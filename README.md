@@ -1,15 +1,15 @@
 # Catchin' Up booking site
 
-Customer booking site (`index.html`) and management portal (`manage/`) for Catchin' Up Pub, backed by Supabase project **catchinup-bookings** (Singapore).
+Customer booking site (`index.html`) and management portal (`manage.html`) for Catchin' Up Pub, backed by Supabase project **catchinup-bookings** (Singapore).
 
 ## Go live: three short steps
 
 ### 1. Put the site on GitHub Pages (5 minutes)
 
 1. On github.com, click **New repository**, name it `catchinup`, keep it **Public**, click **Create repository**.
-2. On the empty repo page click **uploading an existing file**, drag in everything from this folder (`index.html`, `config.js`, `README.md`, and the `manage` folder), then **Commit changes**.
+2. On the empty repo page click **uploading an existing file**, drag in the four files (`index.html`, `manage.html`, `config.js`, `README.md`), then **Commit changes**.
 3. Go to **Settings → Pages**. Under *Build and deployment* choose **Deploy from a branch**, branch **main**, folder **/ (root)**, click **Save**.
-4. After a minute the site is live at `https://flrsjm17.github.io/catchinup/`. The management portal is `https://flrsjm17.github.io/catchinup/manage/`.
+4. After a minute the site is live at `https://flrsjm17.github.io/catchinup/`. The management portal is `https://flrsjm17.github.io/catchinup/manage.html`.
 
 To use your own address later, add it under **Settings → Pages → Custom domain** and point a CNAME at `flrsjm17.github.io`.
 
@@ -21,7 +21,7 @@ Open https://supabase.com/dashboard/project/fmjoslnzppvxctoplrdg
   - `RESEND_API_KEY` — from resend.com → API Keys (free account). Until you verify your domain there, Resend only delivers to your own email; after adding the two DNS records Resend shows for `tablebondgroup.ph`, set `FROM_EMAIL` to `Catchin' Up Pub <bookings@tablebondgroup.ph>`.
   - `NOTIFY_EMAILS` — where new bookings go, e.g. `flrsjm17@gmail.com, maybelle@…` (commas between).
 - **Authentication → Users → Add user**: your email `flrsjm17@gmail.com` with a password. That's your portal login (you're already on the staff list as owner).
-- **Authentication → URL Configuration**: set *Site URL* to `https://flrsjm17.github.io/catchinup/manage/` so sign-in links land on the portal.
+- **Authentication → URL Configuration**: set *Site URL* to `https://flrsjm17.github.io/catchinup/manage.html` so sign-in links land on the portal.
 
 ### 3. Test (3 minutes)
 
