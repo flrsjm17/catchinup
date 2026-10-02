@@ -43,15 +43,15 @@ const PLAYBOOK = {
 /* Call guides: the infographics behind the floating "Call guide" button and the first Playbook tab. Add a guide = add a line. */
 const CALL_GUIDES = [
   { cat: "Incoming calls", items: [
-    { t: "Phone inquiry script", d: "Tables, big groups and private events: answer, get details, share the link, close.", img: "guides/phone-inquiry-script.webp" },
-    { t: "Private event rates", d: "Quick rate overview per branch and what to say if they insist on a number.", img: "guides/private-event-rates.webp" } ] },
+    { t: "Phone inquiry script", d: "Tables, big groups and private events: answer, get details, share the link, close.", img: "guide-phone-inquiry-script.webp" },
+    { t: "Private event rates", d: "Quick rate overview per branch and what to say if they insist on a number.", img: "guide-private-event-rates.webp" } ] },
   { cat: "Follow-up calls", items: [
-    { t: "Cold call · email follow-up", d: "Past inquiries: check they got the email and see if they're still planning.", img: "guides/cold-call-follow-up.webp" } ] },
+    { t: "Cold call · email follow-up", d: "Past inquiries: check they got the email and see if they're still planning.", img: "guide-cold-call-follow-up.webp" } ] },
   { cat: "Menu & prices", items: [
-    { t: "Menu & best sellers", d: "Price ranges and top sellers per category (Q4 2025).", img: "guides/menu-best-sellers.webp" } ] },
+    { t: "Menu & best sellers", d: "Price ranges and top sellers per category (Q4 2025).", img: "guide-menu-best-sellers.webp" } ] },
 ];
 const GUIDE_VER = "20261002";
-function guideGrid(onclick){ return CALL_GUIDES.map((c, ci) => `<h3 style="margin:18px 0 8px">${esc(c.cat)}</h3><div class="cg-grid">${c.items.map((g, gi) => `<button class="cg-card" onclick="${onclick}(${ci},${gi})"><img src="${g.img}?v=${GUIDE_VER}" alt="" loading="lazy"><b>${esc(g.t)}</b><span>${esc(g.d)}</span></button>`).join("")}</div>`).join(""); }
+function guideGrid(onclick){ return CALL_GUIDES.map((c, ci) => `<h3 style="margin:18px 0 8px">${esc(c.cat)}</h3><div class="cg-grid">${c.items.map((g, gi) => `<button class="cg-card" onclick="${onclick}(${ci},${gi})"><img src="${g.img}?v=${GUIDE_VER}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'cg-miss',textContent:'Image not uploaded yet: ${g.img}'}))"><b>${esc(g.t)}</b><span>${esc(g.d)}</span></button>`).join("")}</div>`).join(""); }
 function cgOpen(ci, gi){ const sh = document.getElementById("cg-sheet"); if (!sh) return; document.body.classList.add("cg-on");
   const body = document.getElementById("cg-body");
   if (ci == null) { document.getElementById("cg-title").textContent = "Call guide"; document.getElementById("cg-back").hidden = true; body.innerHTML = `<p class="muted small" style="margin:0">Pick the guide for this call. Tap the picture to zoom.</p>${guideGrid("cgOpen")}`; }
@@ -70,6 +70,7 @@ body.cg-on .cg-scrim{display:block}body.cg-on .cg-sheet{transform:none}
 #cg-body{overflow:auto;padding:14px 16px 40px;flex:1}
 .cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
 .cg-card{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;font:inherit;color:inherit}
+.cg-miss{height:150px;display:grid;place-items:center;text-align:center;padding:10px;font-size:12px;color:var(--muted);background:var(--soft);border-radius:8px}
 .cg-card:hover{border-color:#161616}.cg-card img{width:100%;height:150px;object-fit:cover;object-position:top;border-radius:8px;background:var(--soft)}.cg-card b{font-size:14px;margin-top:4px}.cg-card span{font-size:12.5px;color:var(--muted);line-height:1.4}
 @media (max-width:860px){.cg-fab{bottom:calc(84px + env(safe-area-inset-bottom));right:14px;padding:11px 14px}.cg-fab span{display:none}}
 @media print{.cg-fab,.cg-sheet,.cg-scrim{display:none!important}}`; document.head.appendChild(css);
