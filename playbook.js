@@ -40,12 +40,54 @@ const PLAYBOOK = {
     ]}
   ]
 };
-let pbTab = 0;
+/* Call guides: the infographics behind the floating "Call guide" button and the first Playbook tab. Add a guide = add a line. */
+const CALL_GUIDES = [
+  { cat: "Incoming calls", items: [
+    { t: "Phone inquiry script", d: "Tables, big groups and private events: answer, get details, share the link, close.", img: "guides/phone-inquiry-script.webp" },
+    { t: "Private event rates", d: "Quick rate overview per branch and what to say if they insist on a number.", img: "guides/private-event-rates.webp" } ] },
+  { cat: "Follow-up calls", items: [
+    { t: "Cold call · email follow-up", d: "Past inquiries: check they got the email and see if they're still planning.", img: "guides/cold-call-follow-up.webp" } ] },
+  { cat: "Menu & prices", items: [
+    { t: "Menu & best sellers", d: "Price ranges and top sellers per category (Q4 2025).", img: "guides/menu-best-sellers.webp" } ] },
+];
+const GUIDE_VER = "20261002";
+function guideGrid(onclick){ return CALL_GUIDES.map((c, ci) => `<h3 style="margin:18px 0 8px">${esc(c.cat)}</h3><div class="cg-grid">${c.items.map((g, gi) => `<button class="cg-card" onclick="${onclick}(${ci},${gi})"><img src="${g.img}?v=${GUIDE_VER}" alt="" loading="lazy"><b>${esc(g.t)}</b><span>${esc(g.d)}</span></button>`).join("")}</div>`).join(""); }
+function cgOpen(ci, gi){ const sh = document.getElementById("cg-sheet"); if (!sh) return; document.body.classList.add("cg-on");
+  const body = document.getElementById("cg-body");
+  if (ci == null) { document.getElementById("cg-title").textContent = "Call guide"; document.getElementById("cg-back").hidden = true; body.innerHTML = `<p class="muted small" style="margin:0">Pick the guide for this call. Tap the picture to zoom.</p>${guideGrid("cgOpen")}`; }
+  else { const g = CALL_GUIDES[ci].items[gi]; document.getElementById("cg-title").textContent = g.t; document.getElementById("cg-back").hidden = false;
+    body.innerHTML = `<div class="muted small" style="margin:0 0 10px">${esc(CALL_GUIDES[ci].cat)} · ${esc(g.d)}</div><a href="${g.img}?v=${GUIDE_VER}" target="_blank" title="Open full size"><img src="${g.img}?v=${GUIDE_VER}" alt="${esc(g.t)}" style="width:100%;height:auto;border-radius:12px;border:1px solid var(--line);display:block"></a>`; }
+  body.scrollTop = 0; }
+function cgClose(){ document.body.classList.remove("cg-on"); }
+(function(){ const css = document.createElement("style"); css.textContent = `
+.cg-fab{position:fixed;right:20px;bottom:20px;z-index:65;display:none;align-items:center;gap:8px;background:#161616;color:#fff;border:0;border-radius:999px;padding:12px 18px 12px 14px;font:600 14px/1 inherit;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer}
+.cg-fab svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+body.cg-ready .cg-fab{display:flex}
+.cg-scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:70;display:none}
+.cg-sheet{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:#fff;z-index:71;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.18)}
+body.cg-on .cg-scrim{display:block}body.cg-on .cg-sheet{transform:none}
+.cg-hd{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.cg-hd h2{margin:0;font-size:18px;flex:1}
+#cg-body{overflow:auto;padding:14px 16px 40px;flex:1}
+.cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.cg-card{display:flex;flex-direction:column;gap:4px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;font:inherit;color:inherit}
+.cg-card:hover{border-color:#161616}.cg-card img{width:100%;height:150px;object-fit:cover;object-position:top;border-radius:8px;background:var(--soft)}.cg-card b{font-size:14px;margin-top:4px}.cg-card span{font-size:12.5px;color:var(--muted);line-height:1.4}
+@media (max-width:860px){.cg-fab{bottom:calc(84px + env(safe-area-inset-bottom));right:14px;padding:11px 14px}.cg-fab span{display:none}}
+@media print{.cg-fab,.cg-sheet,.cg-scrim{display:none!important}}`; document.head.appendChild(css);
+  const fab = document.createElement("button"); fab.className = "cg-fab"; fab.title = "Call guide"; fab.innerHTML = `<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span>Call guide</span>`; fab.onclick = () => cgOpen();
+  const scrim = document.createElement("div"); scrim.className = "cg-scrim"; scrim.onclick = cgClose;
+  const sheet = document.createElement("aside"); sheet.className = "cg-sheet"; sheet.id = "cg-sheet"; sheet.setAttribute("aria-label", "Call guide");
+  sheet.innerHTML = `<div class="cg-hd"><button class="btn sm ghost" id="cg-back" hidden onclick="cgOpen()">← All guides</button><h2 id="cg-title">Call guide</h2><button class="btn sm ghost" onclick="cgClose()" aria-label="Close">Close</button></div><div id="cg-body"></div>`;
+  document.body.append(fab, scrim, sheet);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") cgClose(); });
+  const sync = () => { const nav = document.getElementById("nav"); document.body.classList.toggle("cg-ready", !!nav && !nav.hidden); };
+  sync(); const nav = document.getElementById("nav"); if (nav) new MutationObserver(sync).observe(nav, { attributes: true, attributeFilter: ["hidden"] });
+})();
+let pbTab = -1;
 function playbook(){
   const S = PLAYBOOK.sections;
   document.body.classList.remove("ro"); pageRo = false; $("#main").innerHTML = `<h1>Playbook</h1><p class="muted" style="max-width:70ch">${esc(PLAYBOOK.intro)}</p>
-    <div class="tabs">${S.map((s, i) => `<button aria-pressed="${pbTab === i}" data-i="${i}">${esc(s.title)}</button>`).join("")}<a class="btn sm primary" href="guide-marketing.pdf" target="_blank" style="margin-left:auto">Portal guide (PDF)</a><a class="btn sm ghost" href="playbook.pdf" target="_blank">Scripts PDF</a></div>
-    <div class="grid">${S[pbTab].items.map((it, k) => `<div class="card"><h3 style="margin-bottom:8px">${esc(it.q)}</h3><div style="white-space:pre-wrap;font-size:14.5px;line-height:1.5;background:var(--soft);border-radius:10px;padding:12px 14px" id="pb-${k}">${esc(it.a)}</div>${it.note ? `<p class="small muted" style="margin:8px 0 0">${esc(it.note)}</p>` : ""}<div class="actions" style="margin-bottom:0"><button class="btn sm primary" onclick="pbCopy(${k})">Copy</button></div></div>`).join("")}</div>`;
+    <div class="tabs"><button aria-pressed="${pbTab === -1}" data-i="-1">Call guides</button>${S.map((s, i) => `<button aria-pressed="${pbTab === i}" data-i="${i}">${esc(s.title)}</button>`).join("")}<a class="btn sm primary" href="guide-marketing.pdf" target="_blank" style="margin-left:auto">Portal guide (PDF)</a><a class="btn sm ghost" href="playbook.pdf" target="_blank">Scripts PDF</a></div>
+    ${pbTab === -1 ? `<p class="muted small" style="margin:12px 0 0">The same guides open from the <b>Call guide</b> button at the bottom right of every page, so you can pull one up mid-call.</p>${guideGrid("cgOpen")}` : `<div class="grid">${S[pbTab].items.map((it, k) => `<div class="card"><h3 style="margin-bottom:8px">${esc(it.q)}</h3><div style="white-space:pre-wrap;font-size:14.5px;line-height:1.5;background:var(--soft);border-radius:10px;padding:12px 14px" id="pb-${k}">${esc(it.a)}</div>${it.note ? `<p class="small muted" style="margin:8px 0 0">${esc(it.note)}</p>` : ""}<div class="actions" style="margin-bottom:0"><button class="btn sm primary" onclick="pbCopy(${k})">Copy</button></div></div>`).join("")}</div>`}`;
   document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { pbTab = +b.dataset.i; playbook(); });
 }
 function pbCopy(k){ const t = PLAYBOOK.sections[pbTab].items[k].a; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast("Copied, paste it in the chat"), () => { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast("Copied"); }); }

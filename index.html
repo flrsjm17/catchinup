@@ -403,6 +403,9 @@ const app = document.getElementById("app");
 function render(){
   drawSteps();
   [stepEvent, stepMode, stepMenu, stepReview][S.step]();
+  if (S.menuFor && S.step === 2) { const n = document.createElement("div"); n.className = "note"; n.style.margin = "0 0 14px";
+    n.innerHTML = S.menuFor.had ? `<b>Updating your menu for ${esc(S.menuFor.ref)}.</b> Your current order is loaded. Change only what you need, then review and send. Want the other option instead? <a href="#" id="mf-switch">Switch option</a>` : `<b>Planning your menu for ${esc(S.menuFor.ref)}.</b> Pick your dishes, then review and send.`;
+    app.prepend(n); const sw = document.getElementById("mf-switch"); if (sw) sw.onclick = e => { e.preventDefault(); go(1); }; }
 }
 
 function stepEvent(){
@@ -602,7 +605,7 @@ function payload(s){
     booking_type: S.mode === "skip" ? "To be discussed" : S.mode === "own" ? "Build your own" : "Package", selection: S.mode === "skip" ? "Menu to be discussed" : s.pkgName, menu_status: S.mode === "skip" ? "to_discuss" : "chosen", menu: s.lines.join("\n"),
     food_and_drinks: Math.round(s.consumed), minimum: s.min, unused_minimum: Math.round(s.top), service_charge: Math.round(s.sc),
     estimated_total: Math.round(s.total), per_guest: Math.round(s.perGuest), deposit: Math.round(s.deposit), notes: S.notes.trim(), summary: s.txt,
-    page_version: CONFIG.VERSION};
+    page_version: CONFIG.VERSION, menu_state: S.mode === "skip" ? null : {mode: S.mode, pick: S.pick, swaps: S.swaps, bundle: S.bundle, cart: S.cart, budget: S.budget}};
 }
 
 /* ---------- booking kind: table (1–6), big group (7–18), private event (20+) ---------- */
@@ -797,7 +800,7 @@ function groupReview(){
     ${privacyRow()}
     <div class="btns"><button class="btn" id="back">Edit order</button><button class="btn primary" id="r-send" disabled>Book my table</button></div>
     <div id="r-msg" hidden></div>
-    <div class="terms"><b style="color:var(--ink)">Good to know</b><span>• Estimates use our 2026 menu prices. A 10% service charge is added to what you consume.</span><span>• We'll message you how to pay the down payment (GCash or bank). Your tables are pencil-booked for 24 hours while we wait for it.</span><span>• Late arrivals or a change of date: tell us in advance and we'll adjust your booking.</span></div></section>`;
+    <div class="terms"><b style="color:var(--ink)">Good to know</b><span>• Estimates use our 2026 menu prices. A 10% service charge is added to what you consume.</span><span>• Pay the down payment by bank transfer; we show the account after you book. Your tables are pencil-booked for 24 hours while we wait for it.</span><span>• Late arrivals or a change of date: tell us in advance and we'll adjust your booking.</span></div></section>`;
   document.getElementById("agree").onchange = e => document.getElementById("r-send").disabled = !e.target.checked;
   bindPv(false);
   document.getElementById("back").onclick = () => { K.step = 1; saveK(); renderKind(); };
@@ -834,8 +837,8 @@ async function sendReservation(){
       <p class="muted" style="max-width:52ch;margin:0">${esc(K.branch)} · ${esc(K.area)} · ${niceDate(K.date)} at ${ampm(K.time)} · ${K.guests} guests. Show this reference at the door.${K.email ? " A copy has been sent to " + esc(K.email) + "." : ""}</p>
       ${seasonNote}
       ${isGroup() ? `<div style="max-width:560px;width:100%;text-align:left;display:flex;flex-direction:column;gap:14px">
-        <div class="note"><b>To confirm, send your ${peso(s.dp)} down payment within 24 hours.</b> Scan either QR code, then send us the screenshot together with your reference <b>${esc(out.ref)}</b>. We'll reply with your confirmation.</div>
-        <div class="qrs">${[["gcash_qr", "GCash", pay.gcash_name], ["maya_qr", "Maya", pay.maya_name], ["qrph_qr", "QR Ph", "Any bank or e-wallet app"], ["bank_qr", pay.bank_name || "Bank", K.branch]].filter(([k]) => pay[k]).map(([k, t, sub]) => `<div class="qr"><img src="${esc(pay[k])}" alt="${t} QR"><b>${esc(t)}</b><span>${esc(sub || "")}</span></div>`).join("") || `<div class="muted small">We'll message you the payment details.</div>`}</div>
+        <div class="note"><b>To confirm, send your ${peso(s.dp)} down payment within 24 hours.</b> Pay by bank transfer to the account below, then send us the screenshot together with your reference <b>${esc(out.ref)}</b>. We'll reply with your confirmation.</div>
+        ${pay.bank ? `<div class="note" style="background:var(--paper,#f4efe8)"><b>Bank transfer</b><br>Bank: <b>${esc(pay.bank.bank_name)}</b><br>Account name: <b>${esc(pay.bank.account_name)}</b><br>Account no.: <b class="num">${esc(pay.bank.account_no)}</b>${pay.bank.swift ? `<br>SWIFT code: <b>${esc(pay.bank.swift)}</b>` : ""}</div>${pay.note ? `<p class="muted small" style="margin:0">${esc(pay.note)}</p>` : ""}` : `<div class="muted small">We'll message you the payment details.</div>`}
         <div style="display:flex;gap:10px;flex-wrap:wrap">${fb ? `<a class="btn primary" href="${esc(fb)}" target="_blank" rel="noopener">Send on Facebook</a>` : ""}${ig ? `<a class="btn" href="${esc(ig)}" target="_blank" rel="noopener">Instagram</a>` : ""}${waLink ? `<a class="btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${vbLink ? `<a class="btn" href="${vbLink}">Viber</a>` : ""}</div>
         <p class="muted small" style="margin:0">Thank you for your cooperation. Your tables stay pencil-booked for 24 hours while we wait for the down payment.</p></div>` : contactButtons()}
       <button class="btn" id="again">Book another</button></section>`;
@@ -935,10 +938,51 @@ renderKind();
     if (L.event_type && !S.occasion) S.occasion = String(L.event_type).trim();
     if (/jupiter/i.test(L.branch_pref || "")) S.branch = "Jupiter Street"; else if (/gil puyat|san antonio/i.test(L.branch_pref || "")) S.branch = "San Antonio Place";
     try { save(); } catch (e) {} }).catch(() => {}); })();
+/* menus sent before menu_state existed: rebuild the cart from the saved menu lines */
+function legacyMenu(txt){ const L = String(txt || "").split("\n"); if (!L[0] || /to be planned/i.test(L[0])) return null;
+  const cart = {}; L.forEach(l => { const m = l.match(/^(\d+) × (.+) \(([^)]+)\) — /); if (!m) return; const it = CAT.find(c => c.name === m[2]); if (!it) return; const op = it.opts.find(o => o[1] === m[3]); if (op) cart[it.id + "|" + op[0]] = +m[1]; });
+  if (Object.keys(cart).length) return {mode: "own", cart};
+  const pi = C.packages.findIndex(p => L[0].startsWith(p.name + " buffet")); if (pi >= 0) return {mode: "cur", pick: pi};
+  const si = C.sets.findIndex(t => L[0].startsWith(t.name + " sharing")); if (si >= 0) { const b = L[0].match(/sharing set \+ ([^—]+) —/); return {mode: "cur", pick: si, bundle: b ? b[1].trim() : undefined}; }
+  return null; }
+/* ---------- sign & accept the proposal (?accept=TOKEN, linked from the proposal email) ---------- */
+(async () => { const tok = new URLSearchParams(location.search).get("accept"); if (!tok || !CONFIG.ENDPOINT) return;
+  const ov = document.createElement("div"); ov.id = "acc"; ov.style.cssText = "position:fixed;inset:0;z-index:95;background:var(--bg);overflow:auto;padding:28px 16px 60px";
+  ov.innerHTML = `<div style="max-width:620px;margin:0 auto"><img src="logo-wide.webp" alt="Catchin' Up" style="height:34px;width:auto;display:block;margin:0 0 22px"><section class="panel" id="acc-in"><p class="muted">Loading your proposal…</p></section></div>`;
+  document.body.appendChild(ov); document.body.style.overflow = "hidden"; const box = document.getElementById("acc-in");
+  const PDF = {sa:"proposal-san-antonio.pdf", ju:"proposal-jupiter.pdf"}, BN = {sa:"San Antonio Place", ju:"Jupiter Street"};
+  let q; try { const r = await fetch(CONFIG.ENDPOINT + "?action=inquiry&token=" + encodeURIComponent(tok), {headers:JSON_HEADERS}); const j = await r.json(); if (!j.ok) throw new Error(j.error); q = j.inquiry; }
+  catch (e) { box.innerHTML = `<h2>This link is no longer valid</h2><p class="muted">Please message us or call your marketing associate and we'll send a new one.</p>`; return; }
+  const when = new Date(q.event_date + "T12:00:00+08:00").toLocaleDateString("en-PH", {weekday:"long", month:"long", day:"numeric", year:"numeric"}), slot = q.slot === "aft" ? "Afternoon · 1:00 PM – 5:00 PM" : "Evening · 7:00 PM – 11:00 PM";
+  const head = `<div class="tagline">Event proposal · ${esc(q.ref)}</div><h2 style="margin:6px 0 10px">Accept your proposal</h2>
+    <div class="note" style="margin:0 0 16px"><b>${esc(when)}</b> · ${slot}<br>${esc(BN[q.branch] || q.branch)} · ${+q.guests} guests${q.occasion ? " · " + esc(q.occasion) : ""}${+q.estimated_total ? `<br>Estimate <b class="num">${peso(q.estimated_total)}</b> incl. 10% service charge` : ""}</div>`;
+  if (q.proposal_accepted_at) { box.innerHTML = head + `<h3 style="margin:0 0 6px">Already accepted ✓</h3><p class="muted" style="margin:0">Signed${q.proposal_signed_name ? " by <b>" + esc(q.proposal_signed_name) + "</b>" : ""} on ${new Date(q.proposal_accepted_at).toLocaleDateString("en-PH", {month:"long", day:"numeric"})} · ${esc(q.proposal_option || "")}. Your statement of account is next.</p>`; return; }
+  const pre = /build your own/i.test(q.booking_type || "") ? "2" : "1";
+  box.innerHTML = head + `<p class="muted" style="margin:0 0 14px">Please read the <a href="${PDF[q.branch] || PDF.sa}" target="_blank" rel="noopener" style="color:var(--pink)">proposal (PDF)</a>, choose your option, then sign with your full name.</p>
+    <div class="choices" id="acc-opt">
+      <button type="button" class="choice" data-o="1" aria-pressed="${pre === "1"}"><span class="badge">Option 1 · Easiest · recommended</span><h3>Package, priced per guest</h3><span class="muted">A ready menu from our best-sellers. Guest count is set with your advance order.</span></button>
+      <button type="button" class="choice" data-o="2" aria-pressed="${pre === "2"}"><span class="badge c">Option 2 · Full control</span><h3>Build your own menu</h3><span class="muted">Pick from our trays, platters and drinks. Final guest count 3 days before.</span></button>
+    </div>
+    <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:18px 0 0"><input type="checkbox" id="acc-agree" style="width:auto;margin-top:3px"> <span>I have read the proposal, I agree to its terms and conditions, and I wish to proceed with the statement of account.</span></label>
+    <label class="f" style="margin-top:16px">Sign with your full name<input id="acc-name" autocomplete="name" placeholder="${esc(q.name || "Juan dela Cruz")}" style="font:italic 600 22px/1.2 Georgia,'Times New Roman',serif"></label>
+    <p class="muted small" style="margin:8px 0 0">Typing your name here counts as your signature on this acceptance. Your date stays pencil-booked until the 50% deposit is in.</p>
+    <p id="acc-err" class="warn" style="display:none;margin:14px 0 0"></p>
+    <div class="btns" style="margin-top:18px"><span></span><button class="btn primary" id="acc-send" disabled>Sign &amp; send</button></div>`;
+  let opt = pre; const send = document.getElementById("acc-send"), agree = document.getElementById("acc-agree"), nm = document.getElementById("acc-name"), err = document.getElementById("acc-err");
+  const ready = () => { send.disabled = !(agree.checked && nm.value.trim().length >= 3); }; agree.onchange = ready; nm.oninput = ready;
+  document.getElementById("acc-opt").onclick = e => { const b = e.target.closest("[data-o]"); if (!b) return; opt = b.dataset.o; document.querySelectorAll("#acc-opt [data-o]").forEach(x => x.setAttribute("aria-pressed", x === b)); };
+  send.onclick = async () => { send.disabled = true; send.textContent = "Sending…"; err.style.display = "none";
+    try { const r = await fetch(CONFIG.ENDPOINT, {method:"POST", headers:JSON_HEADERS, body: JSON.stringify({type:"accept_proposal", token: tok, option: opt, agree: true, signed_name: nm.value.trim()})}); const j = await r.json();
+      if (!j.ok) throw new Error(j.error || "Something went wrong");
+      box.innerHTML = head + `<h3 style="margin:0 0 6px">Thank you, ${esc((q.name || "").split(" ")[0])}! ✓</h3><p class="muted" style="margin:0">You accepted <b>${esc(j.option || (opt === "2" ? "Option 2 · build your own" : "Option 1 · package"))}</b>. We emailed you a copy. Your marketing associate will send your statement of account next, with the 50% deposit and our bank details.</p>`;
+    } catch (e) { err.textContent = e.message; err.style.display = "block"; send.textContent = "Sign & send"; ready(); } };
+})();
 (async () => { const tok = new URLSearchParams(location.search).get("menu"); if (!tok || !CONFIG.ENDPOINT) return;
   try { const r = await fetch(CONFIG.ENDPOINT + "?action=inquiry&token=" + encodeURIComponent(tok), {headers:JSON_HEADERS}); const j = await r.json(); if (!j.ok) { alert(j.error || "This menu link is no longer valid."); return; } const q = j.inquiry;
     const bname = Object.keys(BR_KEY).find(k => BR_KEY[k] === q.branch) || "San Antonio Place";
-    S = {...S, name: q.name || "", phone: q.mobile || "", email: q.email || "", branch: bname, date: q.event_date, slot: q.slot, area: q.area === "indoor" ? "indoor" : "whole", guests: q.guests, occasion: q.occasion || "", mode: "", cart: {}, step: 1, menuFor: {token: tok, ref: q.ref}};
+    const ms = q.menu_state || legacyMenu(q.menu || "");
+    S = {...S, name: q.name || "", phone: q.mobile || "", email: q.email || "", branch: bname, date: q.event_date, slot: q.slot, area: q.area === "indoor" ? "indoor" : "whole", guests: q.guests, occasion: q.occasion || "", mode: "", pick: 0, swaps: {}, cart: {}, step: 1, menuFor: {token: tok, ref: q.ref, had: !!(ms && ms.mode)}};
+    if (ms && ms.mode) { S = {...S, mode: ms.mode, pick: +ms.pick || 0, swaps: ms.swaps || {}, bundle: ms.bundle || S.bundle, cart: ms.cart || {}, budget: ms.budget || S.budget, step: 2}; }
     save(); K.kind = "event"; K.step = 0; saveK(); history.replaceState(null, "", location.pathname); renderKind(); window.scrollTo({top:0});
   } catch (e) { console.error(e); } })();
 </script>
