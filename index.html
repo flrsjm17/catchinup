@@ -479,7 +479,14 @@ function billBox(consumed, extra = ""){
     <div class="row small"><span class="muted">Per guest</span><span class="num">${peso(total / g)}</span></div>${extra}`;
 }
 
-function stepMenu(){ S.mode === "own" ? stepOwn() : stepCurated(); }
+function stepMenu(){ if (S.mode === "skip") S.mode = ""; S.mode === "own" ? stepOwn() : stepCurated(); escapeBar(); }
+function assistLinks(){ const norm = u => u && !/^https?:\/\//i.test(u) ? "https://" + u.replace(/^\/+/, "") : (u || ""); const fb = norm(RULES.facebook), wa = (RULES.whatsapp || "").replace(/\D/g, ""), vb = (RULES.viber || "").replace(/\D/g, ""); const intl = n => n.startsWith("0") ? "63" + n.slice(1) : n;
+  const msg = encodeURIComponent(`Hi Catchin' Up! I'm planning an event${S.date ? " on " + S.date : ""}${S.guests ? " for " + S.guests + " guests" : ""} at ${S.branch} and I'd like help choosing the menu.`);
+  return [fb ? `<a class="btn" href="${esc(fb)}" target="_blank" rel="noopener">Message us on Facebook</a>` : "", wa ? `<a class="btn" href="https://wa.me/${intl(wa)}?text=${msg}" target="_blank" rel="noopener">WhatsApp</a>` : "", vb ? `<a class="btn" href="viber://chat?number=%2B${intl(vb)}">Viber</a>` : ""].join(""); }
+function escapeBar(){ const el = document.createElement("section"); el.className = "panel"; el.style.marginTop = "16px"; el.style.borderStyle = "dashed";
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center"><div><h3 style="margin-bottom:4px">Feeling overwhelmed by the menu?</h3><p class="muted" style="margin:0;max-width:60ch">You don't have to decide now. Skip this step and send us your event; our team will plan the food and drinks with you. Or message us and we'll walk you through it.</p></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="skip-menu">Skip the menu, decide with your team</button>${assistLinks()}</div></div>`;
+  app.appendChild(el); document.getElementById("skip-menu").onclick = () => { S.mode = "skip"; save(); go(3); }; }
 
 function stepCurated(){
   const g = +S.guests, kind = curatedKind(), r = recommend();
@@ -557,7 +564,8 @@ function drawCart(){
 
 function summary(){
   const g = +S.guests, ms = minSpend(), d = dow(); let lines = [], consumed = 0, lead = 0;
-  if (S.mode === "own"){ cartLines().forEach(l => { consumed += l.v; lines.push(`${l.q} × ${l.it.name} (${l.op[1]}) — ${peso(l.v)}`); if (l.it.lead) lead = Math.max(lead, l.it.lead); }); }
+  if (S.mode === "skip"){ lines.push("To be planned with the Catchin' Up events team (customer skipped the menu step)"); }
+  else if (S.mode === "own"){ cartLines().forEach(l => { consumed += l.v; lines.push(`${l.q} × ${l.it.name} (${l.op[1]}) — ${peso(l.v)}`); if (l.it.lead) lead = Math.max(lead, l.it.lead); }); }
   else if (curatedKind() === "buffet"){ const q = quotePackage(S.pick, g), p = C.packages[S.pick]; consumed = q.rate * g; lead = q.lead;
     lines.push(`${p.name} buffet package — ${peso(q.rate)} × ${g} guests = ${peso(consumed)}`); q.food.forEach(f => lines.push(`  · ${f.name}`)); lines.push(`  · Drinks: ${q.drinks.map(x => x.u + " × " + x.item).join(", ")}`); }
   else { const t = C.sets[S.pick] ? S.pick : 0, q = quoteSet(t, g); consumed = q.rate * g;
@@ -566,8 +574,8 @@ function summary(){
   const txt = [`CATCHIN' UP EVENT INQUIRY`, ``, `Name: ${S.name}`, `Mobile: ${S.phone}`, S.email ? `Email: ${S.email}` : null,
     `Branch: ${S.branch}${S.branch === "San Antonio Place" && S.area === "indoor" ? " (indoor only)" : ""}`, `Date: ${S.date ? DAYS[d] + ", " + S.date : "-"}`, `Time: ${SLOTS.find(s => s[0] === S.slot).slice(1).join(" ")}`, `Guests: ${g}`, `Occasion: ${S.occasion}`,
     S.budget ? `Budget per guest: up to ${peso(S.budget)}` : null, S.notes ? `Notes: ${S.notes}` : null, ``,
-    `MENU (${S.mode === "own" ? "custom" : "package"})`, ...lines, ``,
-    `Food & drinks: ${peso(consumed)}`, min ? `Minimum consumable: ${peso(min)}${top ? " (unused " + peso(top) + ")" : " (reached)"}` : null,
+    `MENU (${S.mode === "skip" ? "to be discussed" : S.mode === "own" ? "custom" : "package"})`, ...lines, ``,
+    `Food & drinks: ${peso(consumed)}`, min ? `Minimum consumable: ${peso(min)}${S.mode === "skip" ? " (food and drinks to be planned with you)" : top ? " (unused " + peso(top) + ")" : " (reached)"}` : null,
     `Service charge 10%: ${peso(sc)}`, `ESTIMATED TOTAL: ${peso(total)} (${peso(total / g)} per guest)`, `Deposit to confirm (50%): ${peso(total / 2)}`].filter(x => x !== null).join("\n");
   const pkgName = S.mode === "own" ? "Custom menu" : (curatedKind() === "buffet" ? C.packages[S.pick].name + " buffet package" : C.sets[C.sets[S.pick] ? S.pick : 0].name + " sharing set" + (S.bundle ? " + " + S.bundle : ""));
   return {txt, total, lead, consumed, min, top, sc, pkgName, lines, dayName: S.date ? DAYS[d] : "", perGuest: total / g, deposit: total / 2};
@@ -576,7 +584,7 @@ function summary(){
 function payload(s){
   return {type:"inquiry", consent: CONSENT, website: S.website || "", name: S.name.trim(), mobile: S.phone.trim(), email: S.email.trim(), branch: BR_KEY[S.branch], area: S.branch === "San Antonio Place" ? (S.area === "indoor" ? "indoor" : "whole") : "", event_date: S.date, slot: S.slot,
     guests: +S.guests, occasion: S.occasion, budget_per_guest: S.budget ? +S.budget : "",
-    booking_type: S.mode === "own" ? "Build your own" : "Package", selection: s.pkgName, menu: s.lines.join("\n"),
+    booking_type: S.mode === "skip" ? "To be discussed" : S.mode === "own" ? "Build your own" : "Package", selection: S.mode === "skip" ? "Menu to be discussed" : s.pkgName, menu_status: S.mode === "skip" ? "to_discuss" : "chosen", menu: s.lines.join("\n"),
     food_and_drinks: Math.round(s.consumed), minimum: s.min, unused_minimum: Math.round(s.top), service_charge: Math.round(s.sc),
     estimated_total: Math.round(s.total), per_guest: Math.round(s.perGuest), deposit: Math.round(s.deposit), notes: S.notes.trim(), summary: s.txt,
     page_version: CONFIG.VERSION};

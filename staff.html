@@ -33,7 +33,7 @@ video,canvas{width:100%;border-radius:14px;background:#000;transform:scaleX(-1)}
 <script src="config.js"></script>
 </head>
 <body><div class="wrap" id="app"><div class="muted">Loading…</div></div>
-<div class="tabs" id="tabs" hidden><button data-t="clock" aria-pressed="true"><span>⏱</span>Clock</button><button data-t="sched"><span>📅</span>Schedule</button><button data-t="time"><span>🕒</span>Timesheet</button><button data-t="pay"><span>💸</span>Payslips</button></div>
+<div class="tabs" id="tabs" hidden><button data-t="clock" data-acc="clock" aria-pressed="true"><span>⏱</span>Clock</button><button data-t="sched" data-acc="schedule"><span>📅</span>Schedule</button><button data-t="time" data-acc="clock"><span>🕒</span>Timesheet</button><button data-t="pay" data-acc="payslips"><span>💸</span>Payslips</button><button data-t="floor" data-acc="floor"><span>🪑</span>Floor</button></div>
 <script>
 const CFG = window.CU_CONFIG || {}, sb = supabase.createClient(CFG.SUPABASE_URL, CFG.ANON_KEY), $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -53,6 +53,10 @@ async function start(){
   if (["invite", "recovery"].includes(linkType) && !sessionStorage.getItem("pwset")) return setPassword();
   const { data } = await sb.from("employees").select("*").eq("email", me.email.toLowerCase()).maybeSingle(); E = data;
   if (!E) return $("#app").innerHTML = `${header()}<div class="card"><h2>Almost there</h2><p class="muted">${esc(me.email)} is signed in but isn't on the employee list yet. Ask the manager to add you with this exact email.</p></div>`;
+  const ACC = Object.assign({ clock: true, schedule: true, payslips: true, floor: false }, E.access || {});
+  document.querySelectorAll("#tabs button").forEach(b => { if (!ACC[b.dataset.acc]) b.remove(); });
+  const first = document.querySelector("#tabs button"); if (!first) return $("#app").innerHTML = `${header()}<div class="card"><h2>No access yet</h2><p class="muted">HR hasn't switched on any pages for you yet. Ask your manager.</p></div>`;
+  tab = first.dataset.t; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === first));
   $("#tabs").hidden = false; document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); });
   await loadToday(); render(); setInterval(() => { const c = $("#clk"); if (c) c.textContent = new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 }
@@ -63,7 +67,7 @@ function setPassword(){ $("#app").innerHTML = `<div style="text-align:center;pad
   $("#setp").onclick = async () => { const a = $("#p1").value, b = $("#p2").value; if (a.length < 8) return $("#m").textContent = "Use at least 8 characters."; if (a !== b) return $("#m").textContent = "The two passwords don't match."; const { error } = await sb.auth.updateUser({ password: a }); if (error) return $("#m").textContent = error.message; sessionStorage.setItem("pwset", "1"); history.replaceState(null, "", location.pathname); start(); }; }
 async function loadToday(){ const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).eq("work_date", workDate()).eq("source", "app").order("created_at", { ascending: false }).limit(1); P = (data || [])[0] || null; }
 function next(){ if (!P) return "time_in"; if (!P.lunch_out && !P.time_out) return "lunch_out"; if (P.lunch_out && !P.lunch_in) return "lunch_in"; if (!P.time_out) return "time_out"; return null; }
-function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } ({ clock, sched, time, pay })[tab](); }
+function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } if (floorTimer){ clearInterval(floorTimer); floorTimer = null; } ({ clock, sched, time, pay, floor })[tab](); }
 
 /* clock */
 function clock(){
@@ -121,6 +125,45 @@ async function pay(){
       <div class="small muted">Days ${l.days_worked} · regular ${p2(l.reg_hours)} h · OT ${p2(l.ot_hours)} h · ND ${p2(l.nd_hours)} h</div>
       <div class="small" style="display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin-top:6px"><span>Basic</span><span>${p2(l.basic_pay)}</span><span>Premiums</span><span>${p2(l.premium_pay)}</span><span>Overtime</span><span>${p2(l.ot_pay)}</span><span>Night differential</span><span>${p2(l.nd_pay)}</span><span>Leave / other</span><span>${p2(+l.leave_pay + +l.other_earnings)}</span><span><b>Gross</b></span><span><b>${p2(l.gross)}</b></span><span>SSS</span><span>−${p2(l.sss)}</span><span>PhilHealth</span><span>−${p2(l.philhealth)}</span><span>Pag-IBIG</span><span>−${p2(l.pagibig)}</span><span>Tax</span><span>−${p2(l.tax)}</span><span>Other deductions</span><span>−${p2(l.other_deductions)}</span></div></div>`).join("") : "<div class='muted'>Payslips appear here once a cut-off has been released.</div>"}</div>`;
 }
+
+/* floor plan */
+let floorTimer = null, FT = [], FB = [], fArea = "", fSel = null;
+const serviceDate = () => { const n = new Date(); if (n.getHours() < 6) n.setDate(n.getDate() - 1); return iso(n); };
+const nowMin = () => { const n = new Date(); let m = n.getHours() * 60 + n.getMinutes(); if (m < 12 * 60) m += 1440; return m; };
+const bMin = b => { const [h, m] = String(b.time).split(":").map(Number); let x = h * 60 + m; if (x < 12 * 60) x += 1440; return x; };
+const bLive = b => ["Pencil", "Booked", "Confirmed", "Seated"].includes(b.status) && !b.cleared_at;
+async function loadFloor(){ const d = serviceDate(); const [t, b] = await Promise.all([sb.from("floor_tables").select("*").eq("branch", E.branch).eq("active", true).order("code"), sb.from("bookings").select("*").eq("branch", E.branch).eq("date", d).order("time")]); FT = t.data || []; FB = (b.data || []).filter(bLive); if (!fArea || !FT.some(x => x.area === fArea)) fArea = (FT[0] || {}).area || ""; }
+function tableState(t){ const seated = FB.find(b => b.status === "Seated" && (b.table_codes || []).includes(t.code)); if (seated) return { k: "seated", b: seated };
+  const soon = FB.filter(b => b.status !== "Seated" && (b.table_codes || []).includes(t.code)).sort((a, b) => bMin(a) - bMin(b))[0]; if (soon) return { k: Math.abs(bMin(soon) - nowMin()) <= 120 ? "reserved" : "later", b: soon }; return { k: "free" }; }
+async function floor(){
+  await loadFloor(); const areas = [...new Set(FT.map(t => t.area))]; const d = serviceDate();
+  const unassigned = FB.filter(b => b.status !== "Seated" && !(b.table_codes || []).length).sort((a, b) => bMin(a) - bMin(b));
+  const W = Math.max(...FT.filter(t => t.area === fArea).map(t => t.x), 0) + 110, Hh = Math.max(...FT.filter(t => t.area === fArea).map(t => t.y), 0) + 110;
+  const col = { free: "#1d1d26", reserved: "#3a2f0c", later: "#15202a", seated: "#0f3a2a" }, bord = { free: "var(--line)", reserved: "var(--yellow)", later: "var(--cyan)", seated: "var(--ok)" };
+  $("#app").innerHTML = `${header()}<div class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Floor · ${fmt(d)}</h2><div style="display:flex;gap:6px">${areas.map(a => `<button class="btn" style="width:auto;margin:0;padding:7px 12px;font-size:13px;${a === fArea ? "background:#fff;color:#07070a" : ""}" onclick="fArea='${a}';render()">${esc(a)}</button>`).join("")}</div></div>
+    <div class="small muted" style="margin:6px 0 8px"><span style="color:var(--ok)">■</span> seated · <span style="color:var(--yellow)">■</span> reserved, arriving within 2 h · <span style="color:var(--cyan)">■</span> reserved later · tap a table</div>
+    <div style="overflow:auto;border:1px solid var(--line);border-radius:12px;background:#0b0b10"><div style="position:relative;width:${W}px;height:${Hh}px">${FT.filter(t => t.area === fArea).map(t => { const st = tableState(t); return `<button onclick="tapTable('${t.id}')" style="position:absolute;left:${t.x}px;top:${t.y}px;width:84px;height:72px;border-radius:${t.shape === "square" ? "12px" : "50%"};border:2px solid ${bord[st.k]};background:${col[st.k]};color:#fff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px"><b style="font-size:15px">${esc(t.code)}</b>${st.b ? `<span style="font-size:11px;line-height:1.2;color:var(--ink2);text-align:center;overflow:hidden;max-height:28px">${esc(st.b.name.split(" ")[0])} · ${st.b.guests}p<br>${st.k === "seated" ? hhmm(st.b.seated_at) : t5(st.b.time)}</span>` : `<span style="font-size:11px;color:var(--muted)">free</span>`}</button>`; }).join("")}</div></div></div>
+    <div class="card"><h2>Tonight's bookings <span class="muted small">${FB.length}</span></h2>${FB.sort((a, b) => bMin(a) - bMin(b)).map(b => `<div class="row" style="align-items:center"><span><b>${t5(b.time)}</b> ${esc(b.name)} · ${b.guests} pax · ${esc(b.area)}<br><span class="small muted">${esc(b.ref)} · ${b.status}${(b.table_codes || []).length ? " · tables " + b.table_codes.join(", ") : " · <span style='color:var(--yellow)'>no table yet</span>"}</span></span><span style="display:flex;gap:6px">${b.status !== "Seated" ? `<button class="btn" style="width:auto;margin:0;padding:6px 10px;font-size:12px" onclick="pickFor('${b.id}')">Assign</button>` : `<button class="btn" style="width:auto;margin:0;padding:6px 10px;font-size:12px" onclick="fAct('clear','${b.id}')">Clear</button>`}</span></div>`).join("") || "<div class='muted'>No bookings yet tonight.</div>"}</div>`;
+  if (unassigned.length) toastF(`${unassigned.length} booking${unassigned.length > 1 ? "s" : ""} still without a table`);
+  floorTimer = setInterval(async () => { if (tab !== "floor" || document.getElementById("fmodal")) return; await loadFloor(); if (tab === "floor") render(); }, 60000);
+}
+function toastF(t){ const el = document.getElementById("ftoast") || Object.assign(document.body.appendChild(document.createElement("div")), { id: "ftoast" }); el.style.cssText = "position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--yellow);color:#1a1400;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;z-index:50"; el.textContent = t; clearTimeout(el._t); el._t = setTimeout(() => el.remove(), 3000); }
+function fModal(html){ let m = document.getElementById("fmodal"); if (!m){ m = document.createElement("div"); m.id = "fmodal"; m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center;padding:12px"; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); } m.innerHTML = `<div class="card" style="width:100%;max-width:480px;max-height:85vh;overflow:auto">${html}</div>`; }
+const closeF = () => { const m = document.getElementById("fmodal"); if (m) m.remove(); };
+function tapTable(id){ const t = FT.find(x => x.id === id), st = tableState(t);
+  if (st.k === "seated") return fModal(`<h2>${esc(t.code)} · ${esc(st.b.name)}</h2><p class="muted small">${st.b.guests} pax · seated ${hhmm(st.b.seated_at)} · ${esc(st.b.ref)}${(st.b.table_codes || []).length > 1 ? " · also " + st.b.table_codes.filter(c => c !== t.code).join(", ") : ""}</p><button class="btn cyan" onclick="fAct('clear','${st.b.id}')">Clear table (guests left)</button><button class="btn" onclick="fAct('unseat','${st.b.id}')">Undo seating</button><button class="btn" onclick="closeF()">Close</button>`);
+  if (st.b) return fModal(`<h2>${esc(t.code)} · reserved</h2><p class="muted small">${esc(st.b.name)} · ${st.b.guests} pax at ${t5(st.b.time)} · ${esc(st.b.ref)} · ${st.b.status}</p><button class="btn go" onclick="fAct('seat','${st.b.id}')">They're here, seat them</button><button class="btn" onclick="pickFor('${st.b.id}')">Change tables</button><button class="btn" onclick="fAct('noshow','${st.b.id}')">No-show, release</button><button class="btn" onclick="closeF()">Close</button>`);
+  const waiting = FB.filter(b => b.status !== "Seated" && b.area === t.area).sort((a, b) => bMin(a) - bMin(b));
+  fModal(`<h2>${esc(t.code)} · free</h2><p class="muted small">Seat a booking here, or a walk-in.</p>${waiting.map(b => `<button class="btn" onclick="fAct('seat','${b.id}',['${t.code}'])"><span style="display:block">${t5(b.time)} · ${esc(b.name)} · ${b.guests} pax</span><span class="small muted">${esc(b.ref)}${(b.table_codes || []).length ? " · " + b.table_codes.join(", ") : ""}</span></button>`).join("")}
+    <div style="border-top:1px solid var(--line);margin:12px 0 6px"></div><label class="small muted">Walk-in: guests</label><input id="wi-g" type="number" value="2" min="1" max="18"><input id="wi-n" placeholder="Name (optional)"><button class="btn go" onclick="walkIn('${t.code}','${esc(t.area)}')">Seat walk-in at ${esc(t.code)}</button><button class="btn" onclick="closeF()">Close</button>`); }
+let PK = null;
+function pickFor(id){ const b = FB.find(x => x.id === id); PK = { b, sel: new Set(b.table_codes || []) }; drawPick(); }
+function pkTog(code){ if (PK.sel.has(code)) PK.sel.delete(code); else PK.sel.add(code); drawPick(); }
+function drawPick(){ const { b, sel } = PK; const list = FT.filter(t => t.area === b.area);
+  fModal(`<h2>Tables for ${esc(b.name)}</h2><p class="muted small">${b.guests} pax needs ${b.tables} table${b.tables > 1 ? "s" : ""} · ${esc(b.area)}. Tap to pick ${sel.size}/${b.tables}.</p><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">${list.map(t => { const st = tableState(t); const busy = st.k === "seated" || (st.b && st.b.id !== b.id && st.k === "reserved"); return `<button class="btn" style="margin:0;padding:10px 4px;${sel.has(t.code) ? "background:var(--pink);color:#1a0416;border-color:var(--pink)" : busy ? "opacity:.35" : ""}" ${busy ? "disabled" : ""} onclick="pkTog('${t.code}')">${esc(t.code)}</button>`; }).join("")}</div><button class="btn go" onclick="fAct('assign','${b.id}',${JSON.stringify([...sel]).replace(/"/g, "&quot;")})" ${sel.size ? "" : "disabled"}>Save tables</button><button class="btn" onclick="closeF()">Cancel</button>`); }
+async function fAct(action, id, codes){ const { data, error } = await sb.rpc("floor_action", { p: { action, id, codes: codes || [] } }); if (error || !data?.ok) return toastF((error || {}).message || data?.error || "Failed"); closeF(); await loadFloor(); render(); }
+async function walkIn(code, area){ const { data, error } = await sb.rpc("floor_action", { p: { action: "walkin", branch: E.branch, area, codes: [code], guests: +$("#wi-g").value || 2, name: $("#wi-n").value } }); if (error || !data?.ok) return toastF((error || {}).message || data?.error || "Failed"); closeF(); await loadFloor(); render(); }
+
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
 start();
 </script>
