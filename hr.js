@@ -199,7 +199,7 @@ async function importTimesheet(file){
   openModal(`<h2>Import timesheet</h2><p class="muted">${esc(file.name)} · ${people.length} people · ${all.length} punches · ${fmt(pd(from))} to ${fmt(pd(to))}</p>
     ${unmatched.length ? `<div class="card" style="border-color:#d98e04;margin-bottom:10px"><b>Not on the employee list (skipped):</b> ${unmatched.map(p => esc(`${p.last}, ${p.first} <${p.email}>`)).join("; ")}<br><span class="small muted">Add them under Employees (same email) and import again.</span></div>` : ""}
     <p class="small muted">Imported punches for these people in this date range replace any earlier import for the same days. Punches made from the staff app are kept.</p>
-    <div class="actions"><button class="btn primary" id="imp-go">Import ${matched.reduce((a, p) => a + p.punches.length, 0)} punches</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+    <div class="actions"><button class="btn primary" id="imp-go">Import ${matched.reduce((a, p) => a + p.punches.length, 0)} punches</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#imp-go").onclick = async () => {
     $("#imp-go").disabled = true;
     const { data: im, error: e1 } = await sb.from("timesheet_imports").insert({ filename: file.name, period_start: from, period_end: to, uploaded_by: me.email, row_count: all.length, unmatched: unmatched.map(p => p.email || `${p.last}, ${p.first}`) }).select().single();
@@ -221,10 +221,14 @@ function periodBar(extra){
   return `<div class="toolbar"><label class="f">Pay period<select id="hr-period">${opts.map(([a, b]) => `<option value="${a}|${b}" ${a === H.from && b === H.to ? "selected" : ""}>${fmt(pd(a))} – ${fmt(pd(b))}</option>`).join("")}</select></label>${extra || ""}</div>`;
 }
 function bindPeriod(){ const s = $("#hr-period"); if (s) s.onchange = async () => { [H.from, H.to] = s.value.split("|"); await hrLoadPeriod(); hrRender(); }; }
+const HR_CAT = { pay: "H", rules: "H", exc: "G", time: "G", lineup: "G", floorplan: "G", hol: "G", emps: "F" };
 function hrRender(){
-  const tabs = [["pay", "Payroll"], ["exc", "Exceptions"], ["time", "Timesheets"], ["lineup", "Line-up"], ["emps", "Employees"], ["floorplan", "Floor plan"], ["hol", "Holidays & leave"], ["rules", "Rules"]];
+  const tabs = [["pay", "Payroll"], ["exc", "Exceptions"], ["time", "Timesheets"], ["lineup", "Line-up"], ["emps", "Employees"], ["floorplan", "Floor plan"], ["hol", "Holidays & leave"], ["rules", "Rules"]].filter(([k]) => can(HR_CAT[k]));
+  if (!tabs.length) return $("#main").innerHTML = `<div class="empty">No HR access.</div>`;
+  if (!tabs.some(([k]) => k === H.tab)) H.tab = tabs[0][0];
+  ro(HR_CAT[H.tab]);
   const pend = H.exc.filter(x => x.status === "pending").length, pendEmp = H.emps.filter(e => e.status === "pending").length;
-  $("#main").innerHTML = `<h1>HR & Payroll</h1><div class="tabs">${tabs.map(([k, l]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${l}${k === "exc" && pend ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pend}</span>` : ""}${k === "emps" && pendEmp ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pendEmp}</span>` : ""}</button>`).join("")}</div><div id="hr-body"></div>`;
+  $("#main").innerHTML = `<h1>HR & Payroll<span class="ro-badge">view only</span></h1><div class="tabs">${tabs.map(([k, l]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${l}${k === "exc" && pend ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pend}</span>` : ""}${k === "emps" && pendEmp ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pendEmp}</span>` : ""}</button>`).join("")}</div><div id="hr-body"></div>`;
   document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { H.tab = b.dataset.t; hrRender(); });
   ({ pay: tabPay, exc: tabExc, time: tabTime, lineup: tabLineup, emps: tabEmps, floorplan: tabFloor, hol: tabHol, rules: tabRules })[H.tab]();
 }
@@ -265,7 +269,7 @@ async function showEmp(id){
     ${st === "pending" ? `<div class="card" style="border-color:#d98e04"><h3>Approve this registration</h3><div class="fields"><label class="f">Hourly rate ₱<input id="ap-rate" type="number" step="0.01" value="${e.hourly_rate || ""}"></label><label class="f">Date hired<input id="ap-hired" type="date" value="${e.date_hired || iso(today)}"></label><label class="f">Default shift start<input id="ap-start" type="time" value="${String(e.default_start || "").slice(0, 5)}"></label><label class="f">Default shift end<input id="ap-end" type="time" value="${String(e.default_end || "").slice(0, 5)}"></label><label class="f">Break minutes<input id="ap-brk" type="number" value="${e.default_break_min ?? 60}"></label><label class="f">Role<select id="ap-role">${["", "Server", "Bartender", "Cashier", "Kitchen", "Floor manager", "Security", "Admin", "Other"].map(r => `<option value="${r}" ${(e.role || "") === r ? "selected" : ""}>${r || "—"}</option>`).join("")}</select></label></div>
       <div class="small muted" style="font-weight:700;margin-top:6px">Staff app access</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 6px">${[["clock", "Time clock & timesheet"], ["schedule", "Schedule"], ["payslips", "Payslips"], ["floor", "Floor plan"]].map(([k, l]) => `<label><input type="checkbox" class="ap-acc" value="${k}" ${k !== "floor" ? "checked" : ""}> ${l}</label>`).join("")}</div>
       <div class="actions"><button class="btn primary" id="ap-go">Approve and send staff-app invite</button><button class="btn ghost" id="ap-no">Reject</button></div></div>` : ""}
-    <div class="actions"><button class="btn" onclick="closeModal();editEmp('${e.id}')">Edit details</button>${st === "active" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','inactive')">Mark separated</button>` : st === "inactive" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','active')">Reactivate</button>` : ""}<button class="btn ghost" onclick="closeModal()">Close</button></div>`);
+    <div class="actions"><button class="btn" onclick="closeModal();editEmp('${e.id}')">Edit details</button>${st === "active" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','inactive')">Mark separated</button>` : st === "inactive" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','active')">Reactivate</button>` : ""}<button class="btn ghost keep" onclick="closeModal()">Close</button></div>`);
   if (e.selfie){ const { data } = await sb.storage.from("employee-docs").createSignedUrl(e.selfie, 600); if (data) $("#em-sf").style.backgroundImage = `url(${data.signedUrl})`; }
   if (e.id_photo){ const { data } = await sb.storage.from("employee-docs").createSignedUrl(e.id_photo, 600); if (data) $("#em-id").innerHTML = `<div class="small muted" style="margin-bottom:4px">Valid ID (click to open)</div><a href="${data.signedUrl}" target="_blank"><img src="${data.signedUrl}" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line)"></a>`; }
   if ($("#ap-go")) $("#ap-go").onclick = async () => { const rate = +$("#ap-rate").value; if (!rate) return toast("Set the hourly rate first");
@@ -293,7 +297,7 @@ function editEmp(id){
     <div class="f" style="font-size:13px;font-weight:700;color:var(--muted)">Staff app access (what they can open)</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 10px">${[["clock", "Time clock & timesheet"], ["schedule", "Schedule"], ["payslips", "Payslips"], ["floor", "Floor plan (seat guests, walk-ins)"]].map(([k, l]) => `<label><input type="checkbox" class="e-acc" value="${k}" ${(e.access || { clock: true, schedule: true, payslips: true })[k] ? "checked" : ""}> ${l}</label>`).join("")}</div>
     <div class="f" style="font-size:13px;font-weight:700;color:var(--muted)">Rest days</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px">${DAYS.map((d, i) => `<label><input type="checkbox" class="e-rd" value="${i}" ${(e.rest_days || []).includes(i) ? "checked" : ""}> ${d}</label>`).join("")}</div>
     <label class="f">Notes<textarea id="e-notes" rows="2">${esc(e.notes || "")}</textarea></label>
-    <div class="actions"><button class="btn primary" id="e-save">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+    <div class="actions"><button class="btn primary" id="e-save">Save</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#e-save").onclick = async () => {
     const v = {}; ["last_name", "first_name", "email", "mobile", "branch", "position", "employment_type", "sss_no", "philhealth_no", "pagibig_no", "tin", "notes"].forEach(k => v[k] = $(`#e-${k}`).value.trim() || null);
     v.email = v.email ? v.email.toLowerCase() : null; ["hourly_rate", "monthly_rate", "default_break_min", "vl_credits", "sl_credits"].forEach(k => v[k] = $(`#e-${k}`).value === "" ? null : +$(`#e-${k}`).value);
@@ -334,7 +338,7 @@ function editShift(eid, d, S){
   openModal(`<h2>${esc(ename(e))} · ${fmt(pd(d))}</h2><div class="fields"><label class="f">Day<select id="sh-kind">${["work", "rest", "off", "leave"].map(k => `<option ${s.kind === k ? "selected" : ""}>${k}</option>`).join("")}</select></label>
     <label class="f">Start<input id="sh-start" type="time" value="${String(s.start_time || "").slice(0, 5)}"></label><label class="f">End<input id="sh-end" type="time" value="${String(s.end_time || "").slice(0, 5)}"></label><label class="f">Break minutes<input id="sh-brk" type="number" value="${s.break_min ?? 60}"></label></div>
     <label><input type="checkbox" id="sh-rep"> Apply to every ${DAYS[pd(d).getDay()]} for the rest of the month</label>
-    <div class="actions"><button class="btn primary" id="sh-save">Save</button>${s.id ? `<button class="btn ghost" id="sh-del">Clear day</button>` : ""}<button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+    <div class="actions"><button class="btn primary" id="sh-save">Save</button>${s.id ? `<button class="btn ghost" id="sh-del">Clear day</button>` : ""}<button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#sh-save").onclick = async () => {
     const kind = $("#sh-kind").value, base = { employee_id: eid, kind, start_time: kind === "work" ? $("#sh-start").value : null, end_time: kind === "work" ? $("#sh-end").value : null, break_min: +$("#sh-brk").value || 0, branch: e.branch, created_by: me.email };
     const dates = [d]; if ($("#sh-rep").checked){ const last = iso(new Date(lu.y, lu.m + 1, 0)); for (let x = addDays(d, 7); x <= last; x = addDays(x, 7)) dates.push(x); }
@@ -353,7 +357,7 @@ function tabTime(){
 }
 function manualPunch(){
   openModal(`<h2>Add a punch by hand</h2><div class="fields"><label class="f">Employee<select id="mp-e">${H.emps.filter(e => e.active).map(e => `<option value="${e.id}">${esc(ename(e))}</option>`).join("")}</select></label><label class="f">Work date<input id="mp-d" type="date" value="${H.to}"></label><label class="f">Time in<input id="mp-in" type="datetime-local"></label><label class="f">Time out<input id="mp-out" type="datetime-local"></label><label class="f">Note<input id="mp-note"></label></div>
-    <div class="actions"><button class="btn primary" id="mp-save">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+    <div class="actions"><button class="btn primary" id="mp-save">Save</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#mp-save").onclick = async () => { const { error } = await sb.from("punches").insert({ employee_id: $("#mp-e").value, work_date: $("#mp-d").value, time_in: new Date($("#mp-in").value).toISOString(), time_out: $("#mp-out").value ? new Date($("#mp-out").value).toISOString() : null, source: "manual", note: `${$("#mp-note").value} (by ${me.email})` }); if (error) return toast(error.message); closeModal(); await hrLoadPeriod(); hrRender(); };
 }
 
@@ -377,7 +381,7 @@ function rejectExc(id){ const n = prompt("Reason (optional)"); if (n === null) r
 async function tabPay(){
   const run = H.runs.find(r => r.period_start === H.from && r.period_end === H.to);
   const pend = H.exc.filter(x => x.status === "pending" && NEEDS_OK.includes(x.kind)).length;
-  const canProcess = ["owner", "manager"].includes(myRole), canApprove = myRole === "owner";
+  const canProcess = can("H", "edit"), canApprove = sw("H3");
   let lines = []; if (run){ const { data } = await sb.from("payroll_lines").select("*").eq("run_id", run.id); lines = (data || []).sort((a, b) => ename(emp(a.employee_id)).localeCompare(ename(emp(b.employee_id)))); H.lines = lines; }
   const frozen = run && ["Approved", "Released"].includes(run.status);
   const tot = k => lines.reduce((a, l) => a + (+l[k] || 0), 0);
@@ -455,7 +459,7 @@ async function setLeave(id, status){ const { error } = await sb.from("leaves").u
 
 /* Rules */
 function tabRules(){
-  const R = H.rules, owner = myRole === "owner", f = (k, l, step = "0.01") => `<label class="f">${l}<input id="r-${k}" type="number" step="${step}" value="${R[k] ?? ""}" ${owner ? "" : "disabled"}></label>`;
+  const R = H.rules, owner = sw("H4"), f = (k, l, step = "0.01") => `<label class="f">${l}<input id="r-${k}" type="number" step="${step}" value="${R[k] ?? ""}" ${owner ? "" : "disabled"}></label>`;
   $("#hr-body").innerHTML = `<div class="grid"><div class="card"><h3>Time rules</h3><div class="fields">${f("std_hours", "Standard paid hours per day", "0.5")}${f("break_min", "Lunch break (minutes) assumed when not punched", "5")}${f("tol_min", "Tolerance before a hit is listed (minutes)", "1")}${f("round_min", "Round paid time to (minutes)", "1")}</div></div>
     <div class="card"><h3>Rates (multipliers on the hourly rate)</h3><div class="fields">${f("ot_rate", "Overtime")}${f("nd_rate", "Night differential (10 PM–6 AM)")}${f("rest_day", "Rest day")}${f("special_holiday", "Special non-working day")}${f("regular_holiday", "Regular holiday")}${f("rest_day_special", "Rest day + special")}${f("rest_day_regular", "Rest day + regular holiday")}${f("ot_on_premium", "OT on a rest day / holiday")}</div>
       <label><input type="checkbox" id="r-hup" ${R.regular_holiday_unworked_paid ? "checked" : ""} ${owner ? "" : "disabled"}> Pay regular holidays even when not worked (regular employees)</label></div>
@@ -497,7 +501,7 @@ async function tabFloor(){
 }
 function editTable(id){ const t = fp.tables.find(x => x.id === id);
   openModal(`<h2>Table ${esc(t.code)}</h2><div class="fields"><label class="f">Code<input id="ft-code" value="${esc(t.code)}"></label><label class="f">Seats<input id="ft-seats" type="number" value="${t.seats}"></label><label class="f">Shape<select id="ft-shape"><option value="round" ${t.shape === "round" ? "selected" : ""}>Round</option><option value="square" ${t.shape === "square" ? "selected" : ""}>Square</option></select></label><label class="f">Area<input id="ft-area" value="${esc(t.area)}"></label></div>
-    <div class="actions"><button class="btn primary" id="ft-save">Save</button><button class="btn ghost" id="ft-retire">Retire table</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+    <div class="actions"><button class="btn primary" id="ft-save">Save</button><button class="btn ghost" id="ft-retire">Retire table</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#ft-save").onclick = async () => { const { error } = await sb.from("floor_tables").update({ code: $("#ft-code").value.trim(), seats: +$("#ft-seats").value || 2, shape: $("#ft-shape").value, area: $("#ft-area").value.trim() }).eq("id", id); if (error) return toast(error.message); closeModal(); hrRender(); };
   $("#ft-retire").onclick = async () => { if (!confirm("Retire this table? It disappears from the floor plan; bookings keep their history.")) return; await sb.from("floor_tables").update({ active: false }).eq("id", id); closeModal(); hrRender(); };
 }

@@ -206,6 +206,16 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 .pv-foot .btn{background:#fff;color:#111;border:1px solid #bbb}.pv-foot .btn.primary{background:#111;color:#fff;border-color:#111}.pv-foot .btn:disabled{opacity:.4}
 .pvrow{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:4px 0}.pvrow input{width:18px;height:18px;flex:none;margin-top:2px}.pvrow a{color:var(--cyan)}
 @media(max-width:520px){.pv-head img{height:64px}.pv-head{padding:14px 16px 10px}.pv-body,.pv-foot{padding-left:16px;padding-right:16px}}
+
+/* soft launch */
+.sl-bg{position:fixed;inset:0;z-index:90;background:rgba(10,10,14,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px}.sl-bg.open{display:flex}
+.sl{background:#0b0b0e;color:#efe9e1;border:1px solid #2a2a30;border-radius:18px;max-width:520px;width:100%;padding:28px 26px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.sl .tag{display:inline-block;background:#ff70e8;color:#0b0b0e;font:700 11px/1.4 Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+.sl h3{font:700 26px/1.1 "Space Grotesk",sans-serif;margin:14px 0 8px;color:#fff}.sl p{margin:0 0 10px;color:#b9b2a8;font-size:15px;line-height:1.55}
+.sl textarea,.sl input{width:100%;background:#15151a;border:1px solid #2a2a30;color:#fff;border-radius:10px;padding:10px 12px;font:inherit;margin-top:8px}
+.sl .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:16px}
+.sl .b{border:1px solid #efe9e1;background:transparent;color:#efe9e1;border-radius:999px;padding:10px 18px;font:700 14px Inter,sans-serif;cursor:pointer}.sl .b.p{background:#efe9e1;color:#0b0b0e}
+.fb-pill{position:fixed;right:16px;bottom:16px;z-index:80;background:#0b0b0e;color:#efe9e1;border:1px solid #2a2a30;border-radius:999px;padding:10px 16px;font:700 13px Inter,sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35)}.fb-pill:hover{transform:scale(1.04)}
 </style>
 <script src="config.js"></script>
 </head>
@@ -325,7 +335,9 @@ const isHoliday = () => { if (!S.date) return false; const [y, m, dd] = S.date.s
 let EV = {key:"", taken:[]};
 async function loadEventSlots(){ const key = BR_KEY[S.branch] + "|" + (S.date || "").slice(0, 7); if (!S.date || EV.key === key || !CONFIG.ENDPOINT) return; EV = {key, taken:[]};
   try { const from = S.date.slice(0, 7) + "-01", to = S.date.slice(0, 7) + "-31"; const r = await fetch(CONFIG.ENDPOINT + "?action=event_slots&branch=" + BR_KEY[S.branch] + "&from=" + from + "&to=" + to, {headers:JSON_HEADERS}); const j = await r.json(); if (j.ok && EV.key === key) { EV.taken = j.taken || []; if (S.step === 0 && K.kind === "event") render(); } } catch (e) {} }
-function slotOpen(slot){ if (!S.date) return true; return !EV.taken.some(t => t.date === S.date && t.slot === slot); }
+function slotOpen(slot){ if (!S.date) return true; return !EV.taken.some(t => t.date === S.date && t.slot === slot && t.locked); }
+function slotPencil(slot){ return !!S.date && EV.taken.some(t => t.date === S.date && t.slot === slot && !t.locked); }
+function slotNote(){ if (!S.date) return "Events run for 4 hours. Extra hours can be arranged before the event date."; if (!slotOpen(S.slot)) return "This slot is already booked. Please pick another time or date."; return slotPencil(S.slot) ? `<b>Heads up:</b> another customer has a pencil booking on this slot. Pencil bookings last 24 hours; the first down payment locks the date. You can still send your inquiry.` : "Events run for 4 hours. Extra hours can be arranged before the event date."; }
 function minSpend(){
   const g = +S.guests || 0, d = dow(), sa = S.branch === "San Antonio Place";
   if (g < 20) return {amt:0, label:"No minimum consumable: a regular table reservation"};
@@ -392,7 +404,7 @@ function render(){
 }
 
 function stepEvent(){
-  const d = dow(), ms = minSpend();
+  const d = dow(), ms = minSpend(); loadEventSlots();
   app.innerHTML = `<section class="panel">
     <h2>Tell us about your event</h2>
     <div><div class="muted small" style="font-weight:600;margin-bottom:8px">Which branch?</div>${branchCards("f-brcards", S.branch)}</div>
@@ -408,7 +420,7 @@ function stepEvent(){
     </div>
     <div><div class="muted small" style="font-weight:600;margin-bottom:8px">Time</div>
       <div class="pills" id="f-slot">${SLOTS.map(([k, n, t]) => `<button data-v="${k}" aria-pressed="${S.slot === k}" ${slotOpen(k) ? "" : "disabled"}>${n} · ${t}</button>`).join("")}</div>
-      <div class="muted small" style="margin-top:6px">Events run for 4 hours. Extra hours can be arranged before the event date.</div></div>
+      <div class="muted small" id="f-slotnote" style="margin-top:6px">${slotNote()}</div></div>
     <div id="f-area-wrap" ${S.branch === "San Antonio Place" ? "" : "hidden"}><div class="muted small" style="font-weight:600;margin-bottom:8px">Area (San Antonio Place)</div>
       <div class="pills" id="f-area"><button data-v="whole" aria-pressed="${S.area !== "indoor"}">Whole venue</button><button data-v="indoor" aria-pressed="${S.area === "indoor"}">Indoor only · 5% lower minimum</button></div>
       <div class="muted small" style="margin-top:6px">Indoor only keeps the outdoor area open to walk-in guests. Package rates per guest are the same.</div></div>
@@ -423,7 +435,7 @@ function stepEvent(){
   </section>`;
   const dyn = () => { const el = document.getElementById("f-min"); el.innerHTML = guestNote();
     const gi = document.getElementById("f-guests"); if (gi) gi.max = EVENT_CAP[S.branch].whole;
-    document.querySelectorAll("#f-slot button").forEach(btn => { btn.disabled = !slotOpen(btn.dataset.v); btn.setAttribute("aria-pressed", S.slot === btn.dataset.v); });
+    document.querySelectorAll("#f-slot button").forEach(btn => { btn.disabled = !slotOpen(btn.dataset.v); btn.setAttribute("aria-pressed", S.slot === btn.dataset.v); }); const sn = document.getElementById("f-slotnote"); if (sn) sn.innerHTML = slotNote();
     document.getElementById("f-area-wrap").hidden = S.branch !== "San Antonio Place"; nextBtn(); };
   const bind = (id, key, num) => { const el = document.getElementById(id); el.oninput = () => { S[key] = num ? (+el.value || "") : el.value; save(); if (key === "date" || key === "branch") loadEventSlots(); dyn(); }; };
   bind("f-website","website"); bind("f-name","name"); bind("f-phone","phone"); bind("f-email","email"); bind("f-date","date"); bindPv(true);
@@ -483,7 +495,7 @@ function stepMenu(){ if (S.mode === "skip") S.mode = ""; S.mode === "own" ? step
 function assistLinks(){ const norm = u => u && !/^https?:\/\//i.test(u) ? "https://" + u.replace(/^\/+/, "") : (u || ""); const fb = norm(RULES.facebook), wa = (RULES.whatsapp || "").replace(/\D/g, ""), vb = (RULES.viber || "").replace(/\D/g, ""); const intl = n => n.startsWith("0") ? "63" + n.slice(1) : n;
   const msg = encodeURIComponent(`Hi Catchin' Up! I'm planning an event${S.date ? " on " + S.date : ""}${S.guests ? " for " + S.guests + " guests" : ""} at ${S.branch} and I'd like help choosing the menu.`);
   return [fb ? `<a class="btn" href="${esc(fb)}" target="_blank" rel="noopener">Message us on Facebook</a>` : "", wa ? `<a class="btn" href="https://wa.me/${intl(wa)}?text=${msg}" target="_blank" rel="noopener">WhatsApp</a>` : "", vb ? `<a class="btn" href="viber://chat?number=%2B${intl(vb)}">Viber</a>` : ""].join(""); }
-function escapeBar(){ const el = document.createElement("section"); el.className = "panel"; el.style.marginTop = "16px"; el.style.borderStyle = "dashed";
+function escapeBar(){ if (S.menuFor) return; const el = document.createElement("section"); el.className = "panel"; el.style.marginTop = "16px"; el.style.borderStyle = "dashed";
   el.innerHTML = `<div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center"><div><h3 style="margin-bottom:4px">Feeling overwhelmed by the menu?</h3><p class="muted" style="margin:0;max-width:60ch">You don't have to decide now. Skip this step and send us your event; our team will plan the food and drinks with you. Or message us and we'll walk you through it.</p></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="skip-menu">Skip the menu, decide with your team</button>${assistLinks()}</div></div>`;
   app.appendChild(el); document.getElementById("skip-menu").onclick = () => { S.mode = "skip"; save(); go(3); }; }
@@ -582,7 +594,8 @@ function summary(){
 }
 
 function payload(s){
-  return {type:"inquiry", consent: CONSENT, website: S.website || "", name: S.name.trim(), mobile: S.phone.trim(), email: S.email.trim(), branch: BR_KEY[S.branch], area: S.branch === "San Antonio Place" ? (S.area === "indoor" ? "indoor" : "whole") : "", event_date: S.date, slot: S.slot,
+  let lead = ""; try { lead = localStorage.getItem("cu-lead") || ""; } catch (e) {}
+  return {type:"inquiry", lead, consent: CONSENT, website: S.website || "", name: S.name.trim(), mobile: S.phone.trim(), email: S.email.trim(), branch: BR_KEY[S.branch], area: S.branch === "San Antonio Place" ? (S.area === "indoor" ? "indoor" : "whole") : "", event_date: S.date, slot: S.slot,
     guests: +S.guests, occasion: S.occasion, budget_per_guest: S.budget ? +S.budget : "",
     booking_type: S.mode === "skip" ? "To be discussed" : S.mode === "own" ? "Build your own" : "Package", selection: S.mode === "skip" ? "Menu to be discussed" : s.pkgName, menu_status: S.mode === "skip" ? "to_discuss" : "chosen", menu: s.lines.join("\n"),
     food_and_drinks: Math.round(s.consumed), minimum: s.min, unused_minimum: Math.round(s.top), service_charge: Math.round(s.sc),
@@ -856,12 +869,12 @@ function contactButtons(){
 function stepReview(){
   const s = summary();
   app.innerHTML = `<section class="panel" id="review">
-    <h2>Review your inquiry</h2>
-    <p class="muted" style="margin:0">Here's your event and estimated bill. Send it to us and our events team will check the date and confirm your final quote.</p>
+    <h2>${S.menuFor ? "Review your menu" : "Review your inquiry"}</h2>
+    <p class="muted" style="margin:0">${S.menuFor ? `This updates your inquiry <b>${esc(S.menuFor.ref)}</b>. Your choices are subject to availability; your marketing associate will confirm the order.` : "Here's your event and estimated bill. Send it to us and our events team will check the date and confirm your final quote."}</p>
     <div class="sum" id="sum">${esc(s.txt)}</div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px"><input type="checkbox" id="agree" style="width:auto;margin-top:3px"> <span>I agree that Catchin' Up may use these details to contact me about this event.</span></label>
     ${privacyRow()}
-    <div class="btns"><button class="btn" id="back">Edit menu</button><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="copy">Copy</button><button class="btn primary" id="send" disabled>Send inquiry</button></div></div>
+    <div class="btns"><button class="btn" id="back">Edit menu</button><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="copy">Copy</button><button class="btn primary" id="send" disabled>${S.menuFor ? "Send my menu" : "Send inquiry"}</button></div></div>
     <div id="msg" hidden></div>
     <div class="terms"><b style="color:var(--ink)">Good to know</b>
       <span>• Estimates use our 2026 menu prices. Final prices are confirmed by our events team.</span>
@@ -885,16 +898,17 @@ function stepReview(){
     if (!CONFIG.ENDPOINT || CONFIG.ENDPOINT.includes("PASTE")) return fail("the inquiry form isn't connected yet");
     const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), 25000);
     try {
-      const res = await fetch(CONFIG.ENDPOINT, {method:"POST", body: JSON.stringify(payload(s)), headers:JSON_HEADERS, signal: ctrl.signal});
+      const body = S.menuFor ? { ...payload(s), type: "menu_update", token: S.menuFor.token } : payload(s);
+      const res = await fetch(CONFIG.ENDPOINT, {method:"POST", body: JSON.stringify(body), headers:JSON_HEADERS, signal: ctrl.signal});
       const out = await res.json();
       clearTimeout(timer);
       if (!out.ok) return fail(out.error || "server error");
-      try { localStorage.removeItem("cu-inquiry"); } catch (e) {}
+      try { localStorage.removeItem("cu-inquiry"); } catch (e) {} S.menuFor = null;
       document.getElementById("steps").innerHTML = STEPS.map((x, i) => `<span class="done">${i + 1}. ${x}</span>`).join("");
       app.innerHTML = `<section class="panel" style="text-align:center;align-items:center;padding-block:48px">
-        <div class="tagline">Inquiry received</div><h2>Thanks, ${esc(S.name.split(" ")[0])}! We've got your event.</h2>
+        <div class="tagline">${S.menuFor ? "Menu received" : "Pencil booked"}</div><h2>Thanks, ${esc(S.name.split(" ")[0])}! ${S.menuFor ? "Your menu is in." : "Your date is pencil-booked."}</h2>
         <div class="price num" style="color:var(--cyan)">${esc(out.ref)}</div>
-        <p class="muted" style="max-width:52ch;margin:0">That's your reference number. Our events team will check ${S.date ? DAYS[dow()] + ", " + esc(S.date) : "your date"} and contact you on ${esc(S.phone)} to confirm your quote and deposit.${S.email ? " A copy has been sent to " + esc(S.email) + "." : ""}</p>
+        <p class="muted" style="max-width:52ch;margin:0">${S.menuFor ? "Your choices are under review and subject to availability. Your marketing associate will confirm the order with you." : `That's your reference number. Your date is held for 24 hours. A marketing associate will contact you on ${esc(S.phone)} to confirm your details and menu, then send your statement of account; the 50% deposit locks the date.${out.clash ? " <b>Heads up:</b> another customer also has a pencil booking on this slot; the first down payment wins." : ""}`}${S.email ? " A copy has been sent to " + esc(S.email) + "." : ""}</p>
         ${contactButtons()}
         <button class="btn" id="again">Plan another event</button></section>`;
       document.getElementById("again").onclick = () => { try { localStorage.removeItem("cu-inquiry"); localStorage.removeItem("cu-kind"); } catch (e) {} location.reload(); };
@@ -905,7 +919,35 @@ function stepReview(){
 
 if (S.step > 0 && !ok1()) S.step = 0;
 renderKind();
+(function(){ const lt = new URLSearchParams(location.search).get("lead"); if (lt) { try { localStorage.setItem("cu-lead", lt); } catch (e) {} history.replaceState(null, "", location.pathname + (location.search.replace(/[?&]lead=[^&]*/, "").replace(/^&/, "?") || "")); }
+  let has = lt; try { has = has || localStorage.getItem("cu-lead"); } catch (e) {}
+  if (has) { const b = document.createElement("div"); b.id = "lead-banner"; b.style.cssText = "background:#ff70e8;color:#0b0b0e;font:600 14px/1.4 Inter,sans-serif;text-align:center;padding:10px 16px"; b.innerHTML = "Welcome back! Booking is open and, as an early inquiry, you get first pick of dates. Tap <b>Private event</b> below to pencil-book yours."; document.body.insertBefore(b, document.body.firstChild); } })();
+(async () => { const tok = new URLSearchParams(location.search).get("menu"); if (!tok || !CONFIG.ENDPOINT) return;
+  try { const r = await fetch(CONFIG.ENDPOINT + "?action=inquiry&token=" + encodeURIComponent(tok), {headers:JSON_HEADERS}); const j = await r.json(); if (!j.ok) { alert(j.error || "This menu link is no longer valid."); return; } const q = j.inquiry;
+    const bname = Object.keys(BR_KEY).find(k => BR_KEY[k] === q.branch) || "San Antonio Place";
+    S = {...S, name: q.name || "", phone: q.mobile || "", email: q.email || "", branch: bname, date: q.event_date, slot: q.slot, area: q.area === "indoor" ? "indoor" : "whole", guests: q.guests, occasion: q.occasion || "", mode: "", cart: {}, step: 1, menuFor: {token: tok, ref: q.ref}};
+    save(); K.kind = "event"; K.step = 0; saveK(); history.replaceState(null, "", location.pathname); renderKind(); window.scrollTo({top:0});
+  } catch (e) { console.error(e); } })();
 </script>
 
+
+<div class="sl-bg" id="sl"><div class="sl" id="sl-in"></div></div><button class="fb-pill" id="fb-pill" hidden>Feedback</button>
+<script>
+(function(){ const bg = document.getElementById("sl"), box = document.getElementById("sl-in"), pill = document.getElementById("fb-pill"), KEY = "cu-softlaunch-v1";
+  const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  function notice(){ box.innerHTML = `<span class="tag">Soft launch</span><h3>Welcome to our new booking site.</h3><p>Everything here should work the way you expect: free tables, big groups and private events. We just opened it, so if anything feels off or could be better, tell us. Your feedback is gold to us.</p><div class="row"><button class="b" id="sl-fb">Send feedback</button><button class="b p" id="sl-ok">Got it</button></div>`;
+    bg.classList.add("open"); document.getElementById("sl-ok").onclick = close; document.getElementById("sl-fb").onclick = form; }
+  function form(){ box.innerHTML = `<span class="tag">Feedback</span><h3>What should we know?</h3><p>A bug, a confusing step, something you wish was there. A line or two is plenty.</p><textarea id="fb-msg" rows="4" placeholder="Tell us…"></textarea><input id="fb-name" placeholder="Your name (optional)"><input id="fb-contact" placeholder="Mobile or email, if you'd like a reply (optional)"><div class="row"><button class="b" id="fb-cancel">Close</button><button class="b p" id="fb-send">Send</button></div><p id="fb-msgline" style="margin-top:8px"></p>`;
+    bg.classList.add("open"); document.getElementById("fb-cancel").onclick = close;
+    document.getElementById("fb-send").onclick = async () => { const m = document.getElementById("fb-msg").value.trim(); const line = document.getElementById("fb-msgline"); if (m.length < 3) { line.textContent = "Please write a few words first."; return; } line.textContent = "Sending…";
+      try { const cfg = window.CU_CONFIG || {}; const r = await fetch(cfg.ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json", apikey: cfg.ANON_KEY || "", Authorization: "Bearer " + (cfg.ANON_KEY || "")}, body: JSON.stringify({type:"feedback", source:"website", page: location.pathname + location.hash, message: m, name: document.getElementById("fb-name").value, contact: document.getElementById("fb-contact").value, version: cfg.VERSION})}); const j = await r.json(); if (!j.ok) throw new Error(j.error || "failed");
+        box.innerHTML = `<span class="tag">Thank you</span><h3>Got it.</h3><p>Thanks for helping us make this better. See you at Catchin' Up!</p><div class="row"><button class="b p" id="fb-done">Close</button></div>`; document.getElementById("fb-done").onclick = close; }
+      catch (e) { line.textContent = "Couldn't send right now. Please message us on Facebook instead."; } }; }
+  function close(){ bg.classList.remove("open"); try { localStorage.setItem(KEY, "1"); } catch (e) {} pill.hidden = false; }
+  bg.onclick = e => { if (e.target === bg) close(); }; pill.onclick = form;
+  let seen = false; try { seen = !!localStorage.getItem(KEY); } catch (e) {}
+  if (seen) pill.hidden = false; else setTimeout(notice, 600);
+})();
+</script>
 </body>
 </html>
