@@ -468,10 +468,10 @@ function stepMode(){
     <p class="muted" style="margin:0">${g} guests · ${esc(S.occasion)} · ${S.date ? DAYS[dow()] + ", " + new Date(S.date + "T12:00:00").toLocaleDateString("en-PH", {month:"long", day:"numeric"}) : ""} · ${esc(SLOTS.find(s => s[0] === S.slot)[1])}${ms.amt ? ` · minimum consumable ${peso(ms.amt)}` : ""}</p>
     <p class="sc-note"><b>All rates are subject to a 10% service charge</b> on what you consume.</p>
     <div class="choices">
-      <button class="choice" id="m-cur"><span class="badge">Easiest · recommended</span><h3>${kind === "buffet" ? "Buffet package" : "Sharing set"}, priced per guest</h3>
+      <button class="choice" id="m-cur"><span class="badge">Option 1 · Easiest · recommended</span><h3>${kind === "buffet" ? "Buffet package" : "Sharing set"}, priced per guest</h3>
         <span class="muted">A ready menu made from our best-sellers. Choose one package, swap a dish if you like, and you're done. The price is set for exactly ${g} guests.</span>
         <span class="price num"><small>from</small> ${peso(from)} <small>per guest</small></span></button>
-      <button class="choice" id="m-own"><span class="badge c">Full control</span><h3>Build your own menu</h3>
+      <button class="choice" id="m-own"><span class="badge c">Option 2 · Full control</span><h3>Build your own menu</h3>
         <span class="muted">Pick anything from our party trays, sharing platters and drinks. Your bill updates as you add items.${ms.amt ? ` Spend at least ${peso(ms.amt)}.` : ""}</span>
         <span class="price num"><small>menu prices</small></span></button>
     </div>
@@ -735,8 +735,8 @@ function groupOrder(){
     app.innerHTML = `<section class="panel"><h2>Choose your food and drinks</h2>
       <p class="muted" style="margin:0">${g} guests · ${niceDate(K.date)} at ${ampm(K.time)} · minimum consumable <b class="num" style="color:var(--ink)">${peso(groupMin())}</b>. Ordering ahead means your table is ready when you walk in, and you can see you've reached your minimum before you book.</p>
       <div class="choices">
-        <button class="choice" id="g-set"><span class="badge">Easiest · our best-sellers</span><h3>Curated table</h3><span class="muted">A ready set of our most-ordered sharing platters, sized for ${g} guests, plus a drinks bundle. One tap and you're done.</span><span class="price num"><small>from</small> ${peso(Math.min(...sets.map(s => s.total)))} <small>for the table</small></span></button>
-        <button class="choice" id="g-own"><span class="badge c">Full control</span><h3>Build your own</h3><span class="muted">Pick anything from our sharing platters, mains and drinks. Your bill updates as you add items, with a bar showing how close you are to ${peso(groupMin())}.</span><span class="price num"><small>menu prices</small></span></button>
+        <button class="choice" id="g-set"><span class="badge">Option 1 · Easiest · our best-sellers</span><h3>Curated table</h3><span class="muted">A ready set of our most-ordered sharing platters, sized for ${g} guests, plus a drinks bundle. One tap and you're done.</span><span class="price num"><small>from</small> ${peso(Math.min(...sets.map(s => s.total)))} <small>for the table</small></span></button>
+        <button class="choice" id="g-own"><span class="badge c">Option 2 · Full control</span><h3>Build your own</h3><span class="muted">Pick anything from our sharing platters, mains and drinks. Your bill updates as you add items, with a bar showing how close you are to ${peso(groupMin())}.</span><span class="price num"><small>menu prices</small></span></button>
       </div>
       <div class="btns"><button class="btn" id="back">Back</button><span></span></div></section>`;
     document.getElementById("g-set").onclick = () => { K.mode = "set"; saveK(); groupOrder(); };
