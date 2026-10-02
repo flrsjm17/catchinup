@@ -4,6 +4,6 @@ window.CU_CONFIG = {
   SUPABASE_URL: "https://fmjoslnzppvxctoplrdg.supabase.co",
   ANON_KEY: "sb_publishable_7qqyJAfom5iiiIZMkPTpEA_ztcmgxnR",
   CONTACT: { messenger: "", viber: "", phone: "+63 917 139 2068", email: "" },
-  PAYMENT: { gcash: "", bank: "" },
-  VERSION: "2026.10.17"
+  PAYMENT: { sa: { gcash: "", bank: "" }, ju: { gcash: "", bank: "" } },  // optional fallback; the live details come from the portal Settings
+  VERSION: "2026.10.18"
 };

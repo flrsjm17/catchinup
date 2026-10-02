@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#070708">
+<title>Catchin' Up · Employee registration</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#07070a;--card:#14141b;--line:rgba(255,255,255,.12);--line2:rgba(255,255,255,.22);--ink:#f5f5f7;--ink2:#c9c9d1;--muted:#8e8e99;--pink:#ff70e8;--cyan:#32e3ff;--ok:#38d996;--amber:#ffd84d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:24px 16px 80px}
+h1,h2,h3{font-family:"Space Grotesk",sans-serif;margin:0;letter-spacing:-.4px}h1{font-size:34px;line-height:1.1}h2{font-size:22px;margin-bottom:4px}
+.muted{color:var(--muted)}.small{font-size:14px;line-height:1.45}
+.logo{height:56px;width:auto;display:block;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:18px;display:flex;flex-direction:column;gap:16px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 18px}
+label.f{display:block;font:500 14px/1.4 Inter,sans-serif;color:var(--ink2)}label.f>input,label.f>select,label.f>textarea{margin-top:6px}
+label.f.w{grid-column:1/-1}
+input,select,textarea{font:400 16px Inter,sans-serif;color:var(--ink);background:#0b0b10;border:1px solid var(--line);border-radius:10px;padding:0 14px;height:50px;width:100%}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8e8e99 50%),linear-gradient(135deg,#8e8e99 50%,transparent 50%);background-position:calc(100% - 18px) 22px,calc(100% - 13px) 22px;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+textarea{height:auto;min-height:80px;padding:12px 14px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(50,227,255,.18)}
+.btn{font:500 16px/1.2 "Space Grotesk",sans-serif;border-radius:10px;padding:13px 22px;cursor:pointer;border:1px solid var(--line2);background:transparent;color:var(--ink)}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:#1a0416}.btn:disabled{opacity:.35;cursor:not-allowed}
+.photo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.shot{border:1px dashed var(--line2);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;background:#0b0b10}
+.shot img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:none;background:#000}
+.shot img.on{display:block}
+.shot b{font:500 14px Inter,sans-serif;color:var(--ink2)}
+.shot label.up{font:500 14px "Space Grotesk",sans-serif;color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:8px 12px;cursor:pointer}
+.shot input{display:none}
+.req::after{content:" *";color:var(--pink)}
+.msg{font-size:14px;color:var(--amber)}
+.pv{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:var(--ink2)}.pv input{width:18px;height:18px;flex:none;margin-top:2px}
+.pv a{color:var(--cyan)}
+.done{text-align:center;padding:40px 10px}
+@media(max-width:600px){.photo{grid-template-columns:1fr}h1{font-size:28px}.card{padding:18px}}
+</style>
+<script src="config.js"></script>
+</head>
+<body><div class="wrap">
+<img src="logo-wide.png" alt="Catchin' Up Pub" class="logo">
+<div id="app">
+<h1>Employee registration</h1>
+<p class="muted" style="margin-top:8px">Tablebond Group Inc. · Catchin' Up Pub and Funhan Mart. Fill this in once; HR will review it and send your staff-app login. Fields marked <span style="color:var(--pink)">*</span> are required.</p>
+
+<form id="f" novalidate>
+<div class="card"><h2>About you</h2><div class="fields">
+  <label class="f req">Last name<input name="last_name" required autocomplete="family-name"></label>
+  <label class="f req">First name<input name="first_name" required autocomplete="given-name"></label>
+  <label class="f">Middle name<input name="middle_name"></label>
+  <label class="f">Suffix (Jr., III)<input name="suffix"></label>
+  <label class="f req">Birthdate<input name="birthdate" type="date" required></label>
+  <label class="f">Gender<select name="gender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Other</option></select></label>
+  <label class="f">Civil status<select name="civil_status"><option value="">—</option><option>Single</option><option>Married</option><option>Widowed</option><option>Separated</option></select></label>
+  <label class="f req">Mobile number<input name="mobile" inputmode="tel" required placeholder="0917 123 4567"></label>
+  <label class="f req">Email (this becomes your login)<input name="email" type="email" required autocomplete="email"></label>
+  <label class="f w req">Home address<input name="address" required placeholder="House/unit, street, barangay, city"></label>
+  <label style="position:absolute;left:-9999px" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+</div></div>
+
+<div class="card"><h2>Your work</h2><div class="fields">
+  <label class="f req">Branch<select name="branch" required><option value="">Choose…</option><option value="sa">Catchin' Up · San Antonio Place</option><option value="ju">Catchin' Up · Jupiter Street</option><option value="fm">Funhan Mart · Arnaiz</option></select></label>
+  <label class="f req">Position<input name="position" required placeholder="Server, Bartender, Cashier, Kitchen…"></label>
+  <label class="f">Employment<select name="employment_type"><option value="probationary">Probationary</option><option value="regular">Regular</option><option value="part_time">Part-time</option><option value="contractual">Contractual</option></select></label>
+</div></div>
+
+<div class="card"><h2>Government numbers</h2><p class="muted small">Needed for SSS, PhilHealth and Pag-IBIG contributions and your tax. Leave blank if you don't have one yet; HR will follow up.</p><div class="fields">
+  <label class="f">SSS number<input name="sss_no" placeholder="34-1234567-8"></label>
+  <label class="f">PhilHealth number<input name="philhealth_no" placeholder="12-345678901-2"></label>
+  <label class="f">Pag-IBIG (MID) number<input name="pagibig_no" placeholder="1234-5678-9012"></label>
+  <label class="f">TIN<input name="tin" placeholder="123-456-789-000"></label>
+</div></div>
+
+<div class="card"><h2>Emergency contact</h2><div class="fields">
+  <label class="f req">Name<input name="emergency_name" required></label>
+  <label class="f req">Mobile<input name="emergency_mobile" inputmode="tel" required></label>
+  <label class="f">Relationship<input name="emergency_relation" placeholder="Mother, spouse, friend…"></label>
+</div></div>
+
+<div class="card"><h2>Valid ID and photo</h2><div class="fields">
+  <label class="f req">ID type<select name="id_type" required><option value="">Choose…</option><option>PhilSys National ID</option><option>UMID</option><option>Driver's License</option><option>Passport</option><option>SSS ID</option><option>PhilHealth ID</option><option>Postal ID</option><option>Voter's ID</option><option>PRC ID</option><option>Other government ID</option></select></label>
+  <label class="f">ID number<input name="id_number"></label>
+</div>
+<div class="photo">
+  <div class="shot"><b class="req">Photo of your valid ID</b><span class="muted small">Front side, flat, all text readable.</span><img id="id-prev" alt=""><label class="up">📷 Take or choose photo<input type="file" id="id-file" accept="image/*" capture="environment"></label></div>
+  <div class="shot"><b class="req">Your profile selfie</b><span class="muted small">Plain background, face clear, no cap or sunglasses.</span><img id="sf-prev" alt="" style="transform:scaleX(-1)"><label class="up">🤳 Take selfie<input type="file" id="sf-file" accept="image/*" capture="user"></label></div>
+</div></div>
+
+<div class="card">
+  <label class="f">Anything HR should know? (optional)<textarea name="notes"></textarea></label>
+  <label class="pv"><input type="checkbox" id="consent"> <span>I confirm the details above are true, and I consent to Tablebond Group Inc. collecting and keeping my personal information, government numbers, ID photo and photo for employment, payroll and statutory purposes under the Data Privacy Act of 2012 (RA 10173). I can ask HR to see, correct or delete my records. <a href="privacy-notice.pdf" target="_blank" rel="noopener">Privacy notice</a></span></label>
+  <div class="msg" id="msg"></div>
+  <button class="btn primary" type="submit" id="go" disabled>Submit registration</button>
+</div>
+</form>
+</div></div>
+<script>
+const CFG = window.CU_CONFIG || {}, $ = s => document.querySelector(s);
+const IMG = { id: null, sf: null };
+function shrink(file, max){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL("image/jpeg", 0.82)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(file); }); }
+async function pick(inputId, key, prevId, max){ const f = document.getElementById(inputId).files[0]; if (!f) return; try { IMG[key] = await shrink(f, max); const p = document.getElementById(prevId); p.src = IMG[key]; p.classList.add("on"); } catch (e) { $("#msg").textContent = "Couldn't read that photo, please try again."; } check(); }
+$("#id-file").onchange = () => pick("id-file", "id", "id-prev", 1600);
+$("#sf-file").onchange = () => pick("sf-file", "sf", "sf-prev", 900);
+$("#consent").onchange = check;
+document.querySelectorAll("#f input,#f select").forEach(el => el.addEventListener("input", check));
+function check(){ const f = $("#f"); const ok = [...f.querySelectorAll("[required]")].every(el => el.value.trim()) && IMG.id && IMG.sf && $("#consent").checked; $("#go").disabled = !ok; }
+$("#f").onsubmit = async e => {
+  e.preventDefault(); const go = $("#go"), msg = $("#msg"); go.disabled = true; go.textContent = "Sending…"; msg.textContent = "";
+  const d = Object.fromEntries(new FormData($("#f")).entries()); d.id_photo = IMG.id; d.selfie = IMG.sf;
+  d.consent = { accepted: true, at: new Date().toISOString(), version: "emp-2026-10-01", text: document.querySelector(".pv span").textContent.trim() };
+  try {
+    const r = await fetch(`${CFG.SUPABASE_URL}/functions/v1/hr-register`, { method: "POST", headers: { "Content-Type": "application/json", apikey: CFG.ANON_KEY }, body: JSON.stringify(d) });
+    const j = await r.json();
+    if (!j.ok) { msg.textContent = j.error || "Something went wrong."; go.disabled = false; go.textContent = "Submit registration"; return; }
+    $("#app").innerHTML = `<div class="done"><h1>Thanks, ${d.first_name.split(" ")[0]}!</h1><p class="muted" style="margin-top:12px;max-width:46ch;margin-inline:auto">Your registration is in. HR will check your details and, once approved, you'll get an email with a link to create your staff-app password.</p></div>`; window.scrollTo({ top: 0 });
+  } catch (err) { msg.textContent = "No connection. Please try again."; go.disabled = false; go.textContent = "Submit registration"; }
+};
+</script>
+</body>
+</html>

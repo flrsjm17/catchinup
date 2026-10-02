@@ -66,3 +66,9 @@ Files: `hr.js` (loaded by `manage.html`) and `staff.html` (the staff app: time c
 ## Privacy notice (Data Privacy Act of 2012)
 
 Customers see the notice (with the NPC mark, over a blurred page) the first time they reach a booking form, and must tick and press **I accept and continue** before a booking or inquiry can be sent. The database refuses a booking without consent. Each booking and inquiry stores what was accepted, when and which version (`consent` column; shown in the portal under Privacy). The PDF is at `privacy-notice.pdf`. To change the wording, edit the text inside `<div id="pv">` in `index.html` and bump `PV_VERSION`; customers will be asked again.
+
+## Employee registration and master list
+
+Send new hires the registration link (Employees tab → *Copy registration link*, it is `register.html`). They fill in personal details, branch (Catchin' Up San Antonio, Catchin' Up Jupiter, or Funhan Mart Arnaiz), position, SSS/PhilHealth/Pag-IBIG/TIN, emergency contact, a photo of a valid ID and a selfie, and accept the employee privacy consent. The registration lands as **pending** in the Employees master list. Click it to see everything including the ID photo, set the hourly rate and default shift, and press **Approve and send staff-app invite**. The list filters by branch and status, sorts, and downloads as CSV. ID photos and selfies are in the private `employee-docs` bucket; only owner/manager can open them.
+
+Funhan Mart staff use the same staff app, line-up, timesheets and payroll. They never see bookings; the booking pages are only for the owner, events and manager accounts.

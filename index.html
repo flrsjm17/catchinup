@@ -794,7 +794,7 @@ async function sendReservation(){
     if (!out.ok) return fail(out.error || "server error");
     try { if (parent.cuReceiveTable) parent.cuReceiveTable(body, out); } catch (e) {}
     AV.key = ""; try { localStorage.removeItem("cu-kind"); } catch (e) {}
-    const pay = CONFIG.PAYMENT || {};
+    const pay = out.payment || (CONFIG.PAYMENT || {})[BR_KEY[K.branch]] || CONFIG.PAYMENT || {};
     app.innerHTML = `<section class="panel" style="text-align:center;align-items:center;padding-block:48px"><div class="tagline">${isGroup() ? "Pencil booked" : "Table booked"}</div><h2>See you, ${esc(K.name.split(" ")[0])}!</h2>
       <div class="price num" style="color:var(--cyan)">${esc(out.ref)}</div>
       <p class="muted" style="max-width:52ch;margin:0">${esc(K.branch)} · ${esc(K.area)} · ${niceDate(K.date)} at ${ampm(K.time)} · ${K.guests} guests. Show this reference at the door.${K.email ? " A copy has been sent to " + esc(K.email) + "." : ""}</p>
