@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#070708">
+<title>Catchin' Up · Staff</title>
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#070708;--card:#15151b;--line:#2a2a34;--ink:#f7f3fa;--muted:#aaa6b4;--pink:#ff70e8;--cyan:#32e3ff;--yellow:#ffd84d;--ok:#38d996}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Instrument Sans",system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px 90px}
+h1,h2,h3{font-family:Syne,sans-serif;margin:0}h1{font-size:22px}h2{font-size:17px;margin-bottom:8px}.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+input{width:100%;font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0f0f14;color:var(--ink);margin-top:8px}
+.btn{display:block;width:100%;font:inherit;font-weight:700;padding:14px;border-radius:14px;border:1px solid var(--line);background:#1d1d26;color:var(--ink);margin-top:10px;cursor:pointer}
+.btn.go{background:var(--pink);border-color:var(--pink);color:#1a0416}.btn.cyan{background:var(--cyan);border-color:var(--cyan);color:#06202a}.btn:disabled{opacity:.35}
+.clock{font-family:Syne,sans-serif;font-size:46px;font-weight:800;letter-spacing:-1px;line-height:1}.date{color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}.steps div{background:#0f0f14;border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;font-size:12px}.steps b{display:block;font-size:14px}.steps .done{border-color:var(--ok);color:var(--ok)}
+video,canvas{width:100%;border-radius:14px;background:#000;transform:scaleX(-1)}
+.msg{margin-top:10px;font-size:14px;color:var(--cyan)}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.row:last-child{border:0}.row b{font-weight:600}
+.tabs[hidden]{display:none}.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:#0c0c10;border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+.tabs button{flex:1;background:transparent;border:0;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:8px 2px;border-radius:10px}.tabs button[aria-pressed=true]{color:var(--pink);background:#1a1420}
+.tabs span{display:block;font-size:20px}
+.logo{height:46px;width:auto}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#1d1d26}.chip.rd{color:var(--yellow)}.chip.ok{color:var(--ok)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+</head>
+<body><div class="wrap" id="app"><div class="muted">Loading…</div></div>
+<div class="tabs" id="tabs" hidden><button data-t="clock" aria-pressed="true"><span>⏱</span>Clock</button><button data-t="sched"><span>📅</span>Schedule</button><button data-t="time"><span>🕒</span>Timesheet</button><button data-t="pay"><span>💸</span>Payslips</button></div>
+<script>
+const CFG = window.CU_CONFIG || {}, sb = supabase.createClient(CFG.SUPABASE_URL, CFG.ANON_KEY), $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const pd = v => { const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(v); };
+const fmt = v => pd(v).toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric" });
+const hhmm = v => { const x = new Date(v); return `${String(x.getHours()).padStart(2, "0")}:${String(x.getMinutes()).padStart(2, "0")}`; };
+const t5 = t => String(t || "").slice(0, 5), p2 = n => (Math.round((+n || 0) * 100) / 100).toLocaleString("en-US", { minimumFractionDigits: 2 });
+let me = null, E = null, P = null, stream = null, tab = "clock";
+const linkType = (location.hash.match(/type=(\w+)/) || [])[1];   // invite / recovery / magiclink
+const STEPS = [["time_in", "Time in"], ["lunch_out", "Lunch out"], ["lunch_in", "Lunch in"], ["time_out", "Time out"]];
+function workDate(){ const n = new Date(), st = E.default_start ? +E.default_start.slice(0, 2) : 0; if (n.getHours() < 6 && st >= 12){ n.setDate(n.getDate() - 1); } return iso(n); }
+const header = () => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><img src="logo-wide.png" alt="Catchin' Up Pub" class="logo"><button class="btn" style="width:auto;margin:0;padding:8px 12px;font-size:13px" onclick="sb.auth.signOut().then(()=>location.replace(location.pathname))">Sign out</button></div>`;
+
+async function start(){
+  const { data: { session } } = await sb.auth.getSession(); if (!session) return login(); me = session.user;
+  if (["invite", "recovery"].includes(linkType) && !sessionStorage.getItem("pwset")) return setPassword();
+  const { data } = await sb.from("employees").select("*").eq("email", me.email.toLowerCase()).maybeSingle(); E = data;
+  if (!E) return $("#app").innerHTML = `${header()}<div class="card"><h2>Almost there</h2><p class="muted">${esc(me.email)} is signed in but isn't on the employee list yet. Ask the manager to add you with this exact email.</p></div>`;
+  $("#tabs").hidden = false; document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); });
+  await loadToday(); render(); setInterval(() => { const c = $("#clk"); if (c) c.textContent = new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }); }, 1000);
+}
+function login(){ $("#app").innerHTML = `<div style="text-align:center;padding:20px 0 6px"><img src="logo.png" alt="Catchin' Up Pub" style="width:200px"></div><h1 style="text-align:center">Staff</h1><p class="muted small" style="text-align:center">Sign in with the email HR has for you.</p><div class="card"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button class="btn go" id="go">Sign in</button><button class="btn" id="forgot">Forgot password / first sign-in</button><div class="msg" id="m"></div></div>`;
+  $("#go").onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value }); $("#m").textContent = error ? error.message : ""; if (!error) start(); };
+  $("#forgot").onclick = async () => { const em = $("#em").value.trim(); if (!em) return $("#m").textContent = "Type your email first."; const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.href.split("#")[0] }); $("#m").textContent = error ? error.message : "Check your inbox for a link to set your password."; }; }
+function setPassword(){ $("#app").innerHTML = `<div style="text-align:center;padding:20px 0 6px"><img src="logo.png" alt="" style="width:200px"></div><h1 style="text-align:center">Welcome${me.user_metadata?.first_name ? ", " + esc(me.user_metadata.first_name) : ""}!</h1><p class="muted small" style="text-align:center">Create the password you'll use to sign in on your phone.</p><div class="card"><input id="p1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><input id="p2" type="password" placeholder="Repeat password" autocomplete="new-password"><button class="btn go" id="setp">Save password</button><div class="msg" id="m"></div></div>`;
+  $("#setp").onclick = async () => { const a = $("#p1").value, b = $("#p2").value; if (a.length < 8) return $("#m").textContent = "Use at least 8 characters."; if (a !== b) return $("#m").textContent = "The two passwords don't match."; const { error } = await sb.auth.updateUser({ password: a }); if (error) return $("#m").textContent = error.message; sessionStorage.setItem("pwset", "1"); history.replaceState(null, "", location.pathname); start(); }; }
+async function loadToday(){ const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).eq("work_date", workDate()).eq("source", "app").order("created_at", { ascending: false }).limit(1); P = (data || [])[0] || null; }
+function next(){ if (!P) return "time_in"; if (!P.lunch_out && !P.time_out) return "lunch_out"; if (P.lunch_out && !P.lunch_in) return "lunch_in"; if (!P.time_out) return "time_out"; return null; }
+function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } ({ clock, sched, time, pay })[tab](); }
+
+/* clock */
+function clock(){
+  const n = next(), label = Object.fromEntries(STEPS);
+  $("#app").innerHTML = `${header()}<div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
+      <div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div></div>
+    <div class="card" id="cam">${n ? `<div class="muted small">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button><div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
+    <div class="card small muted">Punch at the pub, on your own phone, with your face in the photo. Photos are only seen by management. Forgot to punch? Tell the manager so they can add it by hand.</div>`;
+  if (n) openCam(n);
+}
+async function openCam(kind){
+  try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 } }, audio: false }); $("#v").srcObject = stream; }
+  catch (e){ $("#m").textContent = "Camera not available: " + e.message + ". Allow the camera in your browser settings."; $("#snap").disabled = true; return; }
+  $("#snap").onclick = () => punch(kind);
+}
+async function punch(kind){
+  const b = $("#snap"); b.disabled = true; $("#m").textContent = "Saving…";
+  const v = $("#v"), c = $("#c"); c.width = v.videoWidth || 640; c.height = v.videoHeight || 480; c.getContext("2d").drawImage(v, 0, 0);
+  const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.7)); const now = new Date(), wd = workDate();
+  const path = `${E.id}/${wd}_${kind}_${now.getTime()}.jpg`;
+  const { error: upErr } = await sb.storage.from("selfies").upload(path, blob, { contentType: "image/jpeg" }); if (upErr){ $("#m").textContent = "Photo didn't upload: " + upErr.message; b.disabled = false; return; }
+  const selfieCol = { time_in: "selfie_in", lunch_out: "selfie_lunch_out", lunch_in: "selfie_lunch_in", time_out: "selfie_out" }[kind];
+  let res;
+  if (kind === "time_in" || !P) res = await sb.from("punches").insert({ employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) });
+  else res = await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path }).eq("id", P.id);
+  if (res.error){ $("#m").textContent = "Couldn't save: " + res.error.message; b.disabled = false; return; }
+  await loadToday(); render();
+}
+
+/* schedule */
+async function sched(){
+  const from = iso(new Date()), to = new Date(); to.setDate(to.getDate() + 30);
+  const { data } = await sb.from("schedules").select("*").eq("employee_id", E.id).gte("work_date", from).lte("work_date", iso(to)).order("work_date");
+  const S = data || []; const rows = []; for (let d = new Date(); d <= to; d.setDate(d.getDate() + 1)){ const k = iso(d), s = S.find(x => x.work_date === k); const dow = d.getDay();
+    const txt = s ? (s.kind === "work" ? `<b>${t5(s.start_time)} – ${t5(s.end_time)}</b>` : `<span class="chip ${s.kind === "rest" ? "rd" : ""}">${s.kind === "rest" ? "Rest day" : s.kind}</span>`) : ((E.rest_days || []).includes(dow) ? `<span class="chip rd">Rest day</span>` : E.default_start ? `<span class="muted">${t5(E.default_start)} – ${t5(E.default_end)}</span>` : `<span class="muted">—</span>`);
+    rows.push(`<div class="row"><span>${fmt(k)}${s?.note ? `<br><span class="small muted">${esc(s.note)}</span>` : ""}</span><span>${txt}</span></div>`); }
+  $("#app").innerHTML = `${header()}<div class="card"><h2>My schedule · next 30 days</h2>${rows.join("")}<p class="small muted">Grey times are your usual shift when nothing specific is set. Rest days and changes come from the line-up your manager sets.</p></div>`;
+}
+
+/* timesheet */
+async function time(){
+  const t = new Date(), d = t.getDate(); let from, to; if (d >= 11 && d <= 25){ from = new Date(t.getFullYear(), t.getMonth(), 11); to = new Date(t.getFullYear(), t.getMonth(), 25); } else if (d >= 26){ from = new Date(t.getFullYear(), t.getMonth(), 26); to = new Date(t.getFullYear(), t.getMonth() + 1, 10); } else { from = new Date(t.getFullYear(), t.getMonth() - 1, 26); to = new Date(t.getFullYear(), t.getMonth(), 10); }
+  const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).gte("work_date", iso(from)).lte("work_date", iso(to)).order("work_date").order("time_in");
+  const ps = data || []; let total = 0;
+  const rows = ps.map(p => { const m = p.time_out ? (new Date(p.time_out) - new Date(p.time_in)) / 60000 - (p.lunch_out && p.lunch_in ? (new Date(p.lunch_in) - new Date(p.lunch_out)) / 60000 : 0) : 0; total += m;
+    return `<div class="row"><span>${fmt(p.work_date)}</span><span>${hhmm(p.time_in)} – ${p.time_out ? hhmm(p.time_out) : "<span class='muted'>open</span>"}${p.lunch_out ? `<br><span class="small muted">lunch ${hhmm(p.lunch_out)} – ${p.lunch_in ? hhmm(p.lunch_in) : "…"}</span>` : ""}</span><b>${p.time_out ? (m / 60).toFixed(2) + " h" : ""}</b></div>`; });
+  $("#app").innerHTML = `${header()}<div class="card"><h2>My timesheet · ${fmt(iso(from))} – ${fmt(iso(to))}</h2>${rows.join("") || "<div class='muted'>No punches yet this cut-off.</div>"}<div class="row"><span>Clocked so far</span><b>${(total / 60).toFixed(2)} h</b></div><p class="small muted">Clocked time, before the lunch deduction and approvals. Paid hours are on your payslip.</p></div>`;
+}
+
+/* payslips */
+async function pay(){
+  const { data } = await sb.from("payroll_lines").select("*, payroll_runs(period_start,period_end,status)").eq("employee_id", E.id).order("created_at", { ascending: false }).limit(12);
+  const L = (data || []).filter(l => l.payroll_runs);
+  $("#app").innerHTML = `${header()}<div class="card"><h2>My payslips</h2>${L.length ? L.map(l => `<div class="row" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between"><b>${fmt(l.payroll_runs.period_start)} – ${fmt(l.payroll_runs.period_end)}</b><b style="color:var(--ok)">₱${p2(l.net)}</b></div>
+      <div class="small muted">Days ${l.days_worked} · regular ${p2(l.reg_hours)} h · OT ${p2(l.ot_hours)} h · ND ${p2(l.nd_hours)} h</div>
+      <div class="small" style="display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin-top:6px"><span>Basic</span><span>${p2(l.basic_pay)}</span><span>Premiums</span><span>${p2(l.premium_pay)}</span><span>Overtime</span><span>${p2(l.ot_pay)}</span><span>Night differential</span><span>${p2(l.nd_pay)}</span><span>Leave / other</span><span>${p2(+l.leave_pay + +l.other_earnings)}</span><span><b>Gross</b></span><span><b>${p2(l.gross)}</b></span><span>SSS</span><span>−${p2(l.sss)}</span><span>PhilHealth</span><span>−${p2(l.philhealth)}</span><span>Pag-IBIG</span><span>−${p2(l.pagibig)}</span><span>Tax</span><span>−${p2(l.tax)}</span><span>Other deductions</span><span>−${p2(l.other_deductions)}</span></div></div>`).join("") : "<div class='muted'>Payslips appear here once a cut-off has been released.</div>"}</div>`;
+}
+sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
+start();
+</script>
+</body>
+</html>

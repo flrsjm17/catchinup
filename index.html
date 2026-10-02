@@ -7,16 +7,16 @@
 <meta property="og:title" content="Plan your event at Catchin' Up">
 <meta property="og:description" content="Build your menu or pick a package and see your estimated bill. San Antonio Place and Jupiter Street, Makati.">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#150f22">
+<meta name="theme-color" content="#101014">
 <title>Catchin' Up Pub · Book your night</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"><link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="icon.png">
 <style>
 /* Catchin' Up at night: deep purple, neon pink and cyan, real photos and video doing the talking. */
 :root{
-  --bg:#120c1d;--bg2:#1a1329;--card:#1f1731;--card2:#281d3f;--line:#372a52;
-  --ink:#f7f1ff;--muted:#b8aacf;--pink:#ff4f8b;--pink-soft:#3d1a39;--cyan:#4fe0f0;--cyan-soft:#143844;--amber:#ffc35c;--amber-soft:#3b2c14;
-  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;--body:"Figtree",ui-sans-serif,system-ui,sans-serif;--r:16px;
+  --bg:#070708;--bg2:#0f0f13;--card:#15151b;--card2:#1c1c24;--line:#2a2a34;
+  --ink:#f7f3fa;--muted:#aaa6b4;--pink:#ff70e8;--pink-soft:#3a1536;--cyan:#32e3ff;--cyan-soft:#0f3540;--amber:#ffd84d;--amber-soft:#3a3012;
+  --display:"Syne",ui-sans-serif,system-ui,sans-serif;--body:"Instrument Sans",ui-sans-serif,system-ui,sans-serif;--r:16px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -43,12 +43,12 @@ textarea{min-height:80px;resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pills{display:flex;flex-wrap:wrap;gap:8px}
 .pills button{font:600 14px var(--body);color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:9px 15px;cursor:pointer}
-.pills button[aria-pressed="true"]{color:#1a0f1f;background:var(--cyan);border-color:var(--cyan)}
+.pills button[aria-pressed="true"]{color:#121216;background:var(--cyan);border-color:var(--cyan)}
 .pills button:disabled{opacity:.35;cursor:not-allowed}
 .btns{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:6px}
 .btn{font:700 15px var(--body);border-radius:999px;padding:12px 22px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
 a.btn{text-decoration:none;display:inline-block}span.btn{cursor:default}
-.btn.primary{background:var(--pink);border-color:var(--pink);color:#1a0716;box-shadow:0 0 24px rgba(255,79,139,.35)}
+.btn.primary{background:var(--pink);border-color:var(--pink);color:#0c0c10;box-shadow:0 0 24px rgba(255,79,139,.35)}
 .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 .note{background:var(--cyan-soft);border:1px solid rgba(79,224,240,.35);border-radius:12px;padding:12px 14px;font-size:14px}
 .warn{background:var(--amber-soft);border:1px solid rgba(255,195,92,.4);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--amber)}
@@ -73,7 +73,7 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 .item{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
 .item .nm{font-weight:700}
 .opt{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px}
-.add{font:700 13px var(--body);border:0;border-radius:999px;padding:7px 12px;cursor:pointer;background:var(--pink);color:#1a0716;white-space:nowrap}
+.add{font:700 13px var(--body);border:0;border-radius:999px;padding:7px 12px;cursor:pointer;background:var(--pink);color:#0c0c10;white-space:nowrap}
 .cart{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px}
 .cline{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13.5px;padding-bottom:8px;border-bottom:1px dashed var(--line)}
 .qty{display:flex;align-items:center;gap:6px}
@@ -93,15 +93,16 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 
 
 /* video hook */
-.hero{position:relative;width:100vw;margin:0 0 26px calc(50% - 50vw);min-height:min(90vh,800px);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:#0b0712}
+.hero{position:relative;width:100vw;margin:0 0 26px calc(50% - 50vw);min-height:min(90vh,800px);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:#000}
+.logo{width:min(240px,55vw);height:auto;display:block;filter:drop-shadow(0 0 18px rgba(255,112,232,.35))}.logo-sm{height:54px;width:auto;display:block}
 .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 8%;opacity:0;transition:opacity .6s}
 .hero video.on{opacity:1}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,12,29,.1) 0%,rgba(18,12,29,.35) 45%,rgba(18,12,29,.92) 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,7,8,.1) 0%,rgba(7,7,8,.35) 45%,rgba(7,7,8,.94) 100%)}
 .hero-in{position:relative;z-index:1;width:100%;max-width:1080px;margin:0 auto;padding:40px 16px 22px;display:flex;flex-direction:column;gap:14px}
 .hero .lede{margin:0;max-width:60ch;color:#e9e1f7;font-size:clamp(15px,2vw,18px)}
-.brswitch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(18,12,29,.55);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);align-self:flex-start}
+.brswitch{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(7,7,8,.6);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);align-self:flex-start}
 .brswitch button{font:700 13px var(--body);color:#d9cfee;background:transparent;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
-.brswitch button[aria-pressed="true"]{background:var(--pink);color:#1a0716}
+.brswitch button[aria-pressed="true"]{background:var(--pink);color:#0c0c10}
 .pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:4px}
 .pick button{text-align:left;display:flex;flex-direction:column;gap:3px;padding:16px 16px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(26,19,41,.72);backdrop-filter:blur(10px);color:var(--ink);cursor:pointer;font:inherit;transition:transform .12s,border-color .12s}
 .pick button:hover{transform:translateY(-2px);border-color:var(--pink)}
@@ -119,13 +120,28 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 .brcard .t{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-height:150px;padding:14px;background:linear-gradient(180deg,transparent 30%,rgba(10,6,16,.85))}
 .brcard .t b{font:800 18px var(--display)}.brcard .t span{font-size:12.5px;color:#d9cfee}
 .brcard[aria-pressed="true"]{outline:2px solid var(--pink);box-shadow:0 0 28px rgba(255,79,139,.35)}
-.brcard[aria-pressed="true"] .t::after{content:"✓ Selected";position:absolute;top:10px;right:10px;font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--pink);color:#1a0716;border-radius:999px;padding:4px 9px}
+.brcard[aria-pressed="true"] .t::after{content:"✓ Selected";position:absolute;top:10px;right:10px;font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--pink);color:#0c0c10;border-radius:999px;padding:4px 9px}
 /* snaps strip */
 .snaps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:-4px 0 6px}
 .snaps img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
 .snaps img:nth-child(1){grid-column:span 2;grid-row:span 2;aspect-ratio:auto;height:100%}
 .sc-note{font-size:12.5px;color:var(--amber);margin:4px 0 0}
 @media(max-width:760px){.story{grid-template-columns:1fr}.hero{min-height:78vh}.snaps{grid-template-columns:repeat(3,1fr)}.snaps img:nth-child(1){grid-column:span 3;grid-row:span 1;aspect-ratio:16/9}.brcard .t{min-height:120px}}
+
+/* privacy notice gate */
+.pv{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(.8);-webkit-backdrop-filter:blur(14px) saturate(.8)}
+.pv[hidden]{display:none}
+.pv-card{background:#fff;color:#111;border-radius:18px;max-width:640px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.pv-head{display:flex;gap:16px;align-items:center;padding:18px 22px 12px;border-bottom:1px solid #e6e6e6}
+.pv-head img{height:84px;width:auto;flex:none}
+.pv-head h2{font-family:var(--display);font-size:20px;margin:0;color:#111}.pv-head p{margin:4px 0 0;color:#555;font-size:13px;line-height:1.35}
+.pv-body{padding:14px 22px;overflow:auto;font-size:14.5px;line-height:1.5;color:#222}.pv-body h3{font-family:var(--body);font-size:14px;margin:14px 0 4px;color:#111;text-transform:uppercase;letter-spacing:.04em}.pv-body ul{margin:4px 0 0 18px;padding:0}.pv-body p{margin:4px 0}
+.pv-foot{padding:12px 22px 18px;border-top:1px solid #e6e6e6;background:#fafafa}
+.pv-foot label{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#111}.pv-foot input{width:18px;height:18px;flex:none;margin-top:2px;accent-color:#c62828}
+.pv-foot .btns{margin-top:12px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.pv-foot .btn{background:#fff;color:#111;border:1px solid #bbb}.pv-foot .btn.primary{background:#111;color:#fff;border-color:#111}.pv-foot .btn:disabled{opacity:.4}
+.pvrow{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:4px 0}.pvrow input{width:18px;height:18px;flex:none;margin-top:2px}.pvrow a{color:var(--cyan)}
+@media(max-width:520px){.pv-head img{height:64px}.pv-head{padding:14px 16px 10px}.pv-body,.pv-foot{padding-left:16px;padding-right:16px}}
 </style>
 <script src="config.js"></script>
 </head>
@@ -138,7 +154,7 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
   <video id="v-ju" muted loop playsinline preload="none" poster="jupiter-hook.jpg" src="jupiter-hook.mp4"></video>
   <div class="hero-in">
     <div class="brswitch" id="brswitch"><button data-b="San Antonio Place" aria-pressed="true">San Antonio Place</button><button data-b="Jupiter Street" aria-pressed="false">Jupiter Street</button></div>
-    <div class="tagline">Catchin' Up Pub · Makati</div>
+    <img src="logo.png" alt="Catchin' Up Pub" class="logo">
     <h1>This isn't just about <span class="neon">food</span>.</h1>
     <p class="lede">It's about friendship and a simple idea: a place where friends, families, and even strangers can sit down, share drinks, and catch up on life.</p>
     <div class="pick" id="pick">
@@ -157,11 +173,31 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
   <img src="photo-ju-cheers.jpg" alt="Friends raising glasses at Catchin' Up Jupiter Street">
 </section>
 <header id="hero-compact" hidden>
-  <div class="tagline">Catchin' Up Pub · Makati</div>
+  <img src="logo-wide.png" alt="Catchin' Up Pub" class="logo-sm">
   <h1>Reserve a table</h1>
   <p class="muted" style="max-width:60ch;margin:0"></p>
 </header>
 
+
+<div class="pv" id="pv" hidden role="dialog" aria-modal="true" aria-labelledby="pv-title">
+  <div class="pv-card">
+    <div class="pv-head"><img src="npc-logo.png" alt="National Privacy Commission"><div><h2 id="pv-title">Data Privacy Notice</h2><p>Republic Act No. 10173, the Data Privacy Act of 2012. Before you give us your details, here is what we collect, why, and your rights.</p></div></div>
+    <div class="pv-body">
+      <p><b>Tablebond Group Inc.</b>, the operator of Catchin' Up Pub (Jupiter Street and San Antonio Place), respects your privacy and handles your personal information in line with the Data Privacy Act of 2012. Effective 1 October 2026.</p>
+      <h3>1. What we collect</h3><ul><li>Your name, mobile number and email</li><li>Booking details: branch, date, time, number of guests, occasion and special requests</li><li>The messages you send us on our official pages and numbers</li><li>Proof of payment, if a down payment is required for your booking</li></ul><p>We do not ask for sensitive personal information such as government ID numbers, health information or bank account details.</p>
+      <h3>2. Why we use it</h3><ul><li>To answer your enquiries</li><li>To make, confirm, change or cancel your reservation or event</li><li>To verify down payments and contact you about your booking</li><li>To keep the business and tax records we are required to keep by law</li></ul><p>We will not use your information for promotions unless you agree to receive them.</p>
+      <h3>3. Who can see it</h3><ul><li>Authorised Tablebond personnel who handle enquiries and reservations, including branch staff preparing for your visit</li><li>The messaging platforms you contact us through (Facebook, Instagram, TikTok, WhatsApp and Viber), under their own privacy policies</li><li>Banks or e-wallet providers, only to process your payment</li></ul><p>We do not sell your personal information or share it with anyone else, unless required by law.</p>
+      <h3>4. How long we keep it</h3><p>Enquiry and reservation records are kept for up to one (1) year after your booking date. Payment records are kept only as long as tax and accounting laws require. After that, they are securely deleted.</p>
+      <h3>5. How we protect it</h3><p>Access is limited to authorised personnel bound to keep it confidential. Our systems are protected with passwords and two-factor authentication, and we review who has access regularly.</p>
+      <h3>6. Your rights</h3><ul><li>Be informed about how your information is used</li><li>Access your information and ask us to correct it</li><li>Object to its use, or ask us to delete or block it</li><li>Receive a copy of your information in a usable format</li><li>Be compensated for damages caused by misuse of your information</li><li>File a complaint with the National Privacy Commission (privacy.gov.ph)</li></ul>
+      <h3>7. Contact us</h3><p>Data Protection Officer, Tablebond Group Inc., 215 Sen. Gil J. Puyat Ave, Makati City, Metro Manila, or any of Catchin' Up Pub's official pages. <a href="privacy-notice.pdf" target="_blank" rel="noopener">Download this notice (PDF)</a>.</p>
+    </div>
+    <div class="pv-foot">
+      <label><input type="checkbox" id="pv-ok"> <span>I have read and understood this Privacy Notice, and I consent to Tablebond Group Inc. collecting and using my personal information for my booking as described above.</span></label>
+      <div class="btns"><button class="btn" id="pv-later" type="button">Not now</button><button class="btn primary" id="pv-accept" type="button" disabled>I accept and continue</button></div>
+    </div>
+  </div>
+</div>
 <div class="steps" id="steps"></div>
 <main id="app"></main>
 </div>
@@ -170,6 +206,30 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 const C = {"pans": [{"cat": "Appetizer", "name": "Spring Roll", "lead": 5, "hl": 10, "hh": 15, "hp": 699, "fl": 25, "fh": 30, "fp": 1699}, {"cat": "Appetizer", "name": "Cheese Balls", "lead": 5, "hl": 22, "hh": 45, "hp": 2999, "fl": 60, "fh": 75, "fp": 5799}, {"cat": "Appetizer", "name": "Sizzling Tofu", "lead": 5, "hl": 30, "hh": 45, "hp": 3899, "fl": 60, "fh": 75, "fp": 7499}, {"cat": "Appetizer", "name": "Chicken Skin", "lead": 7, "hl": 15, "hh": 18, "hp": 1999, "fl": 35, "fh": 42, "fp": 4399}, {"cat": "Appetizer", "name": "Toast with Spinach Dip", "lead": 5, "hl": 15, "hh": 18, "hp": 2099, "fl": 20, "fh": 24, "fp": 2699}, {"cat": "Appetizer", "name": "Tokwa’t Baboy", "lead": 7, "hl": 30, "hh": 36, "hp": 4999, "fl": 65, "fh": 72, "fp": 9679}, {"cat": "Appetizer", "name": "Catchin’ Up Salad", "lead": 5, "hl": 22, "hh": 30, "hp": 4199, "fl": 45, "fh": 60, "fp": 8099}, {"cat": "Appetizer", "name": "Nachos", "lead": 5, "hl": 6, "hh": 9, "hp": 1899, "fl": 10, "fh": 15, "fp": 2999}, {"cat": "Chicken", "name": "Original Chicken Poppers", "lead": 5, "hl": 27, "hh": 32, "hp": 2199, "fl": 55, "fh": 63, "fp": 5199}, {"cat": "Chicken", "name": "Salted Egg Poppers", "lead": 5, "hl": 27, "hh": 32, "hp": 2599, "fl": 55, "fh": 63, "fp": 5899}, {"cat": "Chicken", "name": "Buffalo Poppers", "lead": 5, "hl": 27, "hh": 32, "hp": 2699, "fl": 55, "fh": 63, "fp": 6199}, {"cat": "Chicken", "name": "Chicken Satay", "lead": 5, "hl": 12, "hh": 24, "hp": 2499, "fl": 38, "fh": 40, "fp": 3999}, {"cat": "Chicken", "name": "Honey Soy Wings", "lead": 5, "hl": 15, "hh": 18, "hp": 2199, "fl": 30, "fh": 45, "fp": 5399}, {"cat": "Chicken", "name": "Salted Egg Wings", "lead": 5, "hl": 15, "hh": 18, "hp": 2399, "fl": 30, "fh": 45, "fp": 5799}, {"cat": "Chicken", "name": "Garlic Parmesan Wings", "lead": 5, "hl": 15, "hh": 18, "hp": 2699, "fl": 30, "fh": 45, "fp": 6299}, {"cat": "Chicken", "name": "Buffalo Wings", "lead": 5, "hl": 15, "hh": 18, "hp": 2799, "fl": 30, "fh": 45, "fp": 6899}, {"cat": "Pasta/Noodles", "name": "Savory Spaghetti", "lead": 5, "hl": 30, "hh": 42, "hp": 7599, "fl": 60, "fh": 70, "fp": 12599}, {"cat": "Pasta/Noodles", "name": "Stir-Fry Beef Egg Noodles", "lead": 5, "hl": 15, "hh": 25, "hp": 3499, "fl": 30, "fh": 45, "fp": 6899}, {"cat": "Pasta/Noodles", "name": "Seafood Pasta", "lead": 5, "hl": 30, "hh": 42, "hp": 8299, "fl": 60, "fh": 70, "fp": 13799}, {"cat": "Pasta/Noodles", "name": "Carbonara", "lead": 5, "hl": 30, "hh": 42, "hp": 8699, "fl": 60, "fh": 70, "fp": 14499}, {"cat": "Pasta/Noodles", "name": "Pad Thai", "lead": 5, "hl": 30, "hh": 42, "hp": 9099, "fl": 60, "fh": 70, "fp": 15099}, {"cat": "Pasta/Noodles", "name": "Lasagna", "lead": 7, "hl": 15, "hh": 25, "hp": 4199, "fl": 30, "fh": 42, "fp": 8099}, {"cat": "Pork", "name": "Pork Sisig", "lead": 5, "hl": 15, "hh": 20, "hp": 3999, "fl": 35, "fh": 40, "fp": 7799}, {"cat": "Pork", "name": "Lechon Pork Belly", "lead": 7, "hl": 15, "hh": 18, "hp": 3999, "fl": 25, "fh": 30, "fp": 6199}, {"cat": "Pork", "name": "Smokebelly", "lead": 7, "hl": 15, "hh": 18, "hp": 5899, "fl": 25, "fh": 30, "fp": 9499}, {"cat": "Pork", "name": "Bicol Express", "lead": 5, "hl": 15, "hh": 18, "hp": 5899, "fl": 25, "fh": 30, "fp": 9599}, {"cat": "Pork", "name": "BBQ Spare Ribs", "lead": 7, "hl": 15, "hh": 18, "hp": 5799, "fl": 25, "fh": 30, "fp": 10699}, {"cat": "Pork", "name": "Pork Binagoongan", "lead": 5, "hl": 15, "hh": 18, "hp": 6399, "fl": 25, "fh": 30, "fp": 10299}, {"cat": "Vegetables", "name": "Sipo Egg", "lead": 7, "hl": 35, "hh": 40, "hp": 7299, "fl": 70, "fh": 85, "fp": 14099}, {"cat": "Vegetables", "name": "Bagnet with Stir-Fried Eggplant & Beans", "lead": 7, "hl": 18, "hh": 20, "hp": 5899, "fl": 25, "fh": 30, "fp": 9099}, {"cat": "Vegetables", "name": "Baked Veggies and Chicken", "lead": 7, "hl": 15, "hh": 18, "hp": 5399, "fl": 25, "fh": 30, "fp": 10399}, {"cat": "Beef", "name": "Beef Salpicao", "lead": 7, "hl": 15, "hh": 18, "hp": 4899, "fl": 25, "fh": 30, "fp": 9399}, {"cat": "Beef", "name": "Creamy Beef", "lead": 7, "hl": 15, "hh": 18, "hp": 6399, "fl": 25, "fh": 30, "fp": 10399}, {"cat": "Beef", "name": "Bulalo", "lead": 7, "hl": 18, "hh": 20, "hp": 8699, "fl": null, "fh": null, "fp": null}, {"cat": "Seafood", "name": "Baked Hokkaido Scallops", "lead": 10, "hl": 30, "hh": 30, "hp": 10099, "fl": 60, "fh": 60, "fp": 19999}, {"cat": "Seafood", "name": "Baked Salmon", "lead": 10, "hl": 15, "hh": 18, "hp": 5299, "fl": 25, "fh": 30, "fp": 9499}, {"cat": "Seafood", "name": "Pineapple Glazed Tiger Prawns", "lead": 10, "hl": 15, "hh": 18, "hp": 7999, "fl": 25, "fh": 30, "fp": 12899}, {"cat": "Soup", "name": "Creamy Pumpkin Soup", "lead": 7, "hl": 35, "hh": 40, "hp": 4499, "fl": null, "fh": null, "fp": null}, {"cat": "Soup", "name": "Clam Chowder Soup", "lead": 7, "hl": 35, "hh": 40, "hp": 11799, "fl": null, "fh": null, "fp": null}, {"cat": "Rice", "name": "White Rice", "lead": 5, "hl": 30, "hh": 30, "hp": 799, "fl": 70, "fh": 70, "fp": 1799}, {"cat": "Rice", "name": "Garlic Rice", "lead": 5, "hl": 30, "hh": 30, "hp": 1199, "fl": 70, "fh": 70, "fp": 2599}, {"cat": "Rice", "name": "Nasi Goreng", "lead": 5, "hl": 30, "hh": 30, "hp": 2599, "fl": 70, "fh": 70, "fp": 4799}], "alc": [{"cat": "Starters", "name": "Lazy Shrimp Crackers", "s": 169, "m": null}, {"cat": "Starters", "name": "Classic Pub Fries", "s": 179, "m": null}, {"cat": "Starters", "name": "Manong’s Tuhog Mix", "s": 229, "m": null}, {"cat": "Starters", "name": "Spring Roll", "s": 149, "m": 399}, {"cat": "Starters", "name": "Cheesy Fries Overload", "s": 399, "m": null}, {"cat": "Starters", "name": "Caesar Salad", "s": 499, "m": null}, {"cat": "Starters", "name": "Wholesome Fries", "s": 219, "m": 529}, {"cat": "Starters", "name": "Cheese Balls", "s": 239, "m": 599}, {"cat": "Starters", "name": "Chicken Skin", "s": 239, "m": 649}, {"cat": "Starters", "name": "Nacho Cheese", "s": 399, "m": 649}, {"cat": "Starters", "name": "Sticky Fries", "s": 259, "m": 699}, {"cat": "Starters", "name": "Toast with Spinach Dip", "s": 259, "m": 709}, {"cat": "Starters", "name": "Sizzling Tofu", "s": 279, "m": 779}, {"cat": "Wings & Poppers", "name": "Original Poppers", "s": 299, "m": 899}, {"cat": "Wings & Poppers", "name": "Honey Soy Wings", "s": 299, "m": 899}, {"cat": "Wings & Poppers", "name": "Salted Egg Poppers", "s": 309, "m": 919}, {"cat": "Wings & Poppers", "name": "Salted Egg Wings", "s": 319, "m": 949}, {"cat": "Wings & Poppers", "name": "Buffalo Wings", "s": 379, "m": 999}, {"cat": "Wings & Poppers", "name": "Garlic Parmesan Wings", "s": 349, "m": 999}, {"cat": "Wings & Poppers", "name": "Buffalo Poppers", "s": 379, "m": 999}, {"cat": "Pasta", "name": "Savory Spaghetti", "s": 279, "m": 849}, {"cat": "Pasta", "name": "Carbonara", "s": 379, "m": 999}, {"cat": "Pasta", "name": "Seafood Pasta", "s": 379, "m": 999}, {"cat": "Pasta", "name": "Pad Thai", "s": 369, "m": 1099}, {"cat": "Mains", "name": "Bangus Belly", "s": 299, "m": 399}, {"cat": "Mains", "name": "Pork Belly Skewers", "s": 199, "m": 559}, {"cat": "Mains", "name": "Sizzling Beef Salpicao", "s": 299, "m": 599}, {"cat": "Mains", "name": "Marinara Pizza", "s": 599, "m": null}, {"cat": "Mains", "name": "Sisig Pizza", "s": 599, "m": null}, {"cat": "Mains", "name": "Tinapa Roll", "s": 329, "m": 609}, {"cat": "Mains", "name": "Chicken Satay with Kare-Kare Sauce", "s": 219, "m": 629}, {"cat": "Mains", "name": "Manong’s Sisig", "s": 249, "m": 649}, {"cat": "Mains", "name": "Pork Belly Bicol Express", "s": 349, "m": 659}, {"cat": "Mains", "name": "Pork Belly Binagoongan", "s": 369, "m": 699}, {"cat": "Mains", "name": "Beef Sinigang Pakwan", "s": 399, "m": 769}, {"cat": "Mains", "name": "Catchin’ Up Sisig", "s": 279, "m": 799}, {"cat": "Mains", "name": "Tokwa’t Baboy (Capt. T’s)", "s": 419, "m": 829}, {"cat": "Mains", "name": "Boneless Crispy Pata", "s": 479, "m": 899}, {"cat": "Mains", "name": "Fish n’ Chips", "s": 349, "m": 939}, {"cat": "Mains", "name": "Flat Iron Steak", "s": 999, "m": null}, {"cat": "Mains", "name": "Classic Crispy Pata", "s": 999, "m": null}, {"cat": "Rice", "name": "White Rice", "s": 50, "m": 199}, {"cat": "Rice", "name": "Garlic Rice", "s": 70, "m": 299}, {"cat": "Rice", "name": "Goreng Rice", "s": 70, "m": 349}, {"cat": "Dessert", "name": "Ice Cream with Cinnamon", "s": 99, "m": null}, {"cat": "Dessert", "name": "Tiramisu", "s": 199, "m": null}, {"cat": "Dessert", "name": "Crepe al Mango", "s": 298, "m": null}, {"cat": "Dessert", "name": "Brownies à la Mode", "s": 349, "m": null}], "drinks": [{"name": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "fmt": "Bucket of 6", "price": 700, "serv": 6}, {"name": "Smirnoff Mule Bucket 5+1", "fmt": "Bucket of 6", "price": 700, "serv": 6}, {"name": "Premium Local Bucket 5+1 (Super Dry etc.)", "fmt": "Bucket of 6", "price": 1000, "serv": 6}, {"name": "San Mig Beer Tower 3L (w/ shrimp crackers)", "fmt": "Tower 3L", "price": 999, "serv": 12}, {"name": "Blue Lagoon Tower", "fmt": "Tower 3L", "price": 1299, "serv": 12}, {"name": "Sakura Sparkle Tower", "fmt": "Tower 3L", "price": 1299, "serv": 12}, {"name": "Tropical Express Tower", "fmt": "Tower 3L", "price": 1299, "serv": 12}, {"name": "Catch Me Up Tower", "fmt": "Tower 3L", "price": 2199, "serv": 12}, {"name": "Blue Lagoon Carafe", "fmt": "Carafe 1L", "price": 449, "serv": 4}, {"name": "Value Buzzer Pitcher (Gincumber / Glow Getta / Blush Hush)", "fmt": "Pitcher", "price": 999, "serv": 6}, {"name": "Iced Tea Tower", "fmt": "Tower 3L", "price": 499, "serv": 12}, {"name": "Lemonade Tower (blue, lychee or cucumber)", "fmt": "Tower 3L", "price": 549, "serv": 12}, {"name": "Coke or Sprite Tower", "fmt": "Tower 3L", "price": 699, "serv": 12}, {"name": "Iced Tea Pitcher", "fmt": "Pitcher", "price": 189, "serv": 4}, {"name": "JW Black Label 1L Bottle", "fmt": "Bottle 1L", "price": 2999, "serv": 20}, {"name": "Jack Daniel's Old No.7 700ml Bottle", "fmt": "Bottle 700ml", "price": 3399, "serv": 14}], "packages": [{"name": "Pulutan Night", "who": "Drinking crowds, after-work and late nights", "dishes": [{"course": "Starter", "dish": "Cheese Balls", "swap": "or Spring Roll"}, {"course": "Chicken", "dish": "Garlic Parmesan Wings", "swap": "or Buffalo Wings"}, {"course": "Chicken", "dish": "Original Chicken Poppers", "swap": null}, {"course": "Main", "dish": "Pork Sisig", "swap": null}, {"course": "Rice", "dish": "White Rice", "swap": null}], "drinks": [{"item": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "per10": 2}, {"item": "Blue Lagoon Tower", "per10": 0.5}]}, {"name": "Barkada Feast", "who": "Birthdays, reunions and casual celebrations", "dishes": [{"course": "Starter", "dish": "Catchin’ Up Salad", "swap": null}, {"course": "Chicken", "dish": "Garlic Parmesan Wings", "swap": "or Buffalo Wings"}, {"course": "Noodles", "dish": "Stir-Fry Beef Egg Noodles", "swap": "or Savory Spaghetti"}, {"course": "Main", "dish": "Lechon Pork Belly", "swap": null}, {"course": "Rice", "dish": "White Rice", "swap": null}], "drinks": [{"item": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "per10": 2}, {"item": "Blue Lagoon Tower", "per10": 1}, {"item": "Iced Tea Tower", "per10": 0.5}]}, {"name": "Crowd Favorites", "who": "Office and Christmas parties: our most-ordered dishes", "dishes": [{"course": "Starter", "dish": "Catchin’ Up Salad", "swap": null}, {"course": "Chicken", "dish": "Buffalo Wings", "swap": "or Garlic Parmesan Wings"}, {"course": "Pasta", "dish": "Lasagna", "swap": null}, {"course": "Main", "dish": "Creamy Beef", "swap": "or Beef Salpicao"}, {"course": "Main", "dish": "Lechon Pork Belly", "swap": "or Pork Sisig"}, {"course": "Rice", "dish": "Garlic Rice", "swap": null}], "drinks": [{"item": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "per10": 2}, {"item": "Blue Lagoon Tower", "per10": 1}, {"item": "Iced Tea Tower", "per10": 1}]}, {"name": "Celebration", "who": "Weddings, milestones and VIP dinners", "dishes": [{"course": "Soup", "dish": "Creamy Pumpkin Soup", "swap": null}, {"course": "Starter", "dish": "Catchin’ Up Salad", "swap": null}, {"course": "Pasta", "dish": "Seafood Pasta", "swap": null}, {"course": "Main", "dish": "Creamy Beef", "swap": null}, {"course": "Seafood", "dish": "Baked Salmon", "swap": null}, {"course": "Seafood", "dish": "Pineapple Glazed Tiger Prawns", "swap": "or Baked Hokkaido Scallops"}, {"course": "Rice", "dish": "Garlic Rice", "swap": null}], "drinks": [{"item": "Blue Lagoon Tower", "per10": 1}, {"item": "Sakura Sparkle Tower", "per10": 1}, {"item": "Iced Tea Tower", "per10": 1}, {"item": "JW Black Label 1L Bottle", "per10": 1}]}], "sets": [{"name": "Pulutan Table", "who": "Drinking groups, after-work, late night", "items": [{"dish": "Nacho Cheese", "qty": 1, "swap": null}, {"dish": "Chicken Skin", "qty": 1, "swap": null}, {"dish": "Original Poppers", "qty": 1, "swap": "or Salted Egg Poppers"}, {"dish": "Sizzling Beef Salpicao", "qty": 1, "swap": "or Manong’s Sisig"}, {"dish": "Sizzling Tofu", "qty": 1, "swap": null}, {"dish": "Lazy Shrimp Crackers", "qty": 1, "swap": null}]}, {"name": "Salo-Salo Table", "who": "Birthdays, family, team dinners", "items": [{"dish": "Caesar Salad", "qty": 1, "swap": null}, {"dish": "Sizzling Tofu", "qty": 1, "swap": null}, {"dish": "Original Poppers", "qty": 1, "swap": "or Salted Egg Poppers"}, {"dish": "Savory Spaghetti", "qty": 1, "swap": "or Seafood Pasta"}, {"dish": "Boneless Crispy Pata", "qty": 1, "swap": null}, {"dish": "Chicken Satay with Kare-Kare Sauce", "qty": 1, "swap": "or Fish n’ Chips"}, {"dish": "Garlic Rice", "qty": 2, "swap": null}]}, {"name": "Celebration Table", "who": "Milestones, client dinners, VIP", "items": [{"dish": "Caesar Salad", "qty": 1, "swap": null}, {"dish": "Cheese Balls", "qty": 1, "swap": null}, {"dish": "Salted Egg Poppers", "qty": 1, "swap": null}, {"dish": "Pad Thai", "qty": 1, "swap": "or Savory Spaghetti"}, {"dish": "Fish n’ Chips", "qty": 1, "swap": null}, {"dish": "Boneless Crispy Pata", "qty": 1, "swap": null}, {"dish": "Tinapa Roll", "qty": 1, "swap": "or Sizzling Beef Salpicao"}, {"dish": "Garlic Rice", "qty": 2, "swap": null}, {"dish": "Ice Cream with Cinnamon", "qty": 5, "swap": "or Tiramisu"}]}], "bundles": {"Beer & Cocktails": [{"item": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "qty": 2}, {"item": "Blue Lagoon Tower", "qty": 1}], "Bottle Night": [{"item": "JW Black Label 1L Bottle", "qty": 1}, {"item": "Local Beer Bucket 5+1 (w/ shrimp crackers)", "qty": 1}], "No Alcohol": [{"item": "Iced Tea Tower", "qty": 1}, {"item": "Lemonade Tower (blue, lychee or cucumber)", "qty": 1}]}};
 const SC = 0.10;
 const CONFIG = window.CU_CONFIG || {ENDPOINT:"", CONTACT:{}, VERSION:"2026.10"};
+
+/* ---------- privacy consent (Data Privacy Act of 2012) ---------- */
+const PV_VERSION = "2026-10-01";
+let CONSENT = null; try { CONSENT = JSON.parse(sessionStorage.getItem("cu_consent") || "null"); if (CONSENT && CONSENT.version !== PV_VERSION) CONSENT = null; } catch (e) {}
+let pvThen = null;
+function openPrivacy(then){ pvThen = then || null; const el = document.getElementById("pv"); el.hidden = false; document.getElementById("pv-ok").checked = false; document.getElementById("pv-accept").disabled = true; document.body.style.overflow = "hidden"; el.querySelector(".pv-body").scrollTop = 0; }
+function closePrivacy(){ document.getElementById("pv").hidden = true; document.body.style.overflow = ""; }
+document.getElementById("pv-ok").onchange = e => document.getElementById("pv-accept").disabled = !e.target.checked;
+document.getElementById("pv-later").onclick = () => { closePrivacy(); syncPv(); };
+document.getElementById("pv-accept").onclick = () => {
+  CONSENT = { accepted: true, version: PV_VERSION, at: new Date().toISOString(), text: "I have read and understood this Privacy Notice, and I consent to Tablebond Group Inc. collecting and using my personal information for my booking as described above.", page_version: CONFIG.VERSION, ua: navigator.userAgent.slice(0, 120) };
+  try { sessionStorage.setItem("cu_consent", JSON.stringify(CONSENT)); } catch (e) {}
+  closePrivacy(); syncPv(); if (pvThen) { const f = pvThen; pvThen = null; f(); }
+};
+const privacyRow = () => `<label class="pvrow"><input type="checkbox" id="pv-chk" ${CONSENT ? "checked" : ""}> <span>I have read and accept the <a href="#" id="pv-link">Privacy Notice</a> (Data Privacy Act of 2012).</span></label>`;
+function syncPv(){ const c = document.getElementById("pv-chk"); if (c) c.checked = !!CONSENT; document.querySelectorAll("[data-needs-pv]").forEach(b => b.disabled = !(CONSENT && b.dataset.needsPv !== "0")); }
+function bindPv(first){
+  const c = document.getElementById("pv-chk"), l = document.getElementById("pv-link");
+  if (c) c.onchange = e => { if (e.target.checked && !CONSENT) { e.target.checked = false; openPrivacy(); } else syncPv(); };
+  if (l) l.onclick = e => { e.preventDefault(); openPrivacy(); };
+  if (first && !CONSENT && !sessionStorage.getItem("cu_pv_shown")) { try { sessionStorage.setItem("cu_pv_shown", "1"); } catch (e) {} openPrivacy(); }
+  syncPv();
+}
+function privacyGate(fn){ if (CONSENT) fn(); else openPrivacy(fn); }
 const BR_KEY = {"San Antonio Place":"sa", "Jupiter Street":"ju"};
 const JSON_HEADERS = {"Content-Type":"application/json", apikey: CONFIG.ANON_KEY || "", Authorization: "Bearer " + (CONFIG.ANON_KEY || "")};
 const peso = n => "₱" + Math.round(n).toLocaleString("en-PH");
@@ -298,7 +358,7 @@ function stepEvent(){
     document.querySelectorAll("#f-slot button").forEach(btn => { btn.disabled = !slotOpen(btn.dataset.v); btn.setAttribute("aria-pressed", S.slot === btn.dataset.v); });
     document.getElementById("f-area-wrap").hidden = S.branch !== "San Antonio Place"; nextBtn(); };
   const bind = (id, key, num) => { const el = document.getElementById(id); el.oninput = () => { S[key] = num ? (+el.value || "") : el.value; save(); if (key === "date" || key === "branch") loadEventSlots(); dyn(); }; };
-  bind("f-website","website"); bind("f-name","name"); bind("f-phone","phone"); bind("f-email","email"); bind("f-date","date");
+  bind("f-website","website"); bind("f-name","name"); bind("f-phone","phone"); bind("f-email","email"); bind("f-date","date"); bindPv(true);
   document.getElementById("f-brcards").onclick = e => { const b = e.target.closest(".brcard"); if (!b) return; S.branch = b.dataset.b; if (S.branch !== "San Antonio Place") S.area = "whole"; save(); loadEventSlots(); render(); }; bind("f-guests","guests",true); bind("f-budget","budget"); bind("f-notes","notes");
   document.getElementById("f-slot").onclick = e => { const b = e.target.closest("button"); if (!b || b.disabled) return; S.slot = b.dataset.v; save(); dyn(); };
   document.getElementById("f-area").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.area = b.dataset.v; document.querySelectorAll("#f-area button").forEach(x => x.setAttribute("aria-pressed", x === b)); save(); dyn(); };
@@ -445,7 +505,7 @@ function summary(){
 }
 
 function payload(s){
-  return {type:"inquiry", website: S.website || "", name: S.name.trim(), mobile: S.phone.trim(), email: S.email.trim(), branch: BR_KEY[S.branch], area: S.branch === "San Antonio Place" ? (S.area === "indoor" ? "indoor" : "whole") : "", event_date: S.date, slot: S.slot,
+  return {type:"inquiry", consent: CONSENT, website: S.website || "", name: S.name.trim(), mobile: S.phone.trim(), email: S.email.trim(), branch: BR_KEY[S.branch], area: S.branch === "San Antonio Place" ? (S.area === "indoor" ? "indoor" : "whole") : "", event_date: S.date, slot: S.slot,
     guests: +S.guests, occasion: S.occasion, budget_per_guest: S.budget ? +S.budget : "",
     booking_type: S.mode === "own" ? "Build your own" : "Package", selection: s.pkgName, menu: s.lines.join("\n"),
     food_and_drinks: Math.round(s.consumed), minimum: s.min, unused_minimum: Math.round(s.top), service_charge: Math.round(s.sc),
@@ -554,6 +614,7 @@ function renderKind(){
     </div>
     <div class="${sizeMsg ? "warn" : "note"}" id="r-sum">${sizeMsg || (K.time ? `<b>${esc(K.branch)} · ${esc(K.area)}</b> · ${niceDate(K.date)} at <b>${ampm(K.time)}</b> · ${g} guests on <b>${need} ${need === 1 ? "table" : "tables"}</b>${free !== null && AV.data ? ` · ${free} free at that time` : ""}${isGroup() ? ` · minimum consumable <b class="num">${peso(groupMin())}</b> · down payment <b class="num">${peso(groupDp())}</b>` : ""}` : `Choose a time to see your table.`)}</div>
     <div id="r-msg" hidden></div>
+    ${privacyRow()}
     <div class="btns"><span></span><button class="btn primary" id="r-send" ${okRes() ? "" : "disabled"}>${isGroup() ? "Next · choose food and drinks" : "Book my table"}</button></div>
     <div class="terms"><b style="color:var(--ink)">Good to know</b>
       ${isGroup() ? `<span>• Your tables are held once the down payment is in (we'll message you how to pay). The hold is pencil-booked for 24 hours while we wait for it.</span>
@@ -562,14 +623,14 @@ function renderKind(){
       `<span>• Free to book, no deposit. ${GRACE_MIN}-minute grace period: if no one has arrived by then we may release the table. You're welcome ${GRACE_MIN} minutes early.</span>
       <span>• Your reservation is good for up to 2 hours, but you're welcome to stay as long as you need.</span><span>• Running late? Message us before your time and we'll hold it.</span><span>• Tables seat 2; bigger parties are seated together on joined tables.</span>`}</div>
   </section>`;
-  const upd = () => { saveK(); renderKind(); };
+  const upd = () => { saveK(); renderKind(); }; bindPv(true);
   document.getElementById("k-back").onclick = () => { K.kind = ""; K.step = 0; saveK(); renderKind(); window.scrollTo({top:0}); };
   const bind = (id, key, num) => { const el = document.getElementById(id); el.oninput = () => { K[key] = num ? (+el.value || "") : el.value; saveK(); if (key === "guests" || key === "date" || key === "branch") { if (key !== "guests") K.time = ""; upd(); if (key !== "guests") loadAvailability(); } else { const s = document.getElementById("r-send"); if (s) s.disabled = !okRes(); } }; };
   bind("r-website", "website"); bind("r-date", "date");
   document.getElementById("r-brcards").onclick = e => { const b = e.target.closest(".brcard"); if (!b) return; K.branch = b.dataset.b; K.area = "Indoor"; K.time = ""; AV.key = ""; saveK(); renderKind(); loadAvailability(); }; bind("r-guests", "guests", true); bind("r-name", "name"); bind("r-phone", "phone"); bind("r-email", "email"); bind("r-occ", "occasion"); bind("r-notes", "notes");
   const ar = document.getElementById("r-area"); if (ar) ar.onclick = e => { const x = e.target.closest("button"); if (!x) return; K.area = x.dataset.v; K.time = ""; upd(); };
   document.getElementById("r-time").onclick = e => { const x = e.target.closest("button"); if (!x || x.disabled) return; K.time = x.dataset.v; upd(); };
-  document.getElementById("r-send").onclick = () => { if (isGroup()) { K.step = 1; saveK(); renderKind(); window.scrollTo({top:0}); } else sendReservation(); };
+  document.getElementById("r-send").onclick = () => privacyGate(() => { if (isGroup()) { K.step = 1; saveK(); renderKind(); window.scrollTo({top:0}); } else sendReservation(); });
   if (K.date && !AV.data && !AV.loading && !AV.error) loadAvailability();
 }
 
@@ -640,12 +701,14 @@ function groupReview(){
   app.innerHTML = `<section class="panel"><h2>Review your booking</h2>
     <div class="sum" id="sum">${esc(s.txt)}</div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px"><input type="checkbox" id="agree" style="width:auto;margin-top:3px"> <span>I understand the ${peso(s.dp)} down payment holds our tables, is deducted from our bill, and is not refunded if no one from our group arrives within ${GRACE_MIN} minutes of our time. Catchin' Up may use these details to contact me about this booking.</span></label>
+    ${privacyRow()}
     <div class="btns"><button class="btn" id="back">Edit order</button><button class="btn primary" id="r-send" disabled>Book my table</button></div>
     <div id="r-msg" hidden></div>
     <div class="terms"><b style="color:var(--ink)">Good to know</b><span>• Estimates use our 2026 menu prices. A 10% service charge is added to what you consume.</span><span>• We'll message you how to pay the down payment (GCash or bank). Your tables are pencil-booked for 24 hours while we wait for it.</span><span>• Late arrivals or a change of date: tell us in advance and we'll adjust your booking.</span></div></section>`;
   document.getElementById("agree").onchange = e => document.getElementById("r-send").disabled = !e.target.checked;
+  bindPv(false);
   document.getElementById("back").onclick = () => { K.step = 1; saveK(); renderKind(); };
-  document.getElementById("r-send").onclick = sendReservation;
+  document.getElementById("r-send").onclick = () => privacyGate(sendReservation);
 }
 
 async function sendReservation(){
@@ -654,7 +717,7 @@ async function sendReservation(){
   const fail = why => { send.disabled = false; send.textContent = "Try again"; msg.hidden = false; msg.className = "warn"; msg.innerHTML = `We couldn't book your table (${esc(why)}). Please try another time, or message us directly.${contactButtons()}`; AV.key = ""; };
   const s = isGroup() ? groupSummary() : null;
   const body = {type:"reservation", kind:isGroup() ? "group" : "table", website:K.website || "", name:K.name.trim(), mobile:K.phone.trim(), email:K.email.trim(), branch:BR_KEY[K.branch], area:K.area, date:K.date, time:K.time, guests:+K.guests, occasion:K.occasion, notes:K.notes.trim(),
-    estimated_total:s ? Math.round(s.total) : "", order:s ? s.lines.join("\n") : "", summary:s ? s.txt : "", page_version:CONFIG.VERSION};
+    estimated_total:s ? Math.round(s.total) : "", order:s ? s.lines.join("\n") : "", summary:s ? s.txt : "", page_version:CONFIG.VERSION, consent:CONSENT};
   try {
     let out;
     if (CONFIG.DEMO) { await new Promise(r => setTimeout(r, 600)); out = {ok:true, ref:(isGroup() ? "BG" : "TR") + "-DEMO-001", tables:tablesNeeded()}; }
@@ -693,6 +756,7 @@ function stepReview(){
     <p class="muted" style="margin:0">Here's your event and estimated bill. Send it to us and our events team will check the date and confirm your final quote.</p>
     <div class="sum" id="sum">${esc(s.txt)}</div>
     <label style="display:flex;gap:10px;align-items:flex-start;font-size:14px"><input type="checkbox" id="agree" style="width:auto;margin-top:3px"> <span>I agree that Catchin' Up may use these details to contact me about this event.</span></label>
+    ${privacyRow()}
     <div class="btns"><button class="btn" id="back">Edit menu</button><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="copy">Copy</button><button class="btn primary" id="send" disabled>Send inquiry</button></div></div>
     <div id="msg" hidden></div>
     <div class="terms"><b style="color:var(--ink)">Good to know</b>
@@ -705,10 +769,12 @@ function stepReview(){
   </section>`;
   const msg = document.getElementById("msg"), send = document.getElementById("send");
   document.getElementById("agree").onchange = e => send.disabled = !e.target.checked;
+  bindPv(false);
   document.getElementById("back").onclick = () => go(2);
   document.getElementById("copy").onclick = () => { const sel = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById("sum")); const w = getSelection(); w.removeAllRanges(); w.addRange(r); };
     try { navigator.clipboard.writeText(s.txt).catch(sel); } catch (e) { sel(); } msg.hidden = false; msg.className = "note"; msg.textContent = "Copied."; };
-  send.onclick = async () => {
+  send.onclick = () => privacyGate(sendInquiry);
+  async function sendInquiry(){
     send.disabled = true; send.textContent = "Sending…"; msg.hidden = true;
     const fail = why => { send.disabled = false; send.textContent = "Try again"; msg.hidden = false; msg.className = "warn";
       msg.innerHTML = `We couldn't send your inquiry (${esc(why)}). Please try again, or copy it and message us directly.${contactButtons()}`; };
@@ -730,7 +796,7 @@ function stepReview(){
       document.getElementById("again").onclick = () => { try { localStorage.removeItem("cu-inquiry"); localStorage.removeItem("cu-kind"); } catch (e) {} location.reload(); };
       window.scrollTo({top:0});
     } catch (e) { clearTimeout(timer); fail(e.name === "AbortError" ? "the connection timed out" : "no connection"); }
-  };
+  }
 }
 
 if (S.step > 0 && !ok1()) S.step = 0;
