@@ -8,86 +8,191 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"><link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="icon.png">
 <style>
-:root{--ink:#161616;--muted:#5e5e5e;--line:#e4e4e4;--soft:#f6f6f6;--accent:#1f7a8c;--green:#1f9d55;--amber:#8a5a00;--amber-bg:#fff6e3;--red:#c62828;--card:#fff}
+/* ===== Catchin' Up portal · design system v2 =====
+   Spacing scale: 4 · 8 · 12 · 16 · 24 · 32   Radius: 8 controls · 12 containers
+   Type: 12 meta · 13 small · 14 body/table · 15 base · 18 section · 24 page */
+:root{--ink:#161616;--muted:#5e5e5e;--faint:#8a8a8a;--line:#e6e6e6;--soft:#f6f6f6;--hover:#fafafa;--accent:#1f7a8c;--green:#1f9d55;--amber:#8a5a00;--amber-bg:#fff6e3;--red:#c62828;--card:#fff;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r-sm:8px;--r:12px;--ctl:38px;--side:240px}
 *{box-sizing:border-box}[hidden]{display:none!important}
-body{margin:0;font:15px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:#fff}
-h1,h2,h3{font-family:"Space Grotesk",sans-serif;margin:0 0 8px;font-weight:600}h1{font-size:26px}h2{font-size:20px}h3{font-size:16px;font-weight:700}
+body{margin:0;font:15px/1.5 Inter,system-ui,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:"Space Grotesk",sans-serif;margin:0 0 var(--s2);font-weight:600;letter-spacing:-.01em}
+h1{font-size:24px;line-height:1.2}h2{font-size:20px}h3{font-size:15px;font-weight:700}
 .num{font-variant-numeric:tabular-nums}.muted{color:var(--muted)}.small{font-size:13px}
-button{font:inherit;cursor:pointer}
-.btn{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:999px;padding:8px 14px;font-weight:700;text-decoration:none;display:inline-block}
-.btn.primary{background:var(--ink);color:#fff}.btn.sm{padding:5px 11px;font-size:13px}.btn.ghost{border-color:var(--line)}.btn:disabled{opacity:.4;cursor:not-allowed}
-input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:700;color:var(--muted)}label.f>*{font-weight:400;color:var(--ink)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* buttons: one shape, three weights */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--ctl);border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:999px;padding:0 16px;font-weight:700;font-size:14px;line-height:1.2;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn:hover:not(:disabled){background:var(--soft)}
+.btn.primary{background:var(--ink);color:#fff}.btn.primary:hover:not(:disabled){background:#333}
+.btn.ghost{border-color:var(--line)}
+.btn.sm{min-height:32px;padding:0 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* inputs */
+input,select,textarea{font:inherit;font-size:14px;min-height:var(--ctl);padding:7px 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:#fff;color:var(--ink)}
+textarea{min-height:auto}input[type=checkbox],input[type=radio]{min-height:0;width:16px;height:16px;accent-color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(22,22,22,.08)}
+input:disabled,select:disabled,textarea:disabled{background:var(--soft);color:var(--muted)}
+label.f{display:flex;flex-direction:column;gap:var(--s1);font-size:13px;font-weight:600;color:var(--muted)}label.f>*{font-weight:400;color:var(--ink)}
+
+/* shell */
 .app{display:flex;min-height:100vh}
-.side{width:232px;flex:none;position:sticky;top:0;height:100vh;background:#0b0b0e;color:#efe9e1;display:flex;flex-direction:column;padding:18px 14px;gap:6px}
-.side .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;line-height:1.15;color:#efe9e1;white-space:nowrap}.side .brand img{height:34px;width:34px;border-radius:9px}.side .brand span{display:block;font-weight:500;font-size:11px;color:#8a8278;letter-spacing:.08em;text-transform:uppercase}
-.side nav{display:flex;flex-direction:column;gap:4px}
-.side nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;padding:10px 12px;border-radius:10px;font-weight:600;font-size:14px;color:#b9b2a8;transition:transform .15s,background .15s,color .15s}
+.side{width:var(--side);flex:none;position:sticky;top:0;height:100vh;overflow-y:auto;background:#0b0b0e;color:#efe9e1;display:flex;flex-direction:column;padding:var(--s4) var(--s3)}
+.side .brand{display:flex;align-items:center;gap:10px;padding:var(--s1) var(--s2) var(--s4);font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:15px;line-height:1.15;color:#efe9e1;white-space:nowrap}.side .brand img{height:32px;width:32px;border-radius:8px}.side .brand span{display:block;font-weight:500;font-size:11px;color:#8a8278;letter-spacing:.08em;text-transform:uppercase}
+.side nav{display:flex;flex-direction:column;gap:2px}
+.nav-grp{display:flex;flex-direction:column;gap:2px;margin-bottom:var(--s3)}
+.nav-sec{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6f6a63;padding:var(--s2) var(--s3) var(--s1)}
+.side nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;text-align:left;background:transparent;border:0;padding:0 var(--s3);border-radius:var(--r-sm);font-weight:600;font-size:14px;color:#b9b2a8;transition:transform .15s,background .15s,color .15s}
 .side nav button svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.side nav button .nb{margin-left:auto;background:#ff9f1a;color:#0b0b0e;border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
 .side nav button:hover{background:#1a1a20;color:#fff;transform:scale(1.03)}
 .side nav button[aria-current=page]{background:#efe9e1;color:#0b0b0e}
-.side .bottom{margin-top:auto;font-size:12px;color:#8a8278;display:flex;flex-direction:column;gap:6px;padding:8px}
-.side .bottom .btn{border-color:#2a2a30;background:transparent;color:#efe9e1}.side .bottom .btn:hover{background:#1a1a20}
-.wrap{flex:1;min-width:0;max-width:1180px;padding:24px 28px 60px}
-.btn,.card,.kpi,.tabs button,.day{transition:transform .15s,box-shadow .15s}
-.btn:hover:not(:disabled),.tabs button:hover{transform:scale(1.04)}
-.card:hover,.kpi:hover{transform:scale(1.012);box-shadow:0 6px 24px rgba(0,0,0,.07)}
-.day:hover{transform:scale(1.03);box-shadow:0 4px 14px rgba(0,0,0,.08);position:relative;z-index:1}
-body.ro #main .btn:not(.keep),body.ro .modal .btn:not(.keep),body.ro #main .actions:not(.keep),body.ro .modal .actions:not(.keep){display:none!important}
-body.ro .modal select,body.ro .modal textarea,body.ro .modal input[type=checkbox],body.ro #main input[type=file],body.ro #main textarea{pointer-events:none;opacity:.6}
-body.ro .modal h3:has(+ .actions:not(.keep)){display:none}
-.ro-badge{display:none;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a5a00;background:#fff6e3;border-radius:999px;padding:3px 10px;margin-left:8px;vertical-align:middle}body.ro .ro-badge{display:inline-block}
-.perm-grid{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;font-size:14px}.perm-grid .lv{display:flex;gap:4px}.perm-grid .lv button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}.perm-grid .lv button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.role-chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef6f8;color:#0f5f6c}
-.soon{display:inline-block;background:#ff70e8;color:#0b0b0e;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle}
-@media(max-width:860px){.app{flex-direction:column}.side{width:auto;height:auto;position:static;padding:10px 12px}.side nav{flex-direction:row;flex-wrap:wrap}.side nav button{width:auto;padding:8px 11px;font-size:13px}.side .bottom{margin-top:8px;flex-direction:row;align-items:center;flex-wrap:wrap}.wrap{padding:16px 14px 50px}}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0 0 16px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
-.kpi .v{font-family:"Space Grotesk",sans-serif;font-size:26px;font-weight:700;line-height:1.1}.kpi .l{font-size:13px;color:var(--muted)}
-.kpi .bar{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:8px}.kpi .bar i{display:block;height:100%;background:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
-th{background:var(--soft);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-tr.row{cursor:pointer}tr.row:hover td{background:#fafafa}
-.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.side .bottom{margin-top:auto;border-top:1px solid #222228;padding:var(--s3) var(--s2) 0;font-size:12px;color:#8a8278;display:flex;flex-direction:column;gap:var(--s2)}
+.side .bottom .who{display:flex;flex-direction:column;gap:var(--s1);overflow:hidden;text-overflow:ellipsis}
+.side .bottom .row2{display:flex;gap:var(--s2)}.side .bottom .btn{flex:1;border-color:#2a2a30;background:transparent;color:#efe9e1}.side .bottom .btn:hover{background:#1a1a20}
+.wrap{flex:1;min-width:0;max-width:1200px;padding:var(--s5) var(--s6) 64px}
+.topbar,.tabbar,.scrim{display:none}
+
+/* page header: title left, page controls right */
+.ph{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s3);margin:0 0 var(--s4)}.ph h1{margin:0}.ph .toolbar{margin:0}
+.ph-sub{color:var(--muted);font-size:14px;margin:-12px 0 var(--s4)}
+#main>h1:first-child{margin-bottom:var(--s4)}
+
+/* tabs: underline, never look like buttons */
+.tabs{display:flex;gap:var(--s1);margin:0 0 var(--s4);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;display:inline-flex;align-items:center;gap:6px;border:0;border-bottom:2px solid transparent;background:transparent;border-radius:0;padding:10px 12px;margin-bottom:-1px;font-weight:600;font-size:14px;color:var(--muted);white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-pressed=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.tabs .step{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--soft);font-size:11px;font-weight:700;color:var(--muted)}.tabs button[aria-pressed=true] .step{background:var(--ink);color:#fff}
+.tabs .chip{font-size:11px;padding:1px 7px}
+.tabs-x{display:flex;gap:var(--s2);margin:-8px 0 var(--s4);flex-wrap:wrap}
+
+/* containers */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s4);align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4)}
+.card>h3:first-child{margin-bottom:var(--s3)}
+.span2{grid-column:span 2}
+.dash-grid{grid-template-columns:2fr 1fr}.dash-grid>.card:nth-child(2){order:-1;grid-column:1;grid-row:1 / span 2}
+@media(max-width:1100px){.dash-grid{grid-template-columns:1fr}.dash-grid>.card:nth-child(2){grid-row:auto}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:var(--s3);margin:0 0 var(--s5)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:var(--s3) var(--s4)}
+.kpi[onclick]{cursor:pointer;transition:border-color .15s,background .15s}.kpi[onclick]:hover{border-color:var(--ink);background:var(--hover)}
+.kpi .v{font-family:"Space Grotesk",sans-serif;font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}.kpi .l{font-size:13px;color:var(--muted);margin-top:2px}
+.kpi .bar{height:4px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:var(--s2)}.kpi .bar i{display:block;height:100%;background:var(--accent)}
+.toolbar{display:flex;gap:var(--s2);flex-wrap:wrap;align-items:center;margin:0 0 var(--s3)}
+.toolbar input:not([type]),.toolbar input[type=text],.toolbar input[type=search]{min-width:220px}
+.empty{color:var(--muted);padding:var(--s5) var(--s4);text-align:center;font-size:14px}
+.list-row{padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}.list-row:last-child{border-bottom:0}.list-row:hover{background:var(--hover)}
+
+/* tables: scan first */
+table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+tr:last-child>td{border-bottom:0}
+th{background:var(--soft);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);vertical-align:bottom}
+td.num,th.num{text-align:right}
+tr.row{cursor:pointer}tr.row:hover td{background:var(--hover)}
+.card table{border:0;border-radius:0}.card th{background:transparent}.card td:first-child,.card th:first-child{padding-left:0}.card td:last-child,.card th:last-child{padding-right:0}
+
+/* status */
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;line-height:1.5}
 .c-New,.c-Booked{background:#eef6f8;color:#0f5f6c}.c-Seated{background:#eeeeee;color:#333}
 .c-Pencil{background:#ffe88a;color:#5c4500}.c-Contacted{background:#ffc98a;color:#7a3a00}.c-SOA{background:#bcd8ff;color:#0b3d91}.c-Down,.c-Deposit,.c-Confirmed{background:#9fe0b6;color:#0f4d26}.c-Cancelled,.c-Lost{background:#ffb3b3;color:#8a1111}.c-Rescheduled{background:#ffc2ec;color:#8a1e6c}.c-No-show{background:#f1f1f1;color:#777}
 .p-Pencil{background:#ffe88a;color:#5c4500}.p-Contacted{background:#ffb060;color:#4a2300}.p-SOA{background:#8fc0ff;color:#0b3d91}.p-Down{background:#4ccc7a;color:#0f3d1f}.p-Cancelled{background:#ff8a8a;color:#5a0b0b;text-decoration:line-through}.p-Rescheduled{background:#ff9ee0;color:#5a1245}
+.role-chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#eef6f8;color:#0f5f6c}
+.soon{display:inline-block;background:#ff70e8;color:#0b0b0e;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-left:8px;vertical-align:middle}
+.ro-badge{display:none;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a5a00;background:#fff6e3;border-radius:999px;padding:3px 10px;margin-left:8px;vertical-align:middle}body.ro .ro-badge{display:inline-block}
+body.ro #main .btn:not(.keep),body.ro .modal .btn:not(.keep),body.ro #main .actions:not(.keep),body.ro .modal .actions:not(.keep){display:none!important}
+body.ro .modal select,body.ro .modal textarea,body.ro .modal input[type=checkbox],body.ro #main input[type=file],body.ro #main textarea{pointer-events:none;opacity:.6}
+body.ro .modal h3:has(+ .actions:not(.keep)){display:none}
+.perm-grid{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;font-size:14px}.perm-grid .lv{display:flex;gap:4px}.perm-grid .lv button{border:1px solid var(--line);background:#fff;border-radius:999px;min-height:30px;padding:0 10px;font-size:12px;font-weight:700}.perm-grid .lv button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* event pipeline */
 .pipe{display:grid;gap:0;margin:10px 0 4px}.pstep{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:8px 0;position:relative}
 .pstep .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:700 12px "Space Grotesk",sans-serif;color:var(--muted);background:#fff;position:relative;z-index:1}
 .pstep:not(:last-child):before{content:"";position:absolute;left:12px;top:36px;bottom:-8px;width:2px;background:var(--line)}
 .pstep.done .dot{background:var(--green);border-color:var(--green);color:#fff}.pstep.now .dot{background:var(--ink);border-color:var(--ink);color:#fff}
 .pstep .t{font-weight:700}.pstep.next .t{color:var(--muted);font-weight:600}.pstep .s{font-size:13px;color:var(--muted)}.pstep .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.pstep.now{background:var(--soft);border-radius:12px;padding:10px 10px 12px;margin:2px -10px}.pstep.now:before{left:22px}
-.check{display:grid;gap:8px;margin:8px 0 14px}.check label{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.check label input{margin-top:3px}
+.pstep.now{background:var(--soft);border-radius:var(--r);padding:10px 10px 12px;margin:2px -10px}.pstep.now:before{left:22px}
+.check{display:grid;gap:8px;margin:8px 0 14px}.check label{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-sm);cursor:pointer}.check label input{margin-top:3px}
 .soa-only{display:none}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .cal .dow{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:4px}
-.day{background:#fff;border:1px solid var(--line);border-radius:10px;min-height:96px;padding:6px;font-size:12px;cursor:pointer}
-.day.off{opacity:.45}.day.today{outline:2px solid var(--accent)}.day .d{font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between}
+.day{background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);min-height:96px;padding:6px;font-size:12px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
+.day:hover{border-color:var(--ink);background:var(--hover)}
+.day.off{opacity:.45}.day.today{outline:2px solid var(--accent);outline-offset:-1px}.day .d{font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between}
 .pill{border-radius:6px;padding:2px 6px;margin-top:3px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .p-pub{background:var(--green);color:#fff}.p-ok{background:#bfe8cf;color:#115a30}.p-wait{border:1.5px dashed #d98e04;color:#7a5000}.p-plan{background:var(--soft);color:var(--muted)}
 .p-res{background:#eef6f8;color:#0f5f6c}.p-ev{background:var(--ink);color:#fff}.p-evp{border:1.5px dashed var(--ink);color:var(--ink)}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:8px 0}.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:5px}
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:none;align-items:center;justify-content:center;padding:16px}.modal-bg.open{display:flex}
-.modal{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:22px}
-.kv{display:grid;grid-template-columns:140px 1fr;gap:4px 10px;font-size:14px;margin:10px 0}.kv b{color:var(--muted);font-weight:700}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:0 0 var(--s3);color:var(--muted)}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:none;align-items:center;justify-content:center;padding:16px}.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:760px;width:100%;max-height:92vh;overflow:auto;padding:var(--s5)}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:14px;margin:var(--s3) 0}.kv b{color:var(--muted);font-weight:600}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:var(--s3) 0}
 .timeline{border-left:2px solid var(--line);margin:8px 0 0 6px;padding-left:14px;font-size:13px}.timeline div{margin-bottom:6px}
 .load{display:grid;grid-template-columns:repeat(auto-fit,minmax(36px,1fr));gap:4px;margin:6px 0 12px}
 .load div{text-align:center;font-size:11px;border-radius:6px;padding:4px 2px;background:var(--soft)}.load b{display:block;font-size:13px}
 .login{max-width:400px;margin:70px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px}
-.prog{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}.prog i{display:block;height:100%;background:var(--green)}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:50;opacity:0;transition:opacity .2s;pointer-events:none}.toast.show{opacity:1}
-.empty{color:var(--muted);padding:20px;text-align:center}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px}.tabs button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden}.prog i{display:block;height:100%;background:var(--green)}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:95;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100vw - 32px)}.toast.show{opacity:1}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s3);margin:var(--s3) 0}
 pre.sum{white-space:pre-wrap;font:12px/1.45 ui-monospace,monospace;background:var(--soft);border-radius:10px;padding:10px;max-height:40vh;overflow:auto}
-@media print{.soa-only{display:block}.side,.tabs,.toolbar,.actions,button{display:none!important}.wrap{max-width:none;padding:0}body{font-size:12px}}
-@media(max-width:700px){.day{min-height:70px}.wrap{padding:14px 12px}.kv{grid-template-columns:1fr}}
+@media print{.soa-only{display:block}.side,.topbar,.tabbar,.tabs,.toolbar,.actions,button{display:none!important}.wrap{max-width:none;padding:0}body{font-size:12px}}
+
+/* ===== tablet ===== */
+@media(max-width:1100px){.wrap{padding:var(--s5) var(--s5) 64px}.span2{grid-column:auto}}
+
+/* ===== phone: app shell, not a shrunken desktop ===== */
+@media(max-width:860px){
+  :root{--ctl:44px}
+  .btn.sm{min-height:38px}
+  .app{display:block}
+  .topbar{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;height:56px;padding:0 var(--s3);background:#0b0b0e;color:#efe9e1}
+  .topbar img{width:30px;height:30px;border-radius:8px}.topbar b{font:700 17px "Space Grotesk",sans-serif;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar button{background:transparent;border:0;color:#efe9e1;width:44px;height:44px;display:grid;place-items:center;border-radius:10px}.topbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+  .side{position:fixed;top:0;left:0;bottom:0;height:auto;z-index:80;width:min(300px,86vw);transform:translateX(-102%);transition:transform .22s ease;padding-top:var(--s5)}
+  body.drawer .side{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}body.drawer .scrim{opacity:1;pointer-events:auto}
+  .side nav button{min-height:44px;font-size:15px}.side nav button:hover{transform:none}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:#fff;border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;min-height:52px;font-size:11px;font-weight:600;color:var(--faint);border-radius:10px;padding:6px 2px}
+  .tabbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tabbar button[aria-current=page]{color:var(--ink)}.tabbar button[aria-current=page] svg{stroke-width:2.3}
+  .wrap{padding:var(--s4) var(--s4) 96px}
+  h1{font-size:22px}
+  .ph{align-items:flex-start}
+  .grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr;gap:var(--s2);margin-bottom:var(--s4)}.kpi{padding:var(--s3)}.kpi .v{font-size:20px}
+  .toolbar{gap:var(--s2)}.toolbar>input,.toolbar>select,.toolbar input:not([type]){flex:1 1 140px;min-width:0}
+  .fields{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr;gap:0 0}.kv b{margin-top:8px}
+  .modal-bg{align-items:flex-end;padding:0}.modal{border-radius:16px 16px 0 0;max-height:94vh;padding:var(--s5) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom))}
+  .actions .btn{flex:1 1 auto}
+  /* tables become stacked records */
+  table.rt,table.rt tbody,table.rt tr,table.rt td{display:block;width:100%}
+  table.rt{border:0;background:transparent;border-radius:0;overflow:visible}
+  table.rt tr.hd{display:none}
+  table.rt tr{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:var(--s2) var(--s3);margin-bottom:var(--s2)}
+  .card table.rt tr{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:var(--s2) 0;margin:0}
+  table.rt td{border:0;padding:3px 0 3px 38%;position:relative;text-align:left!important;min-height:24px}
+  table.rt td::before{content:attr(data-label);position:absolute;left:0;top:5px;width:35%;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.3}
+  table.rt td[data-label]:not([data-label=""]){padding-left:38%!important;padding-right:0!important}
+  table.rt td:not([data-label]),table.rt td[data-label=""]{padding-left:0}
+  table.rt td:not([data-label])::before,table.rt td[data-label=""]::before{display:none}
+  table.rt td:empty{display:none}
+  table.rt td.empty{padding-left:0;text-align:center!important}
+  .scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* calendar: compact month, tap a day for details */
+  .cal{gap:3px}.cal .dow{font-size:10px;padding:2px;text-align:center}
+  .day{min-height:58px;padding:4px 3px;border-radius:6px}.day .d{font-size:12px;margin-bottom:2px}
+  .pill{font-size:0;height:5px;padding:0;margin-top:2px;border-radius:3px}
+  .legend{font-size:12px;gap:8px 12px}
+  .fb-pill{bottom:calc(72px + env(safe-area-inset-bottom))!important}
+}
 
 /* soft launch */
 .sl-bg{position:fixed;inset:0;z-index:90;background:rgba(10,10,14,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px}.sl-bg.open{display:flex}
@@ -103,10 +208,12 @@ pre.sum{white-space:pre-wrap;font:12px/1.45 ui-monospace,monospace;background:va
 <script src="config.js"></script>
 </head>
 <body>
+<header class="topbar"><button id="menu-btn" aria-label="Open menu"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><b id="tb-title">Catchin' Up</b><img src="icon.png" alt=""></header>
 <div class="app"><aside class="side"><div class="brand"><img src="icon.png" alt=""><div>Catchin' Up<span>management</span></div></div>
-  <nav id="nav" hidden><button data-p="dash" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span></button><button data-p="book" hidden><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M9 5v14"/></svg><span>Bookings</span></button><button data-p="inq" hidden><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v6a7 7 0 0 1-14 0z"/><path d="M5 5H3a2 2 0 0 0 0 4h2M19 5h2a2 2 0 0 1 0 4h-2"/></svg><span>Events</span></button><button data-p="cal" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button><button data-p="seat" hidden><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/></svg><span>Table seating</span></button><button data-p="mkt" hidden><svg viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/></svg><span>Marketing</span></button><button data-p="pb" hidden><svg viewBox="0 0 24 24"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6"/></svg><span>Playbook</span></button><button data-p="hr" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg><span>HR &amp; Payroll</span></button><button data-p="set" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></button></nav>
-  <div class="bottom"><span id="who"></span><span id="myrole"></span><button class="btn sm ghost" id="refresh" hidden>Refresh</button><button class="btn sm ghost" id="logout" hidden>Sign out</button></div></aside>
+  <nav id="nav" hidden><div class="nav-grp"><button data-p="dash" hidden><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Today</span></button></div><div class="nav-grp"><div class="nav-sec">Guests</div><button data-p="book" hidden><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M9 5v14"/></svg><span>Bookings</span></button><button data-p="inq" hidden><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M5 3h14v6a7 7 0 0 1-14 0z"/><path d="M5 5H3a2 2 0 0 0 0 4h2M19 5h2a2 2 0 0 1 0 4h-2"/></svg><span>Events</span></button><button data-p="cal" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button><button data-p="seat" hidden><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/><circle cx="4" cy="12" r="1.5"/><circle cx="20" cy="12" r="1.5"/><circle cx="12" cy="4" r="1.5"/><circle cx="12" cy="20" r="1.5"/></svg><span>Table seating</span></button></div><div class="nav-grp"><div class="nav-sec">Marketing</div><button data-p="mkt" hidden><svg viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/></svg><span>Marketing</span></button><button data-p="pb" hidden><svg viewBox="0 0 24 24"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M8 8h6M8 12h6"/></svg><span>Playbook</span></button></div><div class="nav-grp"><div class="nav-sec">Team</div><button data-p="hr" data-g="people" hidden><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-5-6.3"/></svg><span>People</span></button><button data-p="hr" data-g="schedule" hidden><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3M8 17h6"/></svg><span>Schedule</span></button><button data-p="hr" data-g="pay" hidden><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2"/><path d="M2.5 10h19M6 15h4"/></svg><span>Time &amp; pay</span></button></div><div class="nav-grp"><div class="nav-sec">Admin</div><button data-p="set" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></button></div></nav>
+  <div class="bottom"><div class="who"><span id="who"></span><span id="myrole"></span></div><div class="row2"><button class="btn sm ghost" id="refresh" hidden>Refresh</button><button class="btn sm ghost" id="logout" hidden>Sign out</button></div></div></aside><div class="scrim" id="scrim"></div>
 <main class="wrap" id="main"><div class="empty">Loading…</div></main></div>
+<nav class="tabbar" id="tabbar" hidden></nav>
 <div class="modal-bg" id="modal"><div class="modal" id="modal-in"></div></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -142,6 +249,24 @@ const ROLE_NAMES = { owner:"Owner", executive_assistant:"Executive assistant", m
 const permsOf = s => s.role === "owner" ? FULL : { ...(ROLE_PRESETS[s.role] || ROLE_PRESETS.events), ...(s.perms || {}) };
 const can = (k, lvl) => lvl === "edit" ? P[k] === "edit" : (P[k] === "view" || P[k] === "edit");
 const sw = k => P[k] === true;
+const HR_GRP = { people: { title: "People", tabs: [["emps", "Employees"]] }, schedule: { title: "Schedule", tabs: [["lineup", "Line-up"], ["floorplan", "Floor plan"], ["hol", "Holidays & leave"]] }, pay: { title: "Time & pay", tabs: [["time", "Timesheets", 1], ["exc", "Exceptions", 2], ["pay", "Payroll", 3], ["rules", "Rules"]] } };
+const HR_GRP_PERM = { people: () => can("F"), schedule: () => can("G"), pay: () => can("G") || can("H") };
+const navOk = b => b.dataset.g ? HR_GRP_PERM[b.dataset.g]() : PAGE_PERM[b.dataset.p]();
+const NAV_TITLE = { dash: "Today", book: "Bookings", inq: "Events", cal: "Calendar", seat: "Table seating", mkt: "Marketing", pb: "Playbook", set: "Settings" };
+let hrGrp = null;
+function go(p, g){ page = p; if (p === "hr"){ hrGrp = g || hrGrp; if (window.H && hrGrp && !HR_GRP[hrGrp].tabs.some(([k]) => k === H.tab)) H.tab = HR_GRP[hrGrp].tabs.find(([k]) => can(HR_CAT[k]))?.[0] || HR_GRP[hrGrp].tabs[0][0]; } document.body.classList.remove("drawer"); render(); window.scrollTo(0, 0); }
+function syncNav(){ const cur = b => b.dataset.p === page && (!b.dataset.g || b.dataset.g === hrGrp);
+  document.querySelectorAll("#nav button, #tabbar button[data-p]").forEach(b => cur(b) ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  const more = $("#tabbar [data-more]"); if (more){ const onBar = [...document.querySelectorAll("#tabbar button[data-p]")].some(cur); onBar ? more.removeAttribute("aria-current") : more.setAttribute("aria-current", "page"); }
+  $("#tb-title").textContent = page === "hr" ? (HR_GRP[hrGrp]?.title || "Team") : NAV_TITLE[page] || "Catchin' Up"; }
+function buildNav(){
+  document.querySelectorAll("#nav button").forEach(b => b.hidden = !navOk(b));
+  document.querySelectorAll("#nav .nav-grp").forEach(g => g.hidden = !g.querySelector("button:not([hidden])"));
+  const vis = [...document.querySelectorAll("#nav button:not([hidden])")], pri = ["dash", "book", "inq", "cal", "seat", "mkt", "pb", "hr", "set"];
+  const bar = vis.slice().sort((a, b) => pri.indexOf(a.dataset.p) - pri.indexOf(b.dataset.p)).slice(0, vis.length > 5 ? 4 : 5);
+  const tb = $("#tabbar"); tb.innerHTML = bar.map(b => `<button data-p="${b.dataset.p}"${b.dataset.g ? ` data-g="${b.dataset.g}"` : ""}>${b.querySelector("svg").outerHTML}<span>${b.querySelector("span").textContent}</span></button>`).join("") + (vis.length > 5 ? `<button data-more>${$("#menu-btn").innerHTML}<span>More</span></button>` : "");
+  tb.hidden = false; tb.querySelectorAll("button[data-p]").forEach(b => b.onclick = () => go(b.dataset.p, b.dataset.g)); const m = tb.querySelector("[data-more]"); if (m) m.onclick = () => document.body.classList.add("drawer");
+  const first = vis[0]; page = first.dataset.p; hrGrp = first.dataset.g || [...document.querySelectorAll("#nav button[data-g]:not([hidden])")][0]?.dataset.g || null; }
 const PAGE_PERM = { dash: () => can("A"), book: () => can("A"), inq: () => can("B"), cal: () => can("C"), seat: () => can("S"), mkt: () => can("D"), pb: () => can("E"), hr: () => can("F") || can("G") || can("H"), set: () => true };
 function ro(k){ pageRo = !can(k, "edit"); document.body.classList.toggle("ro", pageRo); }
 function modalRo(k){ document.body.classList.toggle("ro", !can(k, "edit")); }
@@ -158,8 +283,7 @@ async function start(){
   if (error || !staff || !staff.length) { $("#main").innerHTML = `<div class="login"><h2>No access</h2><p class="muted">${esc(me.email)} is signed in but isn't on the staff list. Ask the owner to add you in Settings.</p><button class="btn" id="lo">Sign out</button></div>`; $("#lo").onclick = () => sb.auth.signOut().then(() => location.reload()); return; }
   D.staff = staff; const mine = staff.find(s => s.email.toLowerCase() === me.email.toLowerCase()) || { role: "events" }; myRole = mine.role || "events"; P = permsOf(mine);
   $("#who").textContent = me.email; $("#myrole").innerHTML = `<span class="role-chip">${esc(ROLE_NAMES[myRole] || myRole)}</span>`; $("#nav").hidden = false; $("#refresh").hidden = false; $("#logout").hidden = false;
-  document.querySelectorAll("#nav button").forEach(b => b.hidden = !PAGE_PERM[b.dataset.p]());
-  page = [...document.querySelectorAll("#nav button")].find(b => !b.hidden).dataset.p; document.querySelector(`#nav button[data-p=${page}]`).setAttribute("aria-current", "page");
+  buildNav();
   await load(); render(); if (window.showSoftLaunch) showSoftLaunch();
 }
 function showLogin(){ $("#main").innerHTML = `<div class="login"><div class="small muted" style="letter-spacing:.08em;text-transform:uppercase">Catchin' Up</div><h2>Management sign-in</h2>
@@ -207,11 +331,19 @@ function monthNav(){ return `<div class="toolbar"><button class="btn sm ghost ke
 function bindMonthNav(){ $("#mprev").onclick = () => { cur.m--; if (cur.m < 0) { cur.m = 11; cur.y--; } render(); }; $("#mnext").onclick = () => { cur.m++; if (cur.m > 11) { cur.m = 0; cur.y++; } render(); }; $("#mtoday").onclick = () => { cur = {y: today.getFullYear(), m: today.getMonth()}; render(); }; }
 function calendar(cellFn, dayClick){ const first = new Date(cur.y, cur.m, 1), start = first.getDay(), dim = new Date(cur.y, cur.m + 1, 0).getDate(); let cells = "";
   for (let k = 0; k < start; k++) cells += "<div></div>";
-  for (let d = 1; d <= dim; d++){ const dt = new Date(cur.y, cur.m, d), key = iso(dt); cells += `<div class="day ${dt < today ? "off" : ""} ${key === iso(today) ? "today" : ""}" data-d="${key}"><div class="d"><span>${d}</span><span class="muted">${DAYS[dt.getDay()]}</span></div>${cellFn(key, dt)}</div>`; }
+  for (let d = 1; d <= dim; d++){ const dt = new Date(cur.y, cur.m, d), key = iso(dt); cells += `<div class="day ${dt < today ? "off" : ""} ${key === iso(today) ? "today" : ""}" data-d="${key}"><div class="d"><span>${d}</span></div>${cellFn(key, dt)}</div>`; }
   setTimeout(() => document.querySelectorAll(".day").forEach(el => el.onclick = () => dayClick(el.dataset.d)), 0);
   return `<div class="cal">${DAYS.map(d => `<div class="dow">${d}</div>`).join("")}${cells}</div>`; }
-function render(){ if (!PAGE_PERM[page]()) return $("#main").innerHTML = `<div class="empty">You don't have access to this page.</div>`; ({dash, book, inq, cal, mkt, set, seat, hr: () => hr(), pb: () => playbook()})[page](); }
-document.querySelectorAll("#nav button").forEach(b => b.onclick = () => { page = b.dataset.p; document.querySelectorAll("#nav button").forEach(x => x === b ? x.setAttribute("aria-current", "page") : x.removeAttribute("aria-current")); render(); });
+function render(){ syncNav(); if (!PAGE_PERM[page]()) return $("#main").innerHTML = `<div class="empty">You don't have access to this page.</div>`; ({dash, book, inq, cal, mkt, set, seat, hr: () => hr(), pb: () => playbook()})[page](); }
+document.querySelectorAll("#nav button").forEach(b => b.onclick = () => go(b.dataset.p, b.dataset.g));
+$("#menu-btn").onclick = () => document.body.classList.add("drawer"); $("#scrim").onclick = () => document.body.classList.remove("drawer");
+/* every table gets column labels so phones can show it as stacked records, and numeric columns align right */
+function labelTables(root){ root.querySelectorAll("table").forEach(t => { if (t.closest(".cal") || t.dataset.lb === "1") return; const rows = [...t.rows]; const h = rows.find(r => r.querySelector("th")); if (!h) return; t.dataset.lb = "1";
+  const heads = []; [...h.cells].forEach(c => { for (let k = 0; k < (c.colSpan || 1); k++) heads.push(c.textContent.trim()); });
+  if (heads.length > 12){ if (!t.parentElement.classList.contains("scrollx")){ const w = document.createElement("div"); w.className = "scrollx"; t.before(w); w.append(t); } return; } t.classList.add("rt"); h.classList.add("hd");
+  rows.forEach(r => { if (r === h) return; let i = 0; [...r.cells].forEach(c => { if (c.tagName === "TD" && !c.hasAttribute("data-label") && (c.colSpan || 1) === 1) c.setAttribute("data-label", heads[i] || ""); i += c.colSpan || 1; }); });
+  heads.forEach((_, i) => { const col = rows.filter(r => r !== h).map(r => r.cells[i]).filter(Boolean); if (col.length && col.every(c => c.classList.contains("num") || !c.textContent.trim())) h.cells[i] && h.cells[i].classList.add("num"); }); }); }
+new MutationObserver(() => { labelTables($("#main")); labelTables($("#modal-in")); }).observe(document.body, { childList: true, subtree: true });
 
 /* ---------- today ---------- */
 function dash(){
@@ -221,12 +353,12 @@ function dash(){
   const m = D.inquiries.filter(i => inMonth(pd(i.event_date), today.getFullYear(), today.getMonth()) && evWon(i));
   ro("A"); $("#main").innerHTML = `<h1>Today · ${today.toLocaleDateString("en-PH", {weekday:"long", month:"long", day:"numeric"})}</h1>
   <div class="kpis">
-    <div class="kpi"><div class="v">${tonight.length}</div><div class="l">Tables booked tonight · ${tonight.reduce((a, r) => a + r.guests, 0)} guests</div></div>
-    <div class="kpi"><div class="v" style="color:${pencils.length ? "var(--amber)" : "inherit"}">${pencils.length}</div><div class="l">Big groups waiting for down payment</div></div>
-    <div class="kpi"><div class="v" style="color:${newInq.length ? "var(--accent)" : "inherit"}">${newInq.length}</div><div class="l">Event inquiries waiting for a call</div></div>
-    <div class="kpi"><div class="v num">${peso(m.reduce((a, i) => a + (+i.estimated_total || 0), 0))}</div><div class="l">${MON[today.getMonth()]} events confirmed (est.)</div></div>
+    <div class="kpi" onclick="bf={q:'',st:'',kind:''};go('book')"><div class="v">${tonight.length}</div><div class="l">Tables booked tonight · ${tonight.reduce((a, r) => a + r.guests, 0)} guests</div></div>
+    <div class="kpi" onclick="bf={q:'',st:'Pencil',kind:'group'};go('book')"><div class="v" style="color:${pencils.length ? "var(--amber)" : "inherit"}">${pencils.length}</div><div class="l">Big groups waiting for down payment</div></div>
+    <div class="kpi" onclick="qf={q:'',st:'Pencil'};go('inq')"><div class="v" style="color:${newInq.length ? "var(--accent)" : "inherit"}">${newInq.length}</div><div class="l">Event inquiries waiting for a call</div></div>
+    <div class="kpi" onclick="go('cal')"><div class="v num">${peso(m.reduce((a, i) => a + (+i.estimated_total || 0), 0))}</div><div class="l">${MON[today.getMonth()]} events confirmed (est.)</div></div>
   </div>
-  <div class="grid">
+  <div class="grid dash-grid">
     <div class="card"><h3>Tonight</h3>${tonight.length ? `<table>${tonight.map(r => `<tr class="row" onclick="showBooking('${r.id}')"><td class="num">${ampm(r.time)}</td><td><b>${esc(r.name)}</b><br><span class="muted small">${esc(r.mobile)}</span></td><td>${BRN[r.branch].split(" ")[0]} · ${esc(r.area)}</td><td class="num">${r.guests} pax</td><td>${chip(r.status)}</td></tr>`).join("")}</table>` : `<div class="empty">No reservations tonight.</div>`}</div>
     <div class="card"><h3>Needs you</h3>
       ${pencils.map(r => `<div style="padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="showBooking('${r.id}')">${chip("Pencil")} <b>${esc(r.name)}</b> · ${r.guests} pax · ${fmt(pd(r.date))} ${ampm(r.time)} · waiting for ${peso(r.down_payment)}<br><span class="muted small">Booked ${fmtTs(r.created_at)} · release if unpaid after 24 h</span></div>`).join("")}
@@ -240,7 +372,7 @@ function dash(){
 /* ---------- bookings ---------- */
 let bf = {q:"", st:"", kind:""};
 function book(){ const rows = D.bookings.filter(r => (!bf.st || r.status === bf.st) && (!bf.kind || r.kind === bf.kind) && (!bf.q || (r.name + r.mobile + r.ref).toLowerCase().includes(bf.q.toLowerCase()))).slice().sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
-  ro("A"); $("#main").innerHTML = `<h1>Table and group bookings<span class="ro-badge">view only</span></h1><div class="toolbar"><input placeholder="Search name, mobile, reference" value="${esc(bf.q)}" oninput="bf.q=this.value;book()"><select onchange="bf.st=this.value;book()"><option value="">All statuses</option>${["Pencil","Booked","Confirmed","Seated","Cancelled","No-show"].map(s => `<option ${bf.st === s ? "selected" : ""}>${s}</option>`).join("")}</select><select onchange="bf.kind=this.value;book()"><option value="">Tables and groups</option><option value="table" ${bf.kind === "table" ? "selected" : ""}>Tables only</option><option value="group" ${bf.kind === "group" ? "selected" : ""}>Big groups only</option></select><button class="btn sm" onclick="walkIn()">+ Add a booking by hand</button></div>
+  ro("A"); $("#main").innerHTML = `<h1>Bookings<span class="ro-badge">view only</span></h1><p class="ph-sub">Free tables and big groups, newest date first.</p><div class="toolbar"><input placeholder="Search name, mobile, reference" value="${esc(bf.q)}" oninput="bf.q=this.value;book()"><select onchange="bf.st=this.value;book()"><option value="">All statuses</option>${["Pencil","Booked","Confirmed","Seated","Cancelled","No-show"].map(s => `<option ${bf.st === s ? "selected" : ""}>${s}</option>`).join("")}</select><select onchange="bf.kind=this.value;book()"><option value="">Tables and groups</option><option value="table" ${bf.kind === "table" ? "selected" : ""}>Tables only</option><option value="group" ${bf.kind === "group" ? "selected" : ""}>Big groups only</option></select><button class="btn sm" onclick="walkIn()">+ Add a booking by hand</button></div>
   <div style="overflow:auto"><table><tr><th>Date</th><th>Time</th><th>Customer</th><th>Branch · area</th><th>Guests</th><th>Kind</th><th>Status</th></tr>${rows.map(r => `<tr class="row" onclick="showBooking('${r.id}')"><td>${fmt(pd(r.date))}</td><td class="num">${ampm(r.time)}</td><td><b>${esc(r.name)}</b><br><span class="muted small">${esc(r.mobile)} · ${esc(r.ref)}</span></td><td>${BRN[r.branch]}<br><span class="muted small">${esc(r.area)}</span></td><td class="num">${r.guests} · ${r.tables} tbl</td><td>${r.kind === "group" ? `Big group<br><span class="muted small">min ${peso(r.minimum)} · DP ${peso(r.down_payment)} ${r.dp_paid ? "✔" : "unpaid"}</span>` : "Table"}</td><td>${chip(r.status)}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No bookings in the last two months.</td></tr>`}</table></div>`; }
 function showBooking(id){ const r = D.bookings.find(x => x.id === id); if (!r) return; modalRo("A"); const acts = D.activity.filter(a => a.ref === r.ref);
   openModal(`<div class="muted small num">${esc(r.ref)} · ${r.kind === "group" ? "Big group" : "Table"}</div><h2>${esc(r.name)} ${chip(r.status)}</h2>
@@ -262,7 +394,7 @@ function walkIn(){ openModal(`<h2>Add a booking by hand</h2><p class="muted smal
 /* ---------- events (inquiries) ---------- */
 let qf = {q:"", st:""};
 function inq(){ const rows = D.inquiries.filter(i => (!qf.st || i.status === qf.st) && (!qf.q || (i.name + i.mobile + i.ref).toLowerCase().includes(qf.q.toLowerCase()))).slice().sort((a, b) => b.created_at.localeCompare(a.created_at));
-  ro("B"); $("#main").innerHTML = `<h1>Private event inquiries<span class="ro-badge">view only</span></h1><div class="toolbar"><input placeholder="Search" value="${esc(qf.q)}" oninput="qf.q=this.value;inq()"><select onchange="qf.st=this.value;inq()"><option value="">All statuses</option>${EV_ST.map(s => `<option ${qf.st === s ? "selected" : ""}>${s}</option>`).join("")}</select><span class="muted small">Yellow pencil · orange contacted · blue SOA sent · green down payment confirmed · red cancelled · pink rescheduled</span></div>
+  ro("B"); $("#main").innerHTML = `<h1>Events<span class="ro-badge">view only</span></h1><p class="ph-sub">Private event inquiries, from pencil booking to advance order.</p><div class="toolbar"><input placeholder="Search" value="${esc(qf.q)}" oninput="qf.q=this.value;inq()"><select onchange="qf.st=this.value;inq()"><option value="">All statuses</option>${EV_ST.map(s => `<option ${qf.st === s ? "selected" : ""}>${s}</option>`).join("")}</select></div>
   <div style="overflow:auto"><table><tr><th>Received</th><th>Customer</th><th>Event</th><th>Guests</th><th>Estimate</th><th>Status</th><th>Next step</th></tr>${rows.map(i => `<tr class="row" onclick="showInq('${i.id}')"><td class="small num">${fmtTs(i.created_at)}<br><span class="muted">${esc(i.ref)}</span></td><td><b>${esc(i.name)}</b><br><span class="muted small">${esc(i.mobile)}</span></td><td>${fmt(pd(i.event_date))}<br><span class="muted small">${SLOTN[i.slot] || i.slot} · ${BRN[i.branch]}${i.area === "indoor" ? " (indoor only)" : ""}</span></td><td class="num">${i.guests}</td><td class="num">${peso(i.estimated_total)}</td><td>${chip(i.status)}</td><td class="small">${esc(nextStep(i))}${i.assigned_to ? `<br><span class="muted">${esc(i.assigned_to)}</span>` : ""}</td></tr>`).join("") || `<tr><td colspan="7" class="empty">No inquiries yet.</td></tr>`}</table></div>`; }
 function showInq(id){ const i = D.inquiries.find(x => x.id === id); if (!i) return; modalRo("B"); const acts = D.activity.filter(a => a.ref === i.ref), dep = Math.round(+i.deposit || (+i.estimated_total || 0) / 2);
   const others = D.inquiries.filter(o => o.id !== i.id && o.branch === i.branch && o.event_date === i.event_date && o.slot === i.slot && evHold(o));
@@ -346,7 +478,7 @@ function cal(){ ro("C"); const resBy = {}, evBy = {};
   D.bookings.filter(active).forEach(r => (resBy[r.date] = resBy[r.date] || []).push(r));
   D.inquiries.forEach(i => (evBy[i.event_date] = evBy[i.event_date] || []).push(i));
   const grpBy = {}; D.bookings.filter(r => r.kind === "group" && !["No-show"].includes(r.status)).forEach(r => (grpBy[r.date] = grpBy[r.date] || []).push(r));
-  $("#main").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px"><h1>Booking calendar</h1>${monthNav()}</div>
+  $("#main").innerHTML = `<div class="ph"><h1>Calendar</h1>${monthNav()}</div>
   <div class="legend"><span><i class="p-Pencil"></i>Pencil</span><span><i class="p-Contacted"></i>Contacted</span><span><i class="p-SOA"></i>SOA sent</span><span><i class="p-Down"></i>Down payment confirmed</span><span><i class="p-Cancelled"></i>Cancelled</span><span><i class="p-Rescheduled"></i>Rescheduled</span><span><i class="p-res"></i>Free tables</span></div><p class="muted small" style="margin:0 0 8px">★ private event · ▲ big group. Click a day for details.</p>
   ${calendar(k => { const rs = (resBy[k] || []).filter(r => r.kind !== "group"), ev = evBy[k] || []; const byB = {}; rs.forEach(r => { byB[r.branch] = (byB[r.branch] || 0) + r.tables; });
     return ev.map(i => `<div class="pill p-${i.status.split(" ")[0]}" title="${esc(i.status)} · next: ${esc(nextStep(i))}">★ ${BRN[i.branch].split(" ")[0]} ${i.slot === "aft" ? "1–5" : "7–11"} · ${esc(i.name).split(" ")[0]} (${i.guests})</div>`).join("") + (grpBy[k] || []).map(r => `<div class="pill p-${groupTone(r)}" title="${esc(r.status)}${r.dp_paid ? " · DP paid" : ""}">▲ ${BRN[r.branch].split(" ")[0]} ${ampm(r.time).replace(":00", "")} · ${esc(r.name).split(" ")[0]} (${r.guests})</div>`).join("") + Object.entries(byB).map(([b, t]) => `<div class="pill p-res">${BRN[b].split(" ")[0]} · ${rs.filter(r => r.branch === b).length} res · ${t} tbl</div>`).join(""); }, dayDetail)}`;
@@ -370,14 +502,9 @@ function mkt(){ const key = `${cur.y}-${String(cur.m + 1).padStart(2, "0")}`, T 
   const replied = logs.filter(l => l.first_reply_at && (new Date(l.first_reply_at) - new Date(l.received_at)) <= (T.reply_window_hours || 2) * 3600e3);
   const comm = logs.filter(l => l.verified && (+l.booking_value || 0) >= (T.commission_min_value || 0)).reduce((a, l) => a + (+l.booking_value || 0) * (T.commission_rate || 0), 0);
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
-  ro("D"); $("#main").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px"><h1>Marketing<span class="ro-badge">view only</span></h1>${monthNav()}</div>
-  <div class="kpis"><div class="kpi"><div class="v">${pub} <span class="muted" style="font-size:15px">/ ${req}</span></div><div class="l">Checklist items published</div><div class="bar"><i style="width:${pct(pub, req)}%"></i></div></div>
-    <div class="kpi"><div class="v" style="color:var(--amber)">${posts.filter(p => !p.approved && !p.published).length}</div><div class="l">Posts awaiting your approval</div></div>
-    <div class="kpi"><div class="v">${confirmed.length} <span class="muted" style="font-size:15px">/ ${booking.length}</span></div><div class="l">Enquiries converted</div></div>
-    <div class="kpi"><div class="v">${replied.length} <span class="muted" style="font-size:15px">/ ${logs.length}</span></div><div class="l">Replied within ${T.reply_window_hours || 2} h</div></div>
-    <div class="kpi"><div class="v num">${peso(comm)}</div><div class="l">Commission earned (${((T.commission_rate || 0) * 100).toFixed(2)}% of verified bookings ≥ ${peso(T.commission_min_value)})</div></div>
-    <div class="kpi"><div class="v num">${peso((T.retainer || 0) + comm)}</div><div class="l">Retainer + commission (bonuses scored by hand)</div></div></div>
-  <div class="tabs">${[["kpi","Response KPI"],["leads","Past inquiries"],["posts","Posting calendar"],["check","Checklist"],["log","Enquiry log"]].map(([k, n]) => `<button aria-pressed="${mtab === k}" onclick="mtab='${k}';mkt()">${n}</button>`).join("")}</div>
+  const kC = `<div class="kpis"><div class="kpi"><div class="v">${pub} <span class="muted" style="font-size:15px">/ ${req}</span></div><div class="l">Checklist items published</div><div class="bar"><i style="width:${pct(pub, req)}%"></i></div></div><div class="kpi"><div class="v" style="color:var(--amber)">${posts.filter(p => !p.approved && !p.published).length}</div><div class="l">Posts awaiting your approval</div></div></div>`, kL = `<div class="kpis"><div class="kpi"><div class="v">${confirmed.length} <span class="muted" style="font-size:15px">/ ${booking.length}</span></div><div class="l">Enquiries converted</div></div><div class="kpi"><div class="v">${replied.length} <span class="muted" style="font-size:15px">/ ${logs.length}</span></div><div class="l">Replied within ${T.reply_window_hours || 2} h</div></div><div class="kpi"><div class="v num">${peso(comm)}</div><div class="l">Commission earned (${((T.commission_rate || 0) * 100).toFixed(2)}% of verified bookings ≥ ${peso(T.commission_min_value)})</div></div><div class="kpi"><div class="v num">${peso((T.retainer || 0) + comm)}</div><div class="l">Retainer + commission (bonuses scored by hand)</div></div></div>`;
+  ro("D"); $("#main").innerHTML = `<div class="ph"><h1>Marketing<span class="ro-badge">view only</span></h1>${monthNav()}</div>
+  <div class="tabs">${[["kpi","Response KPI"],["leads","Past inquiries"],["log","Enquiry log"],["posts","Posting calendar"],["check","Checklist"]].map(([k, n]) => `<button aria-pressed="${mtab === k}" onclick="mtab='${k}';mkt()">${n}</button>`).join("")}</div>
   <div id="mbody"></div>`;
   bindMonthNav();
   const body = $("#mbody");
@@ -387,6 +514,7 @@ function mkt(){ const key = `${cur.y}-${String(cur.m + 1).padStart(2, "0")}`, T 
     body.innerHTML = `<div class="toolbar"><button class="btn sm" onclick="editPost()">+ Add a post</button><span class="muted small">Click a post to approve, mark published or edit.</span></div>${calendar(k => (byDay[k] || []).map(p => `<div class="pill ${cls(p)}" onclick="event.stopPropagation();editPost('${p.id}')">${esc(p.platform || "").slice(0, 2)} · ${esc(p.topic)}</div>`).join(""), k => editPost(null, k))}`; }
   if (mtab === "check") body.innerHTML = `<div class="toolbar"><button class="btn sm" onclick="editItem()">+ Add a checklist item</button></div><table><tr><th>Item</th><th>Platform · format</th><th>Required</th><th>Progress</th><th></th></tr>${items.map(c => `<tr><td><b>${esc(c.item)}</b>${c.brief ? `<br><span class="muted small">${esc(c.brief)}</span>` : ""}</td><td>${esc(c.platform)} · ${esc(c.format)}</td><td class="num">${c.required_qty}${c.due_by ? `<br><span class="muted small">due ${fmt(pd(c.due_by))}</span>` : ""}</td><td style="width:160px"><div class="prog"><i style="width:${pct(pubOf(c), c.required_qty)}%"></i></div><span class="small num">${pubOf(c)} published · ${planOf(c)} planned</span></td><td><button class="btn sm ghost" onclick="editItem('${c.id}')">Edit</button></td></tr>`).join("") || `<tr><td colspan="5" class="empty">No items for ${monthLabel(cur.y, cur.m)}.</td></tr>`}</table>`;
   if (mtab === "log") body.innerHTML = `<div class="toolbar"><button class="btn sm" onclick="editLog()">+ Log an enquiry</button><span class="muted small">Website bookings can be logged here too when she handled the conversation.</span></div><div style="overflow:auto"><table><tr><th>Received</th><th>Channel</th><th>Customer</th><th>Type · branch</th><th>First reply</th><th>Status</th><th>Value</th><th>Verified</th><th>Commission</th><th></th></tr>${logs.map(l => { const hrs = l.first_reply_at ? ((new Date(l.first_reply_at) - new Date(l.received_at)) / 3600e3) : null; const eligible = l.verified && (+l.booking_value || 0) >= (T.commission_min_value || 0); return `<tr><td class="small num">${fmtTs(l.received_at)}</td><td>${esc(l.channel)}</td><td><b>${esc(l.customer)}</b></td><td>${esc(l.enquiry_type)}<br><span class="muted small">${esc(l.branch)}</span></td><td class="small num">${hrs === null ? "—" : fmtTs(l.first_reply_at) + (hrs <= (T.reply_window_hours || 2) ? " ✔" : " ✘ " + hrs.toFixed(1) + " h")}</td><td>${chip(l.status)}</td><td class="num">${l.booking_value ? peso(l.booking_value) : "—"}</td><td>${l.verified ? "✔" : "—"}</td><td class="num">${eligible ? peso((+l.booking_value) * (T.commission_rate || 0)) : "—"}</td><td><button class="btn sm ghost" onclick="editLog('${l.id}')">Edit</button></td></tr>`; }).join("") || `<tr><td colspan="10" class="empty">Nothing logged for ${monthLabel(cur.y, cur.m)}.</td></tr>`}</table></div>`;
+  if (mtab === "posts" || mtab === "check") body.insertAdjacentHTML("afterbegin", kC); if (mtab === "log") body.insertAdjacentHTML("afterbegin", kL);
 }
 function kpiView(key, T){
   const win = (T.reply_window_hours || 2) * 60, rate = T.commission_rate || 0, minv = T.commission_min_value || 0;
@@ -471,7 +599,7 @@ async function delRow(table, id){ if (!confirm("Delete this?")) return; const { 
 const KINDL = { table: "Free table", group: "Big group", event: "Private event" };
 function set(){ const r = D.settings.reservation || {}, c = D.settings.contact || {}, pay = D.settings.payment || {}, owner = sw("C3"), iEdit = can("I", "edit"), isHr = can("C", "edit"), admin = sw("I4");
   document.body.classList.remove("ro"); pageRo = false;
-  $("#main").innerHTML = `<h1>Settings</h1><div class="grid">${can("I") || owner ? `
+  $("#main").innerHTML = `<h1>Settings</h1>${setTabs()}<div class="grid set-grid" data-st="${stab}">${can("I") || owner ? `
     <div class="card"><h3>Table and group rules</h3><div class="fields">${[["minutes","Reservation window (minutes)"],["grace_minutes","Grace period (minutes)"],["table_max","Max guests for a free table"],["group_min","Big group from"],["group_max","Big group up to"],["group_rate","Minimum consumable per guest ₱"],["group_dp","Down payment per guest ₱"],["pencil_hours","Pencil hold (hours)"]].map(([k, l]) => `<label class="f">${l}<input id="s-${k}" type="number" value="${r[k] ?? ""}" ${owner ? "" : "disabled"}></label>`).join("")}</div>${owner ? `<button class="btn sm primary" onclick="saveSetting('reservation',${JSON.stringify(["minutes","grace_minutes","table_max","group_min","group_max","group_rate","group_dp","pencil_hours"]).replace(/"/g, "&quot;")},true)">Save</button>` : `<div class="muted small">Only someone with "Edit house rules" access can change these.</div>`}</div>
     <div class="card"><h3>Contact details</h3><p class="muted small">Shown to customers in confirmation emails.</p><div class="fields">${[["name","Events contact name"],["phone","Phone"],["email","Team email (reply-to)"],["notify_emails","Who receives new-booking emails (comma-separated)"],["facebook","Facebook page / Messenger link"],["instagram","Instagram link"],["whatsapp","WhatsApp number"],["viber","Viber number"]].map(([k, l]) => `<label class="f">${l}<input id="s-contact-${k}" value="${esc(c[k] || "")}" ${iEdit ? "" : "disabled"}></label>`).join("")}</div>${iEdit ? `<button class="btn sm primary" onclick="saveSetting('contact',['name','phone','email','notify_emails','facebook','instagram','whatsapp','viber'])">Save</button>` : ""}</div>
     <div class="card"><h3>Down payment QR codes per branch</h3><p class="muted small">Big-group customers see these QR codes on their confirmation page (never the account numbers), plus the Facebook and WhatsApp buttons from Contact details.</p>${["sa","ju"].map(b => { const p = pay[b] || {}; return `<div style="margin:12px 0 6px;font-weight:700">${BRN[b]}</div><div class="fields"><label class="f">GCash account name<input id="s-pay-${b}-gcash_name" value="${esc(p.gcash_name || "")}" ${iEdit ? "" : "disabled"}></label><label class="f">Maya account name<input id="s-pay-${b}-maya_name" value="${esc(p.maya_name || "")}" ${iEdit ? "" : "disabled"}></label><label class="f">Bank (BPI, BDO…)<input id="s-pay-${b}-bank_name" value="${esc(p.bank_name || "")}" ${iEdit ? "" : "disabled"}></label></div>
@@ -486,7 +614,14 @@ function set(){ const r = D.settings.reservation || {}, c = D.settings.contact |
     ${sw("I5") ? `<div class="card"><h3>Backup</h3><p class="muted small">Downloads every table (bookings, events, employees, schedules, punches, payroll, settings) as one file you can keep. Do this before any big change and once a week.</p><button class="btn sm" onclick="backupAll()">Download backup</button></div>` : ""}
     <div class="card"><h3>My password</h3><p class="muted small">Signed in as ${esc(me.email)}.</p><div class="fields"><label class="f">New password (8+ characters)<input id="pw1" type="password" autocomplete="new-password"></label><label class="f">Repeat<input id="pw2" type="password" autocomplete="new-password"></label></div><button class="btn sm" onclick="changePw()">Change password</button></div>
     ${can("I") || admin ? `<div class="card" style="grid-column:1/-1"><h3>Portal users &amp; access</h3><p class="muted small">Each person gets a role preset, then you can fine-tune what they see (view) and what they can change (edit) per area. Owners always have everything.</p><table><tr><th>Person</th><th>Role</th><th>Access</th>${admin ? "<th></th>" : ""}</tr>${D.staff.map(s => { const p = permsOf(s); return `<tr><td><b>${esc(s.name || "")}</b><br><span class="muted small">${esc(s.email)}</span></td><td><span class="role-chip">${esc(ROLE_NAMES[s.role] || s.role)}</span></td><td class="small">${s.role === "owner" ? "Full access" : PERM_CATS.filter(([k]) => p[k] !== "none").map(([k, l]) => `${({A:"Bookings",B:"Events",C:"Calendar",D:"Marketing",E:"Playbook",S:"Seating",F:"HR people",G:"HR time",H:"Payroll",I:"Settings"})[k]} <span class="muted">${p[k]}</span>`).join(" · ") || "<span class='muted'>nothing yet</span>"}</td>${admin ? `<td style="white-space:nowrap"><button class="btn sm ghost" onclick="editAccess('${s.id}')">Access</button> <button class="btn sm ghost" onclick="rmStaff('${s.id}')">Remove</button></td>` : ""}</tr>`; }).join("")}</table>
-      ${admin ? `<div class="fields" style="margin-top:10px"><label class="f">Name<input id="st-name"></label><label class="f">Email<input id="st-email" type="email"></label><label class="f">Role<select id="st-role">${Object.entries(ROLE_NAMES).filter(([k]) => k !== "owner" || myRole === "owner").map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select></label></div><button class="btn sm" onclick="addStaff()">Add person</button><p class="muted small">Presets: <b>Owner</b> and <b>Executive assistant</b> have everything. <b>Manager</b> runs bookings, events, marketing and HR and prepares payroll (the owner approves it). <b>Marketing associate</b> handles bookings, events, calendar, marketing and the playbook, plus backups. <b>Cashier · branch portal</b> sees bookings and runs table seating. <b>Consultant</b> works events and sees only their own KPI line. After adding someone, click Access to adjust, then invite them under Authentication → Users in Supabase (or they can use "Email me a sign-in link").</p>` : ""}</div>` : ""}</div>`; }
+      ${admin ? `<div class="fields" style="margin-top:10px"><label class="f">Name<input id="st-name"></label><label class="f">Email<input id="st-email" type="email"></label><label class="f">Role<select id="st-role"><option value="">Choose a role…</option>${Object.entries(ROLE_NAMES).filter(([k]) => k !== "owner" || myRole === "owner").map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select></label></div><button class="btn sm" onclick="addStaff()">Add person</button><p class="muted small">Presets: <b>Owner</b> and <b>Executive assistant</b> have everything. <b>Manager</b> runs bookings, events, marketing and HR and prepares payroll (the owner approves it). <b>Marketing associate</b> handles bookings, events, calendar, marketing and the playbook, plus backups. <b>Cashier · branch portal</b> sees bookings and runs table seating. <b>Consultant</b> works events and sees only their own KPI line. After adding someone, click Access to adjust, then invite them under Authentication → Users in Supabase (or they can use "Email me a sign-in link").</p>` : ""}</div>` : ""}</div>`; applySetTab(); }
+let stab = "rules";
+const SET_SECS = [["rules", "Booking rules"], ["contact", "Contact & payments"], ["access", "Team access"], ["account", "My account"]];
+const SET_MAP = { "Table and group rules": "rules", "House rules": "rules", "Blocked dates": "rules", "Branches": "rules", "Contact details": "contact", "Down payment QR codes per branch": "contact", "Portal users & access": "access", "My password": "account", "Backup": "account" };
+function setTabs(){ return `<div class="tabs" id="set-tabs">${SET_SECS.map(([k, l]) => `<button aria-pressed="${stab === k}" data-s="${k}" onclick="stab='${k}';applySetTab()">${l}</button>`).join("")}</div>`; }
+function applySetTab(){ const cards = [...document.querySelectorAll(".set-grid > .card")], sec = c => SET_MAP[c.querySelector("h3")?.textContent.trim()] || "rules";
+  const have = new Set(cards.map(sec)); if (!have.has(stab)) stab = SET_SECS.find(([k]) => have.has(k))?.[0] || "rules";
+  cards.forEach(c => c.hidden = sec(c) !== stab); document.querySelectorAll("#set-tabs button").forEach(b => { b.hidden = !have.has(b.dataset.s); b.setAttribute("aria-pressed", b.dataset.s === stab); }); }
 function editAccess(id){ const s = D.staff.find(x => x.id === id); if (!s) return; if (s.role === "owner" && myRole !== "owner") return toast("Only an owner can change an owner account"); let role = s.role, p = { ...permsOf(s) };
   const draw = () => { const locked = role === "owner"; $("#modal-in").innerHTML = `<h2>${esc(s.name || s.email)}</h2><p class="muted small">${esc(s.email)}</p>
     <div class="fields"><label class="f">Role preset<select id="ac-role" ${myRole !== "owner" && role === "owner" ? "disabled" : ""}>${Object.entries(ROLE_NAMES).filter(([k]) => k !== "owner" || myRole === "owner").map(([k, n]) => `<option value="${k}" ${role === k ? "selected" : ""}>${n}</option>`).join("")}</select></label><div style="align-self:end"><button class="btn sm ghost" id="ac-reset">Reset to preset</button></div></div>
@@ -522,7 +657,7 @@ async function cancelBlock(id){ if (!confirm("Cancel this block? Bookings on tho
 async function saveRules(){ const v = { ...(D.settings.reservation || {}), friday_tables_blocked: $("#s-rule-friday").value === "true" };
   const { error } = await sb.from("settings").upsert({ key: "reservation", value: v }); if (error) return toast(error.message); D.settings.reservation = v; toast("Rules saved"); }
 async function changePw(){ const a = $("#pw1").value, b = $("#pw2").value; if (a.length < 8) return toast("Use at least 8 characters"); if (a !== b) return toast("Passwords don't match"); const { error } = await sb.auth.updateUser({ password: a }); if (error) return toast(error.message); $("#pw1").value = $("#pw2").value = ""; toast("Password changed"); }
-async function addStaff(){ const role = $("#st-role").value; const { error } = await sb.from("staff").insert({ name: $("#st-name").value, email: $("#st-email").value.trim().toLowerCase(), role, perms: role === "owner" ? null : ROLE_PRESETS[role] }); if (error) return toast(error.message); await load(); render(); toast("Added. Click Access to fine-tune."); }
+async function addStaff(){ const role = $("#st-role").value; if (!$("#st-email").value.trim()) return toast("Add their email first"); if (!role) return toast("Choose a role for this person"); const { error } = await sb.from("staff").insert({ name: $("#st-name").value, email: $("#st-email").value.trim().toLowerCase(), role, perms: role === "owner" ? null : ROLE_PRESETS[role] }); if (error) return toast(error.message); await load(); render(); toast("Added. Click Access to fine-tune."); }
 async function rmStaff(id){ if (!confirm("Remove this staff member's access?")) return; const { error } = await sb.from("staff").delete().eq("id", id); if (error) return toast(error.message); await load(); render(); }
 
 start();

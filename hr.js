@@ -223,14 +223,20 @@ function periodBar(extra){
 function bindPeriod(){ const s = $("#hr-period"); if (s) s.onchange = async () => { [H.from, H.to] = s.value.split("|"); await hrLoadPeriod(); hrRender(); }; }
 const HR_CAT = { pay: "H", rules: "H", exc: "G", time: "G", lineup: "G", floorplan: "G", hol: "G", emps: "F" };
 function hrRender(){
-  const tabs = [["pay", "Payroll"], ["exc", "Exceptions"], ["time", "Timesheets"], ["lineup", "Line-up"], ["emps", "Employees"], ["floorplan", "Floor plan"], ["hol", "Holidays & leave"], ["rules", "Rules"]].filter(([k]) => can(HR_CAT[k]));
-  if (!tabs.length) return $("#main").innerHTML = `<div class="empty">No HR access.</div>`;
+  const grps = Object.keys(HR_GRP).filter(g => HR_GRP_PERM[g]());
+  if (!grps.length) return $("#main").innerHTML = `<div class="empty">No HR access.</div>`;
+  if (!hrGrp || !grps.includes(hrGrp)) hrGrp = Object.keys(HR_GRP).find(g => grps.includes(g) && HR_GRP[g].tabs.some(([k]) => k === H.tab)) || grps[0];
+  const G = HR_GRP[hrGrp], tabs = G.tabs.filter(([k]) => can(HR_CAT[k]));
   if (!tabs.some(([k]) => k === H.tab)) H.tab = tabs[0][0];
-  ro(HR_CAT[H.tab]);
+  syncNav(); ro(HR_CAT[H.tab]);
   const pend = H.exc.filter(x => x.status === "pending").length, pendEmp = H.emps.filter(e => e.status === "pending").length;
-  $("#main").innerHTML = `<h1>HR & Payroll<span class="ro-badge">view only</span></h1><div class="tabs">${tabs.map(([k, l]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${l}${k === "exc" && pend ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pend}</span>` : ""}${k === "emps" && pendEmp ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${pendEmp}</span>` : ""}</button>`).join("")}</div><div id="hr-body"></div>`;
-  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { H.tab = b.dataset.t; hrRender(); });
+  const badge = n => n ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${n}</span>` : "";
+  const sub = { people: "Everyone on payroll: details, documents, staff app access.", schedule: "Who works when, where they stand, and days off.", pay: "Each cut-off: upload the timesheet, decide the exceptions, then generate payroll." }[hrGrp];
+  $("#main").innerHTML = `<h1>${G.title}<span class="ro-badge">view only</span></h1><p class="ph-sub">${sub}</p>${tabs.length > 1 ? `<div class="tabs">${tabs.map(([k, l, n]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${n ? `<span class="step">${n}</span>` : ""}${l}${k === "exc" ? badge(pend) : ""}${k === "emps" ? badge(pendEmp) : ""}</button>`).join("")}</div>` : ""}<div id="hr-body"></div>`;
+  document.querySelectorAll("#main .tabs button").forEach(b => b.onclick = () => { H.tab = b.dataset.t; hrRender(); });
   ({ pay: tabPay, exc: tabExc, time: tabTime, lineup: tabLineup, emps: tabEmps, floorplan: tabFloor, hol: tabHol, rules: tabRules })[H.tab]();
+  const nbHr = (g, n) => { const b = document.querySelector(`#nav button[data-g=${g}]`); if (!b) return; b.querySelector(".nb")?.remove(); if (n) b.insertAdjacentHTML("beforeend", `<span class="nb">${n}</span>`); };
+  nbHr("pay", pend); nbHr("people", pendEmp);
 }
 
 /* Employees · master list */
@@ -351,7 +357,8 @@ function tabTime(){
   const byEmp = {}; H.punches.forEach(p => (byEmp[p.employee_id] = byEmp[p.employee_id] || []).push(p));
   $("#hr-body").innerHTML = periodBar(`<label class="btn sm primary" style="cursor:pointer">Upload timesheet CSV<input type="file" id="ts-file" accept=".csv,text/csv" hidden></label><button class="btn sm" onclick="generateExceptions()">List exceptions for this period</button><button class="btn sm ghost" onclick="manualPunch()">Add punch by hand</button>`) +
     `<p class="muted small">Imports so far: ${H.imports.slice(0, 5).map(i => `${esc(i.filename)} (${fmt(pd(i.period_start))}–${fmt(pd(i.period_end))}, ${i.row_count} rows)`).join(" · ") || "none"}</p>
-    <div class="grid">${H.emps.filter(e => e.active).map(e => { const ps = (byEmp[e.id] || []); const byDay = {}; ps.forEach(p => (byDay[p.work_date] = byDay[p.work_date] || []).push(p));
+    ${(() => { const none = H.emps.filter(e => e.active && !(byEmp[e.id] || []).length); return !H.punches.length ? `<div class="empty">No punches for this period yet. Upload the timesheet CSV to start.</div>` : none.length ? `<p class="muted small"><b>No punches yet (${none.length}):</b> ${none.map(e => esc(ename(e))).join(", ")}</p>` : ""; })()}
+    <div class="grid">${H.emps.filter(e => e.active && (byEmp[e.id] || []).length).map(e => { const ps = (byEmp[e.id] || []); const byDay = {}; ps.forEach(p => (byDay[p.work_date] = byDay[p.work_date] || []).push(p));
       return `<div class="card"><h3>${esc(ename(e))} <span class="muted small">${Object.keys(byDay).length} days</span></h3>${ps.length ? `<table>${Object.entries(byDay).sort().map(([d, xs]) => { const a = analyzeDay(e, d); return `<tr><td>${fmt(pd(d))}</td><td class="num">${xs.map(p => `${hhmm(p.time_in)}–${p.time_out ? hhmm(p.time_out) : "<b style='color:#c62828'>?</b>"}${p.lunch_out ? ` <span class="muted">(L ${hhmm(p.lunch_out)}–${hhmm(p.lunch_in)})</span>` : ""}${p.source === "app" ? ` <a href="#" onclick="viewSelfie('${p.selfie_in || ""}','${p.selfie_out || ""}');return false" title="selfies">📱</a>` : ""}`).join("<br>")}</td><td class="num">${hm(a.paid)}</td><td class="small">${a.exc.map(x => `<span class="chip" style="background:${NEEDS_OK.includes(x[0]) ? "#fff3df" : "#f1f1f1"};color:#555">${KINDN[x[0]]}</span>`).join(" ")}</td></tr>`; }).join("")}</table>` : `<div class="muted small">No punches in this period</div>`}</div>`; }).join("")}</div>`;
   bindPeriod(); $("#ts-file").onchange = ev => { if (ev.target.files[0]) importTimesheet(ev.target.files[0]); };
 }
