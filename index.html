@@ -921,9 +921,20 @@ function stepReview(){
 
 if (S.step > 0 && !ok1()) S.step = 0;
 renderKind();
-(function(){ const lt = new URLSearchParams(location.search).get("lead"); if (lt) { try { localStorage.setItem("cu-lead", lt); } catch (e) {} history.replaceState(null, "", location.pathname + (location.search.replace(/[?&]lead=[^&]*/, "").replace(/^&/, "?") || "")); }
+(function(){ const qs = new URLSearchParams(location.search), lt = qs.get("l") || qs.get("lead"); if (lt) { try { localStorage.setItem("cu-lead", lt); } catch (e) {} history.replaceState(null, "", location.pathname + (location.search.replace(/[?&](l|lead)=[^&]*/g, "").replace(/^&/, "?") || "")); }
   let has = lt; try { has = has || localStorage.getItem("cu-lead"); } catch (e) {}
-  if (has) { const b = document.createElement("div"); b.id = "lead-banner"; b.style.cssText = "background:#ff70e8;color:#0b0b0e;font:600 14px/1.4 Inter,sans-serif;text-align:center;padding:10px 16px"; b.innerHTML = "Welcome back! Booking is open and, as an early inquiry, you get first pick of dates. Tap <b>Private event</b> below to pencil-book yours."; document.body.insertBefore(b, document.body.firstChild); } })();
+  if (!has) return;
+  const b = document.createElement("div"); b.id = "lead-banner"; b.style.cssText = "background:#0b0b0e;color:#efe9e1;font:500 15px/1.45 Inter,sans-serif;text-align:center;padding:12px 16px;display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap";
+  const draw = n => { b.innerHTML = `<span>${n ? "Welcome back, " + esc(n) + ". " : "Welcome back. "}Our November &amp; December private event dates are open.</span><button type="button" style="background:#efe9e1;color:#0b0b0e;border:0;border-radius:999px;padding:9px 16px;font:700 13px Inter,sans-serif;letter-spacing:.04em;cursor:pointer">Continue your event inquiry &rarr;</button>`; b.querySelector("button").onclick = () => startKind("event"); };
+  draw(""); document.body.insertBefore(b, document.body.firstChild);
+  if (!CONFIG.ENDPOINT) return;
+  fetch(CONFIG.ENDPOINT + "?action=lead&code=" + encodeURIComponent(has), {headers:JSON_HEADERS}).then(r => r.json()).then(j => { if (!j || !j.ok || !j.lead) return; const L = j.lead;
+    const nm = String(L.name || "").split(/\s*[\/|]\s*/)[0].trim(), firstN = /\b(inc|corp|company|group|philippines|room|bank|consulting|trading|services|asia)\b/i.test(nm) ? "" : nm.split(/\s+/)[0]; draw(firstN ? firstN.charAt(0).toUpperCase() + firstN.slice(1).toLowerCase() : "");
+    if (!S.name && L.name) S.name = String(L.name).trim();
+    const g = String(L.guests || "").match(/\d+/g); if (g) S.guests = Math.max(20, +(g[1] || g[0]));
+    if (L.event_type && !S.occasion) S.occasion = String(L.event_type).trim();
+    if (/jupiter/i.test(L.branch_pref || "")) S.branch = "Jupiter Street"; else if (/gil puyat|san antonio/i.test(L.branch_pref || "")) S.branch = "San Antonio Place";
+    try { save(); } catch (e) {} }).catch(() => {}); })();
 (async () => { const tok = new URLSearchParams(location.search).get("menu"); if (!tok || !CONFIG.ENDPOINT) return;
   try { const r = await fetch(CONFIG.ENDPOINT + "?action=inquiry&token=" + encodeURIComponent(tok), {headers:JSON_HEADERS}); const j = await r.json(); if (!j.ok) { alert(j.error || "This menu link is no longer valid."); return; } const q = j.inquiry;
     const bname = Object.keys(BR_KEY).find(k => BR_KEY[k] === q.branch) || "San Antonio Place";
