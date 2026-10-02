@@ -188,6 +188,10 @@ ul.list li{display:flex;justify-content:space-between;gap:10px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+.qrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.qr{background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#111}
+.qr img{width:100%;max-width:220px;aspect-ratio:1;object-fit:contain;display:block}
+.qr b{font:600 16px var(--display);margin-top:4px}.qr span{font-size:13px;color:#555}
 /* privacy notice gate */
 .pv{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);backdrop-filter:blur(14px) saturate(.8);-webkit-backdrop-filter:blur(14px) saturate(.8)}
 .pv[hidden]{display:none}
@@ -431,12 +435,13 @@ function stepEvent(){
 }
 function eventCap(){ const c = EVENT_CAP[S.branch]; return S.branch === "San Antonio Place" && S.area === "indoor" ? c.indoor : c.whole; }
 function guestNote(){ const g = +S.guests || 0, c = EVENT_CAP[S.branch], cap = eventCap(), sa = S.branch === "San Antonio Place";
+  const eb = eventBlockMsg(); if (eb) return eb;
   if (!g) return `<div class="note">Rates and packages are on the next step.</div>`;
   if (g > cap) return `<div class="warn"><b>${esc(S.branch)} fits up to ${cap} guests${sa ? (S.area === "indoor" ? " indoor only (118 with al fresco)" : " (86 indoor, 118 with al fresco)") : ""}.</b> For a bigger crowd, or a standing set-up, message us and we'll arrange an ocular visit first.${sa && S.area === "indoor" ? ` <button type="button" class="btn" style="padding:6px 12px;font-size:13px;margin-left:6px" onclick="S.area='whole';save();render()">Use the whole venue</button>` : ""}</div>`;
   if (sa && g > c.comfort) return `<div class="warn"><b>Above ${c.comfort} guests, comfort gets tight.</b> Our maximum is ${cap}${S.area === "indoor" ? " indoor only" : " with al fresco"}. For a standing or cocktail set-up, or any layout different from our usual seating, we'll schedule an ocular visit before confirming. You can continue.</div>`;
   if (g < 20) return `<div class="warn"><b>Under 20 guests?</b> A <b>big group booking</b> (7 to 18) has no venue minimum: ₱400 a head consumable and tables held for you. You can still continue with a private event if you prefer exclusive use.${g >= GROUP_MIN && g <= GROUP_MAX ? ` <button type="button" class="btn" style="padding:6px 12px;font-size:13px;margin-left:6px" onclick="K.kind='group';K.branch=S.branch;K.guests=${g};K.name=S.name;K.phone=S.phone;K.email=S.email;saveK();renderKind();window.scrollTo({top:0})">Switch to big group</button>` : ""}</div>`;
   return `<div class="note">${g} guests at <b>${esc(S.branch)}</b>. Rates and packages are on the next step, and all rates are subject to a 10% service charge.</div>`; }
-function ok1(){ return S.name.trim() && S.phone.replace(/\D/g, "").length >= 7 && S.date && +S.guests > 0 && +S.guests <= eventCap() && S.occasion; }
+function ok1(){ const bl = blockFor(S.branch, S.date, "event"); if (bl && bl.blocked) return false; return S.name.trim() && S.phone.replace(/\D/g, "").length >= 7 && S.date && +S.guests > 0 && +S.guests <= eventCap() && S.occasion; }
 function nextBtn(){ const b = document.getElementById("next"); if (b) b.disabled = !ok1(); }
 
 function stepMode(){
@@ -618,7 +623,7 @@ async function loadAvailability(){
 function freeAt(time){ const b = TABLE_CFG[K.branch]; if (!AV.data) return b.areas[K.area]; const s = AV.data.slots.find(x => x.time === time); return s ? s.free[K.area] : 0; }
 const tablesNeeded = () => Math.ceil((+K.guests || 0) / 2);
 function guestsOk(){ const g = +K.guests || 0; return isGroup() ? g >= GROUP_MIN && g <= GROUP_MAX : g >= 1 && g <= TABLE_MAX; }
-function okRes(){ return K.name.trim().length > 1 && K.phone.replace(/\D/g, "").length >= 7 && K.date && K.time && guestsOk() && freeAt(K.time) >= tablesNeeded(); }
+function okRes(){ return !ruleMsg() && K.name.trim().length > 1 && K.phone.replace(/\D/g, "").length >= 7 && K.date && K.time && guestsOk() && freeAt(K.time) >= tablesNeeded(); }
 
 /* group order: sharing platters + drinks from the same catalogue as the events page */
 const GCAT = CAT.filter(c => c.grp.startsWith("Sharing platters") || c.grp === "Drinks");
@@ -655,7 +660,7 @@ function renderKind(){
   const b = TABLE_CFG[K.branch]; if (!b.areas[K.area]) K.area = Object.keys(b.areas)[0];
   const times = serviceTimes(b), need = tablesNeeded(), free = K.time ? freeAt(K.time) : null, g = +K.guests || 0;
   const gmin = isGroup() ? GROUP_MIN : 1, gmax = isGroup() ? GROUP_MAX : TABLE_MAX;
-  const sizeMsg = !guestsOk() ? (isGroup() ? (g > GROUP_MAX ? `For more than ${GROUP_MAX} guests, please book a <b>private event</b>.` : `Big group bookings are for ${GROUP_MIN} to ${GROUP_MAX} guests. For ${TABLE_MAX} or fewer, use the free <b>table reservation</b>.`) : (g > TABLE_MAX ? `For ${GROUP_MIN} guests or more, use <b>big group booking</b> (minimum consumable applies).` : "Enter your number of guests.")) : "";
+  const sizeMsg = ruleMsg() || (!guestsOk() ? (isGroup() ? (g > GROUP_MAX ? `For more than ${GROUP_MAX} guests, please book a <b>private event</b>.` : `Big group bookings are for ${GROUP_MIN} to ${GROUP_MAX} guests. For ${TABLE_MAX} or fewer, use the free <b>table reservation</b>.`) : (g > TABLE_MAX ? `For ${GROUP_MIN} guests or more, use <b>big group booking</b> (minimum consumable applies).` : "Enter your number of guests.")) : "");
   app.innerHTML = `<section class="panel">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>${isGroup() ? "Your group" : "Your table"}</h2><button class="btn" id="k-back" style="padding:8px 14px;font-size:13px">← Change booking type</button></div>
     ${isGroup() ? `<div class="note"><b>How it works:</b> your group has a minimum consumable of <b class="num">${peso(GROUP_RATE)} per guest</b> on food and drinks, plus 10% service charge on what you consume. A down payment of <b class="num">₱${GROUP_DP} per guest</b> holds your tables and is deducted from your bill. You'll choose your food and drinks in advance on the next step.</div>` : ""}
@@ -794,16 +799,39 @@ async function sendReservation(){
     if (!out.ok) return fail(out.error || "server error");
     try { if (parent.cuReceiveTable) parent.cuReceiveTable(body, out); } catch (e) {}
     AV.key = ""; try { localStorage.removeItem("cu-kind"); } catch (e) {}
-    const pay = out.payment || (CONFIG.PAYMENT || {})[BR_KEY[K.branch]] || CONFIG.PAYMENT || {};
+    const pay = out.payment || {};
+    const msgText = encodeURIComponent(`Hi Catchin' Up! Down payment for booking ${out.ref} (${K.guests} pax, ${niceDate(K.date)} ${ampm(K.time)}, ${K.branch}). Screenshot attached.`);
+    const fb = pay.facebook || RULES.facebook || "", ig = pay.instagram || RULES.instagram || "", wa = (pay.whatsapp || RULES.whatsapp || "").replace(/\D/g, ""), vb = (pay.viber || RULES.viber || "").replace(/\D/g, "");
+    const intl = n => n.startsWith("0") ? "63" + n.slice(1) : n;
+    const waLink = wa ? `https://wa.me/${intl(wa)}?text=${msgText}` : "", vbLink = vb ? `viber://chat?number=%2B${intl(vb)}` : "";
+    const seasonNote = out.note ? `<div class="warn" style="text-align:left;max-width:52ch"><b>Please note:</b> ${esc(out.note)}</div>` : "";
     app.innerHTML = `<section class="panel" style="text-align:center;align-items:center;padding-block:48px"><div class="tagline">${isGroup() ? "Pencil booked" : "Table booked"}</div><h2>See you, ${esc(K.name.split(" ")[0])}!</h2>
       <div class="price num" style="color:var(--cyan)">${esc(out.ref)}</div>
       <p class="muted" style="max-width:52ch;margin:0">${esc(K.branch)} · ${esc(K.area)} · ${niceDate(K.date)} at ${ampm(K.time)} · ${K.guests} guests. Show this reference at the door.${K.email ? " A copy has been sent to " + esc(K.email) + "." : ""}</p>
-      ${isGroup() ? `<div class="note" style="text-align:left;max-width:52ch"><b>To confirm, send your ${peso(s.dp)} down payment within 24 hours.</b><br>${pay.gcash ? "GCash: " + esc(pay.gcash) + "<br>" : ""}${pay.bank ? "Bank: " + esc(pay.bank) + "<br>" : ""}Put <b>${esc(out.ref)}</b> in the reference, then send us the screenshot. We'll reply with your confirmation.${!pay.gcash && !pay.bank ? " We'll message you the payment details." : ""}</div>` : ""}
-      ${contactButtons()}<button class="btn" id="again">Book another</button></section>`;
+      ${seasonNote}
+      ${isGroup() ? `<div style="max-width:560px;width:100%;text-align:left;display:flex;flex-direction:column;gap:14px">
+        <div class="note"><b>To confirm, send your ${peso(s.dp)} down payment within 24 hours.</b> Scan either QR code, then send us the screenshot together with your reference <b>${esc(out.ref)}</b>. We'll reply with your confirmation.</div>
+        <div class="qrs">${[["gcash_qr", "GCash", pay.gcash_name], ["maya_qr", "Maya", pay.maya_name], ["qrph_qr", "QR Ph", "Any bank or e-wallet app"], ["bank_qr", pay.bank_name || "Bank", K.branch]].filter(([k]) => pay[k]).map(([k, t, sub]) => `<div class="qr"><img src="${esc(pay[k])}" alt="${t} QR"><b>${esc(t)}</b><span>${esc(sub || "")}</span></div>`).join("") || `<div class="muted small">We'll message you the payment details.</div>`}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">${fb ? `<a class="btn primary" href="${esc(fb)}" target="_blank" rel="noopener">Send on Facebook</a>` : ""}${ig ? `<a class="btn" href="${esc(ig)}" target="_blank" rel="noopener">Instagram</a>` : ""}${waLink ? `<a class="btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>` : ""}${vbLink ? `<a class="btn" href="${vbLink}">Viber</a>` : ""}</div>
+        <p class="muted small" style="margin:0">Thank you for your cooperation. Your tables stay pencil-booked for 24 hours while we wait for the down payment.</p></div>` : contactButtons()}
+      <button class="btn" id="again">Book another</button></section>`;
     document.getElementById("again").onclick = () => { K = {...K, kind:"", step:0, time:"", notes:"", mode:"", cart:{}}; saveK(); renderKind(); window.scrollTo({top:0}); };
     window.scrollTo({top:0});
   } catch (e) { fail(e.name === "AbortError" ? "the connection timed out" : "no connection"); }
 }
+/* house rules from the portal (Friday walk-in only, blocked dates) */
+let RULES = { friday_tables_blocked: true, blocks: [], facebook: "", instagram: "", whatsapp: "", viber: "" };
+(async () => { try { if (!CONFIG.ENDPOINT || CONFIG.ENDPOINT.includes("PASTE")) return; const r = await fetch(CONFIG.ENDPOINT + "?action=rules", { headers: JSON_HEADERS }); const j = await r.json(); if (j.ok) { RULES = { ...RULES, ...j }; if (K.kind && K.kind !== "event") renderKind(); else if (K.kind === "event") render(); } } catch (e) {} })();
+const isFriday = d => d && new Date(d + "T12:00:00").getDay() === 5;
+const shortDate = d => new Date(d + "T12:00:00").toLocaleDateString("en-PH", {month:"short", day:"numeric"});
+function blockFor(branchName, date, kind){ if (!date) return null; const key = BR_KEY[branchName]; const hit = RULES.blocks.find(x => date >= x.from && date <= x.to && (x.branch === "all" || x.branch === key) && (x.kinds || []).includes(kind)); if (hit) return { blocked: true, ...hit };
+  const note = RULES.blocks.find(x => date >= x.from && date <= x.to && (x.branch === "all" || x.branch === key) && (x.note_kinds || []).includes(kind) && x.note); return note ? { blocked: false, ...note } : null; }
+const KINDWORD = { table: "Table reservations", group: "Big group bookings", event: "Private events" };
+function ruleMsg(){ if (!K.date) return ""; const kind = isGroup() ? "group" : "table";
+  if (kind === "table" && RULES.friday_tables_blocked && isFriday(K.date)) return `<b>Fridays are walk-in only</b> for tables of up to ${TABLE_MAX}. Big groups of ${GROUP_MIN} to ${GROUP_MAX} can still book a Friday with a down payment, or pick another night.`;
+  const bl = blockFor(K.branch, K.date, kind); if (bl && bl.blocked) return `<b>${KINDWORD[kind]} are not available on ${shortDate(K.date)}</b>${bl.reason ? ` (${esc(bl.reason)})` : ""}${bl.from !== bl.to ? `, ${shortDate(bl.from)} to ${shortDate(bl.to)}` : ""}. Please pick another date${kind === "group" ? ", book a free table, or book a <b>private event</b>" : ""}.`;
+  return ""; }
+function eventBlockMsg(){ const bl = blockFor(S.branch, S.date, "event"); return bl && bl.blocked ? `<div class="warn"><b>Private events are not available on ${shortDate(S.date)}</b>${bl.reason ? ` (${esc(bl.reason)})` : ""}${bl.from !== bl.to ? `, ${shortDate(bl.from)} to ${shortDate(bl.to)}` : ""}. Please choose another date.</div>` : ""; }
 function goHome(to){ K.kind = ""; K.step = 0; saveK(); renderKind(); const el = to && document.getElementById(to); if (el) setTimeout(() => el.scrollIntoView({behavior:"smooth", block:"start"}), 50); else window.scrollTo({top:0, behavior:"smooth"}); }
 function startKind(kind){ const hb = document.querySelector("#brswitch button[aria-pressed=true]"); if (hb) { K.branch = hb.dataset.b; S.branch = hb.dataset.b; if (S.branch !== "San Antonio Place") S.area = "whole"; } K.kind = kind; K.step = 0; K.mode = ""; K.guests = kind === "group" ? Math.max(GROUP_MIN, Math.min(GROUP_MAX, +K.guests || GROUP_MIN)) : kind === "table" ? Math.min(TABLE_MAX, +K.guests || 2) : K.guests; saveK(); renderKind(); window.scrollTo({top:0}); }
 document.getElementById("pick").onclick = e => { const b = e.target.closest("button[data-kind]"); if (!b) return; const hb = document.querySelector("#brswitch button[aria-pressed=true]"); if (hb) { K.branch = hb.dataset.b; S.branch = hb.dataset.b; if (S.branch !== "San Antonio Place") S.area = "whole"; } K.kind = b.dataset.kind; K.step = 0; K.mode = ""; K.guests = b.dataset.kind === "group" ? Math.max(GROUP_MIN, Math.min(GROUP_MAX, +K.guests || GROUP_MIN)) : b.dataset.kind === "table" ? Math.min(TABLE_MAX, +K.guests || 2) : K.guests; saveK(); renderKind(); document.getElementById("app").scrollIntoView({behavior:"smooth", block:"start"}); };

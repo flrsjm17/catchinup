@@ -72,3 +72,10 @@ Customers see the notice (with the NPC mark, over a blurred page) the first time
 Send new hires the registration link (Employees tab → *Copy registration link*, it is `register.html`). They fill in personal details, branch (Catchin' Up San Antonio, Catchin' Up Jupiter, or Funhan Mart Arnaiz), position, SSS/PhilHealth/Pag-IBIG/TIN, emergency contact, a photo of a valid ID and a selfie, and accept the employee privacy consent. The registration lands as **pending** in the Employees master list. Click it to see everything including the ID photo, set the hourly rate and default shift, and press **Approve and send staff-app invite**. The list filters by branch and status, sorts, and downloads as CSV. ID photos and selfies are in the private `employee-docs` bucket; only owner/manager can open them.
 
 Funhan Mart staff use the same staff app, line-up, timesheets and payroll. They never see bookings; the booking pages are only for the owner, events and manager accounts.
+
+## House rules, blocked dates and down payments (Settings)
+
+- **Fridays**: free table bookings are blocked (walk-in only); big groups with a down payment can still book. Switch in Settings → House rules.
+- **Blocked dates**: Settings → Blocked dates. Pick a date or range, the branch (or both), tick which booking types are blocked (free table, big group, private event) and, optionally, which types are "warn only" (still bookable, customer sees your note). Active blocks are listed with a *Cancel block* button. The private-events season (Oct 20 – Dec 20: big groups blocked, free tables warned) is pre-loaded as one block you can cancel or edit by re-adding.
+- **Down payments**: upload up to four QR codes per branch (GCash, Maya, QR Ph, bank). Customers never see account numbers; they scan, then press Facebook / Instagram / WhatsApp / Viber (links from Contact details) with their reference pre-filled where the app allows it.
+- All of this is enforced in the database as well as on the page.
