@@ -801,7 +801,8 @@ async function sendReservation(){
     AV.key = ""; try { localStorage.removeItem("cu-kind"); } catch (e) {}
     const pay = out.payment || {};
     const msgText = encodeURIComponent(`Hi Catchin' Up! Down payment for booking ${out.ref} (${K.guests} pax, ${niceDate(K.date)} ${ampm(K.time)}, ${K.branch}). Screenshot attached.`);
-    const fb = pay.facebook || RULES.facebook || "", ig = pay.instagram || RULES.instagram || "", wa = (pay.whatsapp || RULES.whatsapp || "").replace(/\D/g, ""), vb = (pay.viber || RULES.viber || "").replace(/\D/g, "");
+    const norm = u => u && !/^https?:\/\//i.test(u) ? "https://" + u.replace(/^\/+/, "") : (u || "");
+    const fb = norm(pay.facebook || RULES.facebook), ig = norm(pay.instagram || RULES.instagram), wa = (pay.whatsapp || RULES.whatsapp || "").replace(/\D/g, ""), vb = (pay.viber || RULES.viber || "").replace(/\D/g, "");
     const intl = n => n.startsWith("0") ? "63" + n.slice(1) : n;
     const waLink = wa ? `https://wa.me/${intl(wa)}?text=${msgText}` : "", vbLink = vb ? `viber://chat?number=%2B${intl(vb)}` : "";
     const seasonNote = out.note ? `<div class="warn" style="text-align:left;max-width:52ch"><b>Please note:</b> ${esc(out.note)}</div>` : "";
