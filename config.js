@@ -5,5 +5,5 @@ window.CU_CONFIG = {
   ANON_KEY: "sb_publishable_7qqyJAfom5iiiIZMkPTpEA_ztcmgxnR",
   CONTACT: { messenger: "", viber: "", phone: "+63 917 139 2068", email: "" },
   PAYMENT: { gcash: "", bank: "" },
-  VERSION: "2026.10.9"
+  VERSION: "2026.10.10"
 };
