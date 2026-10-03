@@ -344,7 +344,8 @@ async function team(){
     .on("postgres_changes", { event: "*", schema: "public", table: "feed_reactions" }, () => teamSub === "feed" && loadFeed(true))
     .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => teamSub === "chat" && loadChat()).subscribe();
   if (teamSub === "feed") loadFeed(); else loadChat(br); }
-async function loadFeed(rxOnly){
+let IS_HR = null;
+async function loadFeed(rxOnly){ if (IS_HR === null){ try { const { data } = await sb.rpc("is_hr"); IS_HR = data === true; } catch (e) { IS_HR = false; } }
   const since = new Date(Date.now() - 2 * 86400000).toISOString();
   if (!rxOnly){ const { data } = await sb.from("feed_posts").select("*").gte("at", since).order("at", { ascending: false }).limit(80); FEED = data || [];
     const need = FEED.map(p => p.selfie).filter(x => x && !URLS[x]); if (need.length){ const { data: u } = await sb.storage.from("selfies").createSignedUrls(need, 3600); (u || []).forEach(x => { if (x.signedUrl) URLS[x.path] = x.signedUrl; }); } }
@@ -357,7 +358,7 @@ function drawFeed(){ const box = $("#tbox"); if (!box) return; let last = "", ht
     const mine = RX.find(x => x.post_id === p.id && x.employee_id === E.id), counts = {}; RX.filter(x => x.post_id === p.id).forEach(x => counts[x.emoji] = (counts[x.emoji] || 0) + 1);
     html += `<div class="post">${face(p, 40)}<div style="min-width:0;flex:1"><div class="who"><b>${esc(p.name)}</b> ${p.kind === "in" ? "timed in" : "timed out"} <span class="tag ${p.kind}">${p.kind === "in" ? "IN" : "OUT"}</span></div><div class="t">${hhmm(p.at)} · ${p.branch === "field" ? "🚗 Field work" : p.branch === "ju" ? "Jupiter" : p.branch === "fm" ? "Funhan Mart" : "San Antonio"}</div>
       ${p.selfie && URLS[p.selfie] ? `<img class="ph" src="${URLS[p.selfie]}" alt="${esc(p.name)}" data-post="${p.id}" draggable="false">` : `<div class="t" style="margin-top:6px" data-post="${p.id}">Hold here to react</div>`}
-      <div class="rx">${Object.entries(counts).map(([em, n]) => `<button class="${mine && mine.emoji === em ? "mine" : ""}" onclick="react('${p.id}','${em}')">${em} ${n}</button>`).join("")}<button onclick="pickAt(event,'${p.id}')" aria-label="Add a reaction">＋</button></div></div></div>`; });
+      <div class="rx">${Object.entries(counts).map(([em, n]) => `<button class="${mine && mine.emoji === em ? "mine" : ""}" onclick="react('${p.id}','${em}')">${em} ${n}</button>`).join("")}<button onclick="pickAt(event,'${p.id}')" aria-label="Add a reaction">＋</button>${IS_HR ? `<button onclick="feedDelSheet('${p.id}')" aria-label="Delete post" style="margin-left:auto">🗑</button>` : ""}</div></div></div>`; });
   box.innerHTML = (FEED.length ? `<div class="card" style="padding:12px 16px"><div class="small muted">On shift now</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${[...onNow].map(id => { const p = FEED.find(x => x.employee_id === id); const pin = FEED.find(x => x.employee_id === id && x.kind === "in") || p; return `<span title="${esc(p.name)}" style="display:flex;flex-direction:column;align-items:center;font-size:11px;width:48px">${face(pin, 40)}<span style="max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span></span>`; }).join("") || "<span class='small muted'>Nobody is clocked in right now.</span>"}</div></div>` : "") + (html ? html + "</div>" : `<div class="card muted">No time-ins in the last two days yet. Yours will show up here.</div>`) + `<p class="small muted" style="text-align:center">Press and hold a photo to react · photos disappear after 30 days</p>`;
   box.querySelectorAll("[data-post]").forEach(el => { let t; const id = el.dataset.post;
     el.addEventListener("contextmenu", e => e.preventDefault());
@@ -368,6 +369,16 @@ function showPicker(x, y, id){ document.querySelector(".picker")?.remove(); cons
   document.body.appendChild(p); const w = p.offsetWidth; p.style.left = Math.max(8, Math.min(innerWidth - w - 8, x - w / 2)) + "px"; p.style.top = Math.max(8, y - 64) + "px";
   p.querySelectorAll("button").forEach((b, i) => b.onclick = () => { p.remove(); react(id, EMO[i]); });
   setTimeout(() => document.addEventListener("pointerdown", function off(ev){ if (!p.contains(ev.target)){ p.remove(); document.removeEventListener("pointerdown", off); } }), 50); }
+function feedDelSheet(id){ const p = FEED.find(x => x.id === id); if (!p) return;
+  fModal(`<h2>Delete this post?</h2><p class="muted small" style="margin:0 0 10px">${esc(p.name)} ${p.kind === "in" ? "timed in" : "timed out"} at ${hhmm(p.at)}. Only management can delete.</p>
+    <button class="btn" onclick="feedDel('${id}',false)">Remove from the feed only</button>
+    ${p.punch_id ? `<button class="btn go" onclick="feedDel('${id}',true)">Remove from the feed and delete the punch</button><p class="small muted" style="margin:6px 0 0">Deleting the punch also removes it from the timesheet and payroll. Use it for test or mistaken punches.</p>` : ""}
+    <div class="err" id="fd-err"></div><button class="btn" onclick="closeF()">Cancel</button>`); }
+async function feedDel(id, withPunch){ const p = FEED.find(x => x.id === id); if (!p) return;
+  await sb.from("feed_reactions").delete().eq("post_id", id);
+  const { error } = await sb.from("feed_posts").delete().eq("id", id); if (error) return $("#fd-err").textContent = "Couldn't delete: " + error.message;
+  if (withPunch && p.punch_id){ const { error: e2 } = await sb.from("punches").delete().eq("id", p.punch_id); if (e2) return $("#fd-err").textContent = "Post removed, but the punch couldn't be deleted: " + e2.message; }
+  closeF(); toastF(withPunch ? "Post and punch deleted." : "Post removed from the feed."); loadFeed(); }
 async function react(id, em){ const mine = RX.find(x => x.post_id === id && x.employee_id === E.id);
   if (mine && mine.emoji === em) await sb.from("feed_reactions").delete().eq("post_id", id).eq("employee_id", E.id);
   else if (mine) await sb.from("feed_reactions").update({ emoji: em }).eq("post_id", id).eq("employee_id", E.id);
