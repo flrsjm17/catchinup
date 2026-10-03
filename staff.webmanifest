@@ -1,0 +1,30 @@
+{
+ "name": "Catchin' Up Staff",
+ "short_name": "CU Staff",
+ "description": "Clock in, schedule, leave and payslips for Catchin' Up and Funhan Mart staff.",
+ "id": "/staff.html",
+ "start_url": "/staff.html",
+ "scope": "/",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#070708",
+ "theme_color": "#070708",
+ "icons": [
+  {
+   "src": "/staff-icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "/staff-icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "/staff-icon-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

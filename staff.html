@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#070708">
 <title>Catchin' Up · Staff</title>
-<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="staff-icon-192.png"><link rel="manifest" href="staff.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="CU Staff"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
 <style>
@@ -540,6 +540,25 @@ async function healthSheet(){ if (!HP) return; const col = hpCol(HP.band); const
     <button class="btn" style="margin-top:12px" onclick="closeF()">Close</button>`); }
 
 function nextAnnivS(d){ const h = pd(d), t = new Date(); t.setHours(0, 0, 0, 0); let a = new Date(t.getFullYear(), h.getMonth(), h.getDate()); if (a <= t) a = new Date(t.getFullYear() + 1, h.getMonth(), h.getDate()); return iso(a); }
+/* install as an app (no Play Store / App Store needed) */
+let INSTALL_EVT = null;
+const IS_APP = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const IS_IOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("staff-sw.js").catch(() => {});
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); INSTALL_EVT = e; installBar(); });
+addEventListener("appinstalled", () => { document.getElementById("instbar")?.remove(); toastF("App installed. Open it from your home screen."); });
+function installBar(){
+  if (IS_APP() || document.getElementById("instbar")) return;
+  try { if (localStorage.getItem("inst_hide") && !/install=1/.test(location.search)) return; } catch (e) {}
+  const d = document.createElement("div"); d.id = "instbar";
+  d.style.cssText = "position:fixed;left:12px;right:12px;bottom:84px;z-index:60;background:#17171c;border:1px solid #ff70e8;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.5)";
+  const how = INSTALL_EVT ? "" : IS_IOS ? "In Safari, tap <b>Share</b> ⬆ then <b>Add to Home Screen</b>." : "Tap the browser menu <b>⋮</b> then <b>Install app</b> or <b>Add to Home screen</b>.";
+  d.innerHTML = `<img src="staff-icon-192.png" style="width:44px;height:44px;border-radius:10px"><div style="flex:1;font-size:13px;line-height:1.4"><b>Install the staff app</b><br><span style="color:#aaa">${how || "One tap, no Play Store needed."}</span></div>${INSTALL_EVT ? `<button id="instgo" style="background:#ff70e8;color:#1a0416;border:0;border-radius:10px;padding:10px 14px;font-weight:700">Install</button>` : ""}<button id="instx" aria-label="Close" style="background:none;border:0;color:#888;font-size:20px">×</button>`;
+  document.body.appendChild(d);
+  if (INSTALL_EVT) d.querySelector("#instgo").onclick = async () => { INSTALL_EVT.prompt(); const r = await INSTALL_EVT.userChoice; INSTALL_EVT = null; if (r.outcome === "accepted") d.remove(); };
+  d.querySelector("#instx").onclick = () => { d.remove(); try { localStorage.setItem("inst_hide", "1"); } catch (e) {} };
+}
+setTimeout(installBar, 1500);
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
 start();
 </script>
