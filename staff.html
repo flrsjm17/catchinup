@@ -103,14 +103,14 @@ function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); strea
 /* clock */
 function clock(){
   const n = next(), label = Object.fromEntries(STEPS);
-  $("#app").innerHTML = `${header()}<div id="anns"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
+  $("#app").innerHTML = `${header()}<div id="anns"></div><div id="regbox"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
       ${FLEX() ? `<div class="small muted" style="margin-top:12px;font-weight:700">Today's log-ins (no lunch break needed)</div>${PT.length ? [...PT].reverse().map((x, i) => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="small">#${i + 1}</span><span class="small">In <b>${hhmm(x.time_in)}</b> · Out <b>${x.time_out ? hhmm(x.time_out) : "—"}</b></span></div>`).join("") : `<div class="small muted">No log-ins yet today.</div>`}` : `<div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div>`}</div>
     <div class="card" id="cam">${n ? `<div class="muted small" style="font-weight:700;margin-bottom:6px">Where are you ${n === "time_in" ? "clocking in" : "punching"}?</div><div class="seg" style="margin-top:0" id="brpick">${Object.entries(BRANCHES).map(([k, l]) => `<button aria-pressed="${HERE === k}" onclick="HERE='${k}';checkHere()">${l}</button>`).join("")}</div><div class="geo" id="geo">📍 Checking your location…</div><div class="muted small" style="margin-top:10px">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button><div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
     <div class="card" id="hp" style="display:none"></div>
     <div class="card"><div class="duo"><button class="btn" onclick="notifyStatus()">📣 Notify status</button><button class="btn" onclick="requestOT()">⏱ Request OT / UT</button></div><div id="myreq"></div></div>
     <div class="card small muted">Punch at the pub, on your own phone, with your face in the photo. Photos are only seen by management. Forgot to punch? Tell the manager so they can add it by hand.</div>`;
   if (n) openCam(n);
-  myRequests(); loadAnns(); loadHealth();
+  myRequests(); loadAnns(); loadHealth(); regBox();
 }
 const BRANCHES = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart", field: "Field work" };
 let LOC = null, SPOTS = null, HERE = null, GEO_OK = false;
@@ -559,6 +559,28 @@ function installBar(){
   d.querySelector("#instx").onclick = () => { d.remove(); try { localStorage.setItem("inst_hide", "1"); } catch (e) {} };
 }
 setTimeout(installBar, 1500);
+/* incomplete registration: 48 hours to submit ID / government numbers */
+const REG_MISS = () => { if (!E) return []; return [...(!E.id_photo || !E.id_type ? ["Valid ID"] : []), ...(!E.sss_no ? ["SSS number"] : []), ...(!E.philhealth_no ? ["PhilHealth number"] : []), ...(!E.pagibig_no ? ["Pag-IBIG number"] : []), ...(!E.tin ? ["TIN"] : [])]; };
+function regBox(){ const box = document.getElementById("regbox"); if (!box) return; const inc = E?.consent?.incomplete, miss = REG_MISS();
+  if (!inc || inc.completed_at || !miss.length) return box.innerHTML = "";
+  const due = new Date(inc.due), left = due - Date.now(), over = left <= 0, h = Math.max(0, Math.floor(left / 3600000)), m = Math.max(0, Math.floor(left / 60000) % 60);
+  box.innerHTML = `<div class="card" style="border-color:${over ? "#ff5252" : "#ffb300"};background:${over ? "rgba(255,82,82,.08)" : "rgba(255,179,0,.07)"}"><b style="color:${over ? "#ff5252" : "#ffb300"}">${over ? "⚠️ Registration overdue" : "📝 Complete your registration"}</b>
+    <div class="small" style="margin:6px 0 10px">Missing: <b>${miss.join(", ")}</b><br>${over ? `It was due ${due.toLocaleString("en-PH", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}. You may receive a letter of non-compliance. Submit it now.` : `Due ${due.toLocaleString("en-PH", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · <b>${h}h ${m}m left</b>`}</div>
+    <button class="btn ${over ? "" : "go"}" onclick="regSheet()">Submit missing requirements</button></div>`; }
+function regSheet(){ const miss = REG_MISS(), needId = miss.includes("Valid ID"); let IDIMG = null;
+  const f = (k, l, ph) => miss.includes(l) ? `<label class="lb">${l}</label><input id="rg-${k}" placeholder="${ph}">` : "";
+  fModal(`<h2>Missing requirements</h2><p class="small muted" style="margin:0">Fill in what you have now. You can come back for the rest.</p>
+    ${needId ? `<label class="lb">Valid ID type</label><select id="rg-idt"><option value="">Choose…</option>${["PhilSys National ID", "UMID", "Driver's License", "Passport", "SSS ID", "PhilHealth ID", "Postal ID", "Voter's ID", "PRC ID", "Other government ID"].map(x => `<option ${E.id_type === x ? "selected" : ""}>${x}</option>`).join("")}</select>
+      <label class="lb">ID number</label><input id="rg-idn" value="${esc(E.id_number || "")}"><label class="lb">Photo of your ID</label><label class="btn" style="display:block;text-align:center">📷 Take or choose photo<input type="file" id="rg-idf" accept="image/*" capture="environment" hidden></label><img id="rg-prev" style="display:none;width:100%;border-radius:12px;margin-top:8px">` : ""}
+    ${f("sss", "SSS number", "34-1234567-8")}${f("ph", "PhilHealth number", "12-345678901-2")}${f("pi", "Pag-IBIG number", "1234-5678-9012")}${f("tin", "TIN", "123-456-789-000")}
+    <div class="err" id="rg-err"></div><button class="btn go" id="rg-go">Submit</button><button class="btn" onclick="closeF()">Later</button>`);
+  if (needId) $("#rg-idf").onchange = async ev => { const file = ev.target.files[0]; if (!file) return; const blob = await shrink(file, 1600); IDIMG = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); }); const p = $("#rg-prev"); p.src = IDIMG; p.style.display = "block"; };
+  $("#rg-go").onclick = async () => { const v = id => ($(id)?.value || "").trim(); const body = { action: "complete_profile", sss_no: v("#rg-sss"), philhealth_no: v("#rg-ph"), pagibig_no: v("#rg-pi"), tin: v("#rg-tin"), id_type: v("#rg-idt"), id_number: v("#rg-idn"), id_photo: IDIMG };
+    if (needId && IDIMG && !body.id_type) return $("#rg-err").textContent = "Choose the ID type.";
+    $("#rg-go").disabled = true; $("#rg-go").textContent = "Saving…";
+    const { data, error } = await sb.functions.invoke("staff", { body }); if (error || !data?.ok){ $("#rg-go").disabled = false; $("#rg-go").textContent = "Submit"; return $("#rg-err").textContent = (data && data.error) || "Couldn't save. Try again."; }
+    const { data: e2 } = await sb.from("employees").select("*").eq("id", E.id).maybeSingle(); if (e2) E = e2;
+    fModal(data.missing.length ? `<h2>Saved ✓</h2><p class="muted">Still missing: <b>${data.missing.join(", ")}</b>. Submit them before your deadline.</p><button class="btn go" onclick="closeF();render()">OK</button>` : `<h2>All done ✓</h2><p class="muted">Your registration is complete. Thank you!</p><button class="btn go" onclick="closeF();render()">OK</button>`); }; }
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
 start();
 </script>

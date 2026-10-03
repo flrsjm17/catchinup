@@ -83,16 +83,20 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;bor
 </div></div>
 
 <div class="card"><h2>Valid ID and photo</h2><div class="fields">
-  <label class="f req">ID type<select name="id_type" required><option value="">Choose…</option><option>PhilSys National ID</option><option>UMID</option><option>Driver's License</option><option>Passport</option><option>SSS ID</option><option>PhilHealth ID</option><option>Postal ID</option><option>Voter's ID</option><option>PRC ID</option><option>Other government ID</option></select></label>
+  <label class="f">ID type<select name="id_type"><option value="">Choose…</option><option>PhilSys National ID</option><option>UMID</option><option>Driver's License</option><option>Passport</option><option>SSS ID</option><option>PhilHealth ID</option><option>Postal ID</option><option>Voter's ID</option><option>PRC ID</option><option>Other government ID</option></select></label>
   <label class="f">ID number<input name="id_number"></label>
 </div>
 <div class="photo">
-  <div class="shot"><b class="req">Photo of your valid ID</b><span class="muted small">Front side, flat, all text readable.</span><img id="id-prev" alt=""><label class="up">📷 Take or choose photo<input type="file" id="id-file" accept="image/*" capture="environment"></label></div>
+  <div class="shot"><b>Photo of your valid ID</b><span class="muted small">Front side, flat, all text readable. No ID yet? You can still register and add it in the staff app within 48 hours.</span><img id="id-prev" alt=""><label class="up">📷 Take or choose photo<input type="file" id="id-file" accept="image/*" capture="environment"></label></div>
   <div class="shot"><b class="req">Your profile selfie</b><span class="muted small">Plain background, face clear, no cap or sunglasses.</span><img id="sf-prev" alt="" style="transform:scaleX(-1)"><label class="up">🤳 Take selfie<input type="file" id="sf-file" accept="image/*" capture="user"></label></div>
 </div></div>
 
 <div class="card">
   <label class="f">Anything HR should know? (optional)<textarea name="notes"></textarea></label>
+  <div id="ackbox" style="display:none;border:1px solid #d98e04;background:rgba(217,142,4,.08);border-radius:12px;padding:12px 14px;margin:10px 0">
+    <div style="font-weight:700;margin-bottom:6px">Incomplete registration</div><div class="small" id="ackmiss" style="margin-bottom:8px"></div>
+    <label class="pv" style="margin:0"><input type="checkbox" id="ack"> <span id="acktext">I acknowledge that my registration is incomplete. I will submit the missing requirements through the staff app within 48 hours. If I don't, I understand I may receive a letter of non-compliance.</span></label>
+  </div>
   <label class="pv"><input type="checkbox" id="consent"> <span>I confirm the details above are true, and I consent to Tablebond Group Inc. collecting and keeping my personal information, government numbers, ID photo and photo for employment, payroll and statutory purposes under the Data Privacy Act of 2012 (RA 10173). I can ask HR to see, correct or delete my records. <a href="privacy-notice.pdf" target="_blank" rel="noopener">Privacy notice</a></span></label>
   <div class="msg" id="msg"></div>
   <button class="btn primary" type="submit" id="go" disabled>Submit registration</button>
@@ -106,18 +110,20 @@ function shrink(file, max){ return new Promise((res, rej) => { const r = new Fil
 async function pick(inputId, key, prevId, max){ const f = document.getElementById(inputId).files[0]; if (!f) return; try { IMG[key] = await shrink(f, max); const p = document.getElementById(prevId); p.src = IMG[key]; p.classList.add("on"); } catch (e) { $("#msg").textContent = "Couldn't read that photo, please try again."; } check(); }
 $("#id-file").onchange = () => pick("id-file", "id", "id-prev", 1600);
 $("#sf-file").onchange = () => pick("sf-file", "sf", "sf-prev", 900);
-$("#consent").onchange = check;
+$("#consent").onchange = check; $("#ack").onchange = check;
 document.querySelectorAll("#f input,#f select").forEach(el => el.addEventListener("input", check));
-function check(){ const f = $("#f"); const ok = [...f.querySelectorAll("[required]")].every(el => el.value.trim()) && IMG.id && IMG.sf && $("#consent").checked; $("#go").disabled = !ok; }
+function missingList(){ const v = n => ($(`[name=${n}]`)?.value || "").trim(); return [...(!IMG.id || !v("id_type") ? ["Valid ID (type and photo)"] : []), ...(!v("sss_no") ? ["SSS number"] : []), ...(!v("philhealth_no") ? ["PhilHealth number"] : []), ...(!v("pagibig_no") ? ["Pag-IBIG number"] : []), ...(!v("tin") ? ["TIN"] : [])]; }
+function check(){ const f = $("#f"), miss = missingList(); $("#ackbox").style.display = miss.length ? "" : "none"; $("#ackmiss").innerHTML = miss.length ? "Still missing: <b>" + miss.join(", ") + "</b>" : "";
+  const ok = [...f.querySelectorAll("[required]")].every(el => el.value.trim()) && IMG.sf && $("#consent").checked && (!miss.length || $("#ack").checked); $("#go").disabled = !ok; }
 $("#f").onsubmit = async e => {
   e.preventDefault(); const go = $("#go"), msg = $("#msg"); go.disabled = true; go.textContent = "Sending…"; msg.textContent = "";
-  const d = Object.fromEntries(new FormData($("#f")).entries()); d.id_photo = IMG.id; d.selfie = IMG.sf;
+  const d = Object.fromEntries(new FormData($("#f")).entries()); d.id_photo = IMG.id; d.selfie = IMG.sf; const miss = missingList(); if (miss.length){ d.ack_incomplete = true; d.ack_text = $("#acktext").textContent.trim() + " Missing: " + miss.join(", "); }
   d.consent = { accepted: true, at: new Date().toISOString(), version: "emp-2026-10-01", text: document.querySelector(".pv span").textContent.trim() };
   try {
     const r = await fetch(`${CFG.SUPABASE_URL}/functions/v1/hr-register`, { method: "POST", headers: { "Content-Type": "application/json", apikey: CFG.ANON_KEY }, body: JSON.stringify(d) });
     const j = await r.json();
     if (!j.ok) { msg.textContent = j.error || "Something went wrong."; go.disabled = false; go.textContent = "Submit registration"; return; }
-    $("#app").innerHTML = `<div class="done"><h1>Thanks, ${d.first_name.split(" ")[0]}!</h1><p class="muted" style="margin-top:12px;max-width:46ch;margin-inline:auto">Your registration is in. HR will check your details and, once approved, you'll get an email with a link to create your staff-app password.</p></div>`; window.scrollTo({ top: 0 });
+    $("#app").innerHTML = `<div class="done"><h1>Thanks, ${d.first_name.split(" ")[0]}!</h1><p class="muted" style="margin-top:12px;max-width:46ch;margin-inline:auto">${j.approved ? `You're on our roster, so your account is already approved. Check your email (<b>${d.email}</b>) for the link to set your password, then install the app from <b>catchinup.tablebondgroup.ph/app.html</b>.` : "Your registration is in. HR will check your details and, once approved, you'll get an email with a link to create your staff-app password."}${j.missing && j.missing.length ? `<br><br><b style="color:#d98e04">Reminder:</b> submit your ${j.missing.join(", ")} in the staff app within 48 hours.` : ""}</p></div>`; window.scrollTo({ top: 0 });
   } catch (err) { msg.textContent = "No connection. Please try again."; go.disabled = false; go.textContent = "Submit registration"; }
 };
 </script>
