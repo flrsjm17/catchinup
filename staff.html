@@ -116,14 +116,14 @@ function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); strea
 /* clock */
 function clock(){
   const n = next(), label = Object.fromEntries(STEPS);
-  $("#app").innerHTML = `${header()}<div id="anns"></div><div id="regbox"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
+  $("#app").innerHTML = `${header()}<div id="anns"></div><div id="regbox"></div><div id="rolebox"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
       ${FLEX() ? `<div class="small muted" style="margin-top:12px;font-weight:700">Today's log-ins (no lunch break needed)</div>${PT.length ? [...PT].reverse().map((x, i) => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="small">#${i + 1}</span><span class="small">In <b>${hhmm(x.time_in)}</b> · Out <b>${x.time_out ? hhmm(x.time_out) : "—"}</b></span></div>`).join("") : `<div class="small muted">No log-ins yet today.</div>`}` : `<div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div>`}</div>
     <div class="card" id="cam">${n ? `<div class="muted small" style="font-weight:700;margin-bottom:6px">Where are you ${n === "time_in" ? "clocking in" : "punching"}?</div><div class="seg" style="margin-top:0" id="brpick">${Object.entries(BRANCHES).map(([k, l]) => `<button aria-pressed="${HERE === k}" onclick="HERE='${k}';checkHere()">${l}</button>`).join("")}</div><div class="geo" id="geo">📍 Checking your location…</div><div class="muted small" style="margin-top:10px">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button>${n === "lunch_out" ? `<button class="btn cyan" id="snap2" hidden style="margin-top:8px">📸 Time out (no lunch break)</button><div class="small muted" id="snap2t" hidden style="text-align:center;margin-top:4px">Field work: lunch out / lunch in is optional.</div>` : ""}<div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
     <div class="card" id="hp" style="display:none"></div>
     <div class="card"><div class="duo"><button class="btn" onclick="notifyStatus()">📣 Notify status</button><button class="btn" onclick="requestOT()">⏱ Request OT / UT</button></div><div id="myreq"></div></div>
     <div class="card small muted">Punch at the pub, on your own phone, with your face in the photo. Photos are only seen by management. Forgot to punch? Tell the manager so they can add it by hand.</div>`;
   if (n) openCam(n);
-  myRequests(); loadAnns(); loadHealth(); regBox();
+  myRequests(); loadAnns(); loadHealth(); regBox(); roleCheck();
 }
 const BRANCHES = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart", field: "Field work" };
 let LOC = null, SPOTS = null, HERE = null, GEO_OK = false;
@@ -446,12 +446,44 @@ async function opsInv(){ const { data } = await sb.from("inventory_logs").select
       done("Saved", `${esc($("#iv-act").value)}: ${+q} ${esc($("#iv-u").value)} ${esc(item)}.`); } catch (e) { $("#iv-go").disabled = false; $("#iv-err").textContent = "Couldn't save: " + e.message; } }; }
 function ivSub(){ $("#iv-subw").hidden = $("#iv-cat").value !== "Others"; }
 
+/* CR audit quota (shared by staff app and portal) */
+const CRQ_DEF = { enforce_from: "2026-11-01", before: 15, after: 45, window_days: 30, ladder: ["Verbal warning (documented)", "Written warning", "Notice to explain"], owner: { sa: "supervisor|manager|oic", ju: "supervisor|manager|oic" },
+  sa: [0, 1, 2, 3, 4, 5, 6].map(d => [2, 5, 6].includes(d) ? ["17:30", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00", "01:00", "02:00", "02:45"] : ["17:30", "19:30", "21:30", "23:30", "01:30", "02:45"]),
+  ju: [0, 1, 2, 3, 4, 5, 6].map(d => [1, 2].includes(d) ? ["18:30", "00:00", "02:45"] : [3, 4].includes(d) ? ["18:30", "20:30", "22:30", "00:30", "02:45"] : ["18:30", "21:00", "23:30", "02:45"]) };
+let CRQ = null;
+async function crCfg(){ if (CRQ) return CRQ; try { const { data } = await sb.from("settings").select("value").eq("key", "cr_quota").maybeSingle(); CRQ = data?.value && data.value.sa ? data.value : CRQ_DEF; } catch (e) { CRQ = CRQ_DEF; } return CRQ; }
+function crSlots(cfg, br, d){ const list = ((cfg[br] || [])[new Date(d + "T12:00:00").getDay()]) || [];
+  return list.map(t => { const [h, m] = t.split(":").map(Number), at = new Date(d + "T00:00:00"); if (h < 6) at.setDate(at.getDate() + 1); at.setHours(h, m, 0, 0); return { t, at }; }); }
+function crMatch(cfg, slots, audits){ const used = new Set(), now = Date.now(), B = cfg.before * 60000, A = cfg.after * 60000;
+  return slots.map(s => { const hit = audits.filter(x => !used.has(x.id)).map(x => ({ x, ts: +new Date(x.created_at) })).filter(o => o.ts >= +s.at - B && o.ts <= +s.at + A).sort((p, q) => p.ts - q.ts)[0];
+    if (hit) used.add(hit.x.id); const st = hit ? "done" : now < +s.at - B ? "upcoming" : now <= +s.at + A ? "due" : "missed"; return { ...s, audit: hit ? hit.x : null, st }; }); }
+const crNightRange = d => { const a = new Date(d + "T12:00:00"), b = new Date(d + "T12:00:00"); b.setDate(b.getDate() + 1); b.setHours(6, 0, 0, 0); return [a, b]; };
+const crT12 = t => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+/* shift role (San Antonio FOH): floor / cashier / bar, chosen right after time-in */
+const SROLES = { floor: ["🧹", "Floor", "Serve tables and keep the floor and CRs in check. Floor staff are accountable for tonight's CR checks."], cashier: ["💵", "Cashier", "POS, payments and the cash count."], bar: ["🍹", "Bar", "Drinks and the bar station."] };
+const FOH_SA = () => E && E.branch === "sa" && /foh|server|cashier|bar|waiter|supervisor/i.test(E.position || "") && !/kitchen|cook/i.test(E.position || "") && !FLEX();
+let ROLE_T = null;
+async function roleCheck(){ const box = $("#rolebox"); if (!box || !FOH_SA() || !P || P.time_out || isFieldP()) return;
+  const { data } = await sb.from("shift_roles").select("role").eq("employee_id", E.id).eq("work_date", P.work_date).maybeSingle(); ROLE_T = data ? data.role : null;
+  if (ROLE_T){ const r = SROLES[ROLE_T] || ["", ROLE_T]; box.innerHTML = `<div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px"><span>${r[0]} Your role tonight: <b>${r[1]}</b></span><button class="sw" onclick="roleSheet()">Change</button></div>`; }
+  else { box.innerHTML = ""; roleSheet(); } }
+function roleSheet(){ fModal(`<h2>What's your role tonight?</h2><p class="muted small" style="margin:0 0 10px">Pick the role your supervisor assigned you for this shift.</p>${Object.entries(SROLES).map(([k, [ic, l, d]]) => `<button class="btn ${ROLE_T === k ? "go" : ""}" style="text-align:left;margin-top:8px" onclick="roleSet('${k}')">${ic} <b>${l}</b><br><span class="small" style="font-weight:400;opacity:.8">${d}</span></button>`).join("")}<div class="err" id="ro-err"></div>`); }
+async function roleSet(k){ const { error } = await sb.from("shift_roles").upsert({ employee_id: E.id, work_date: P.work_date, branch: "sa", role: k, set_by: E.email, updated_at: new Date().toISOString() }, { onConflict: "employee_id,work_date" });
+  if (error) return $("#ro-err").textContent = "Couldn't save: " + error.message; closeF(); roleCheck(); }
 /* toilet audit */
 const TOILETS = ["Men's", "Women's", "All-gender", "Staff"];
 const TCHK = ["Toilet bowl and seat clean", "Urinal clean and flushing", "Sink and mirror clean", "Floor clean and dry", "Tissue / paper towels stocked", "Hand soap stocked", "Trash bin emptied", "No bad odor", "Lights working", "Door lock working", "Flush and faucet working"];
 let TA = {};
 async function opsToilet(){ TA = {}; const { data } = await sb.from("toilet_audits").select("*").eq("branch", BR_HERE()).order("created_at", { ascending: false }).limit(6);
-  $("#opsbox").innerHTML = `<div class="card"><h2>Toilet audit</h2>${brSel("ta-br")}<label class="lb">Which toilet</label><select id="ta-t">${TOILETS.map(t => `<option>${t}</option>`).join("")}</select>
+  const cfg = await crCfg(), br = BR_HERE(), night = (() => { const n = new Date(); if (n.getHours() < 6) n.setDate(n.getDate() - 1); return iso(n); })(), slots = crSlots(cfg, br, night);
+  let crHtml = "";
+  if (slots.length){ const [a, b] = crNightRange(night); const { data: tn } = await sb.from("toilet_audits").select("id,created_at,by_name,toilet,branch").eq("branch", br).gte("created_at", a.toISOString()).lt("created_at", b.toISOString());
+    const m = crMatch(cfg, slots, tn || []), done = m.filter(x => x.st === "done").length, nxt = m.find(x => x.st === "due") || m.find(x => x.st === "upcoming");
+    const ic = { done: "✅", due: "⏰", missed: "❌", upcoming: "○" }, col = { done: "var(--ok)", due: "var(--yellow)", missed: "#ff6b6b", upcoming: "var(--muted)" };
+    crHtml = `<div class="card"><h2 style="margin-bottom:2px">Tonight's CR checks · ${done}/${m.length}</h2><p class="small muted" style="margin:0 0 8px">${OPS_BRS[br]} · ${new Date(night + "T12:00:00").toLocaleDateString("en-PH", { weekday: "long" })} quota. Each check counts from 15 min before to 45 min after its time.${nxt ? ` <b style="color:var(--yellow)">Next: ${crT12(nxt.t)}${nxt.st === "due" ? " (due now)" : ""}</b>` : ""}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${m.map(x => `<span style="border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:13px;color:${col[x.st]}">${ic[x.st]} ${crT12(x.t)}${x.audit ? `<br><span class="small muted">${hhmm(x.audit.created_at)} · ${esc((x.audit.by_name || "").split(" ")[0])}</span>` : ""}</span>`).join("")}</div>
+      <p class="small muted" style="margin:8px 0 0">${br === "sa" ? "Missed checks are counted against everyone on the Floor role tonight." : "Missed checks are counted against the shift's supervisor."}</p></div>`; }
+  $("#opsbox").innerHTML = crHtml + `<div class="card"><h2>Toilet audit</h2>${brSel("ta-br")}<label class="lb">Which toilet</label><select id="ta-t">${TOILETS.map(t => `<option>${t}</option>`).join("")}</select>
     <div style="margin-top:10px">${TCHK.map((c, i) => `<div class="chk"><span>${c}</span><span class="yn"><button class="y" aria-pressed="false" onclick="taSet(${i},true,this)">Yes</button><button class="n" aria-pressed="false" onclick="taSet(${i},false,this)">No</button></span></div>`).join("")}</div>
     <label class="lb">Notes / what you fixed (optional)</label><textarea id="ta-n" style="min-height:60px" placeholder="e.g. Refilled soap, reported leaking faucet"></textarea>${photoField("ta-p", "Photo")}
     <div class="err" id="ta-err"></div><button class="btn go" id="ta-go">Submit audit</button></div>
