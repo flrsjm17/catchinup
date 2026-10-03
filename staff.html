@@ -94,15 +94,17 @@ function login(){ $("#app").innerHTML = `<div style="display:flex;justify-conten
   $("#forgot").onclick = async () => { const em = $("#em").value.trim(); if (!em) return $("#m").textContent = "Type your email first."; const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.href.split("#")[0] }); $("#m").textContent = error ? error.message : "Check your inbox for a link to set your password."; }; }
 function setPassword(){ $("#app").innerHTML = `<div style="text-align:center;padding:20px 0 6px"><img src="logo.png" alt="" style="width:200px"></div><h1 style="text-align:center">Welcome${me.user_metadata?.first_name ? ", " + esc(me.user_metadata.first_name) : ""}!</h1><p class="muted small" style="text-align:center">Create the password you'll use to sign in on your phone.</p><div class="card"><input id="p1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><input id="p2" type="password" placeholder="Repeat password" autocomplete="new-password"><button class="btn go" id="setp">Save password</button><div class="msg" id="m"></div></div>`;
   $("#setp").onclick = async () => { const a = $("#p1").value, b = $("#p2").value; if (a.length < 8) return $("#m").textContent = "Use at least 8 characters."; if (a !== b) return $("#m").textContent = "The two passwords don't match."; const { error } = await sb.auth.updateUser({ password: a }); if (error) return $("#m").textContent = error.message; sessionStorage.setItem("pwset", "1"); history.replaceState(null, "", location.pathname); start(); }; }
-async function loadToday(){ const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).eq("work_date", workDate()).eq("source", "app").order("created_at", { ascending: false }).limit(1); P = (data || [])[0] || null; }
-function next(){ if (!P) return "time_in"; if (!P.lunch_out && !P.time_out) return "lunch_out"; if (P.lunch_out && !P.lunch_in) return "lunch_in"; if (!P.time_out) return "time_out"; return null; }
+let PT = [];
+const FLEX = () => !!(E && E.access && E.access.flex);
+async function loadToday(){ const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).eq("work_date", workDate()).eq("source", "app").order("created_at", { ascending: false }).limit(FLEX() ? 30 : 1); PT = data || []; P = PT[0] || null; }
+function next(){ if (FLEX()) return !P || P.time_out ? "time_in" : "time_out"; if (!P) return "time_in"; if (!P.lunch_out && !P.time_out) return "lunch_out"; if (P.lunch_out && !P.lunch_in) return "lunch_in"; if (!P.time_out) return "time_out"; return null; }
 function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } if (floorTimer){ clearInterval(floorTimer); floorTimer = null; } if (tab !== "team") teamOff(); ({ clock, sched, pay, ops, records, team })[tab](); }
 
 /* clock */
 function clock(){
   const n = next(), label = Object.fromEntries(STEPS);
   $("#app").innerHTML = `${header()}<div id="anns"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
-      <div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div></div>
+      ${FLEX() ? `<div class="small muted" style="margin-top:12px;font-weight:700">Today's log-ins (no lunch break needed)</div>${PT.length ? [...PT].reverse().map((x, i) => `<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="small">#${i + 1}</span><span class="small">In <b>${hhmm(x.time_in)}</b> · Out <b>${x.time_out ? hhmm(x.time_out) : "—"}</b></span></div>`).join("") : `<div class="small muted">No log-ins yet today.</div>`}` : `<div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div>`}</div>
     <div class="card" id="cam">${n ? `<div class="muted small" style="font-weight:700;margin-bottom:6px">Where are you ${n === "time_in" ? "clocking in" : "punching"}?</div><div class="seg" style="margin-top:0" id="brpick">${Object.entries(BRANCHES).map(([k, l]) => `<button aria-pressed="${HERE === k}" onclick="HERE='${k}';checkHere()">${l}</button>`).join("")}</div><div class="geo" id="geo">📍 Checking your location…</div><div class="muted small" style="margin-top:10px">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button><div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
     <div class="card" id="hp" style="display:none"></div>
     <div class="card"><div class="duo"><button class="btn" onclick="notifyStatus()">📣 Notify status</button><button class="btn" onclick="requestOT()">⏱ Request OT / UT</button></div><div id="myreq"></div></div>
@@ -110,7 +112,7 @@ function clock(){
   if (n) openCam(n);
   myRequests(); loadAnns(); loadHealth();
 }
-const BRANCHES = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart" };
+const BRANCHES = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart", field: "Field work" };
 let LOC = null, SPOTS = null, HERE = null, GEO_OK = false;
 function getLoc(){ return new Promise(res => { if (!navigator.geolocation) return res({ denied: true }); navigator.geolocation.getCurrentPosition(p => res({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) }), () => res({ denied: true }), { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }); }); }
 const distM = (a, b) => { const R = 6371000, r = x => x * Math.PI / 180, dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng); const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -121,6 +123,7 @@ async function checkHere(again){
   if (again) { el.className = "geo"; el.textContent = "📍 Checking your location…"; LOC = getLoc(); }
   if (!SPOTS) { const { data } = await sb.rpc("branch_spots"); SPOTS = data || {}; }
   const g = await LOC, spot = SPOTS[HERE], name = BRANCHES[HERE], retry = ` <a href="#" onclick="checkHere(true);return false" style="color:var(--pink)">Check again</a>`;
+  if (HERE === "field" && !g.denied) { GEO_OK = true; el.className = "geo"; el.style.color = ""; el.innerHTML = `🚗 Field work: your location (${g.lat.toFixed(5)}, ${g.lng.toFixed(5)} · ±${g.acc} m) is saved with your punch. Say where you are and what you're doing.<input id="fw-note" maxlength="120" placeholder="e.g. Supplier run at Divisoria · bank deposit" style="margin-top:8px;width:100%">`; if (snap) snap.disabled = false; return; }
   if (g.denied) { el.className = "geo bad"; el.innerHTML = `📍 Location is off. Turn on location for this site (and your phone's GPS), then tap Check again. You can't clock in without it.${retry}`; return; }
   if (!spot || spot.lat == null) { GEO_OK = true; el.className = "geo"; el.innerHTML = `📍 ${name}'s location hasn't been set by management yet, so your punch will be checked by HR.`; if (snap) snap.disabled = false; return; }
   const d = Math.round(distM(g, spot)), rad = spot.radius || 20;
@@ -133,7 +136,7 @@ async function openCam(kind){
   $("#snap").onclick = () => punch(kind); $("#snap").disabled = !GEO_OK;
 }
 async function punch(kind){
-  const b = $("#snap"); b.disabled = true; $("#m").textContent = "Saving…";
+  const b = $("#snap"); if (HERE === "field" && !($("#fw-note")?.value || "").trim()) return $("#m").textContent = "Add where you are for field work."; b.disabled = true; $("#m").textContent = "Saving…";
   const v = $("#v"), c = $("#c"); c.width = v.videoWidth || 640; c.height = v.videoHeight || 480; c.getContext("2d").drawImage(v, 0, 0);
   const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.7)); const now = new Date(), wd = workDate();
   const path = `${E.id}/${wd}_${kind}_${now.getTime()}.jpg`;
@@ -141,7 +144,8 @@ async function punch(kind){
   const selfieCol = { time_in: "selfie_in", lunch_out: "selfie_lunch_out", lunch_in: "selfie_lunch_in", time_out: "selfie_out" }[kind];
   let res;
   if (!GEO_OK) { $("#m").textContent = "You need to be at the branch with location on to punch."; b.disabled = false; return; }
-  const g = await Promise.race([LOC || getLoc(), new Promise(r => setTimeout(() => r({ denied: true, timeout: true }), 6000))]); const geo_last = { kind, branch: HERE, ...g, at: now.toISOString() };
+  const g = await Promise.race([LOC || getLoc(), new Promise(r => setTimeout(() => r({ denied: true, timeout: true }), 6000))]); const fw = HERE === "field" ? ($("#fw-note")?.value || "").trim() : null; if (HERE === "field" && !fw){ $("#m").textContent = "Add where you are for field work."; b.disabled = false; return; }
+  const geo_last = { kind, branch: HERE, ...g, at: now.toISOString(), ...(fw ? { field: true, note: fw } : {}) };
   if (kind === "time_in" || !P) res = await sb.from("punches").insert({ geo_last, employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) });
   else res = await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path, geo_last }).eq("id", P.id);
   if (res.error && /geo_last/.test(res.error.message)) res = (kind === "time_in" || !P) ? await sb.from("punches").insert({ employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) }) : await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path }).eq("id", P.id);
@@ -249,7 +253,7 @@ function drawLeave(){
       <p class="small muted" style="margin:10px 0 0">Tap the days you want off. Blue = approved leave · dashed = waiting for approval · faded = rest day.</p></div>
     <div class="card"><h2>Request leave</h2>${sel.length ? `<div class="small">${sel.length === 1 ? fmt(sel[0]) : `${fmt(sel[0])} – ${fmt(sel[sel.length - 1])}`} · <b>${work.length} working day${work.length === 1 ? "" : "s"}</b>${sel.length > work.length ? ` <span class="muted">(rest days not counted)</span>` : ""} <a href="#" onclick="LV.sel=[];drawLeave();return false" style="color:var(--pink)">clear</a></div>` : `<p class="small muted" style="margin:0">Select dates on the calendar above.</p>`}
       <label class="lb">Type of leave</label><select id="lv-k" onchange="LV.kind=this.value">${Object.entries(LEAVE_L).map(([k, l]) => `<option value="${k}" ${LV.kind === k ? "selected" : ""}>${l}</option>`).join("")}</select>
-      ${E.vl_credits != null || E.sl_credits != null ? `<p class="small muted" style="margin:6px 0 0">Remaining credits: ${E.vl_credits ?? "—"} vacation · ${E.sl_credits ?? "—"} sick</p>` : ""}
+      ${E.vl_credits != null ? `<p class="small muted" style="margin:6px 0 0">Leave credits: <b>${+E.vl_credits} hours</b> (8 hours = 1 day)${E.date_hired ? ` · +40 hours on ${fmt(nextAnnivS(E.date_hired))}` : ""}</p>` : ""}
       <label class="lb">Reason</label><textarea id="lv-r" placeholder="e.g. Family trip to Batangas">${esc(LV.reason || "")}</textarea>
       <div class="err" id="lv-err"></div><button class="btn go" id="lv-go" ${work.length ? "" : "disabled"}>Submit leave request</button></div>
     <div class="card"><h2>My leave requests</h2>${Object.values(groups).map(g => { g.sort((a, b) => a.leave_date < b.leave_date ? -1 : 1); const st = g.some(x => x.status === "pending") ? "pending" : g[0].status; return `<div class="row"><span>${LEAVE_L[g[0].kind] || g[0].kind}<br><span class="small muted">${fmt(g[0].leave_date)}${g.length > 1 ? " – " + fmt(g[g.length - 1].leave_date) + ` · ${g.length} days` : ""}</span></span><span class="st ${st}">${ST_L[st] || st}</span></div>`; }).join("") || "<p class='small muted' style='margin:0'>No leave filed yet.</p>"}</div>`;
@@ -332,7 +336,7 @@ function drawFeed(){ const box = $("#tbox"); if (!box) return; let last = "", ht
   const onNow = new Set(); [...FEED].reverse().forEach(p => { if (p.kind === "in") onNow.add(p.employee_id); else onNow.delete(p.employee_id); });
   FEED.forEach(p => { const lab = dayLabel(p.at); if (lab !== last){ html += `${last ? "</div>" : ""}<div class="card"><div class="small muted" style="font-weight:700">${lab}</div>`; last = lab; }
     const mine = RX.find(x => x.post_id === p.id && x.employee_id === E.id), counts = {}; RX.filter(x => x.post_id === p.id).forEach(x => counts[x.emoji] = (counts[x.emoji] || 0) + 1);
-    html += `<div class="post">${face(p, 40)}<div style="min-width:0;flex:1"><div class="who"><b>${esc(p.name)}</b> ${p.kind === "in" ? "timed in" : "timed out"} <span class="tag ${p.kind}">${p.kind === "in" ? "IN" : "OUT"}</span></div><div class="t">${hhmm(p.at)} · ${p.branch === "ju" ? "Jupiter" : p.branch === "fm" ? "Funhan Mart" : "San Antonio"}</div>
+    html += `<div class="post">${face(p, 40)}<div style="min-width:0;flex:1"><div class="who"><b>${esc(p.name)}</b> ${p.kind === "in" ? "timed in" : "timed out"} <span class="tag ${p.kind}">${p.kind === "in" ? "IN" : "OUT"}</span></div><div class="t">${hhmm(p.at)} · ${p.branch === "field" ? "🚗 Field work" : p.branch === "ju" ? "Jupiter" : p.branch === "fm" ? "Funhan Mart" : "San Antonio"}</div>
       ${p.selfie && URLS[p.selfie] ? `<img class="ph" src="${URLS[p.selfie]}" alt="${esc(p.name)}" data-post="${p.id}" draggable="false">` : `<div class="t" style="margin-top:6px" data-post="${p.id}">Hold here to react</div>`}
       <div class="rx">${Object.entries(counts).map(([em, n]) => `<button class="${mine && mine.emoji === em ? "mine" : ""}" onclick="react('${p.id}','${em}')">${em} ${n}</button>`).join("")}<button onclick="pickAt(event,'${p.id}')" aria-label="Add a reaction">＋</button></div></div></div>`; });
   box.innerHTML = (FEED.length ? `<div class="card" style="padding:12px 16px"><div class="small muted">On shift now</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${[...onNow].map(id => { const p = FEED.find(x => x.employee_id === id); const pin = FEED.find(x => x.employee_id === id && x.kind === "in") || p; return `<span title="${esc(p.name)}" style="display:flex;flex-direction:column;align-items:center;font-size:11px;width:48px">${face(pin, 40)}<span style="max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span></span>`; }).join("") || "<span class='small muted'>Nobody is clocked in right now.</span>"}</div></div>` : "") + (html ? html + "</div>" : `<div class="card muted">No time-ins in the last two days yet. Yours will show up here.</div>`) + `<p class="small muted" style="text-align:center">Press and hold a photo to react · photos disappear after 30 days</p>`;
@@ -535,6 +539,7 @@ async function healthSheet(){ if (!HP) return; const col = hpCol(HP.band); const
     ${c ? `<div class="muted small" style="margin-top:12px;line-height:1.6"><b>How points work</b><br>Late after ${r.grace} min grace: −${r.late_1} (up to 15 min), −${r.late_2} (16–30), −${r.late_3} (30+). Sending a “running late” notice before your shift lowers it.<br>Absent with notice ${Math.round(r.notice_min / 60 * 10) / 10}h+ ahead −${r.absent_notice}, late notice −${r.absent_late_notice}, no call no show −${r.no_show}.<br>No time-out −${r.missed_punch} · left early without approved UT −${r.undertime} · punched off-site −${r.offsite}.<br>A clean week earns +${r.clean_week_bonus} back. Approved leave and rest days never count.</div>` : ""}
     <button class="btn" style="margin-top:12px" onclick="closeF()">Close</button>`); }
 
+function nextAnnivS(d){ const h = pd(d), t = new Date(); t.setHours(0, 0, 0, 0); let a = new Date(t.getFullYear(), h.getMonth(), h.getDate()); if (a <= t) a = new Date(t.getFullYear() + 1, h.getMonth(), h.getDate()); return iso(a); }
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
 start();
 </script>
