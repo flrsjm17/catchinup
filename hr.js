@@ -875,7 +875,7 @@ async function attCard(owner){
     ${ATT_F.map(([t, fs]) => `<div class="small muted" style="font-weight:700;margin-top:10px">${t}</div><div class="fields">${fs.map(([k, l, st]) => `<label class="f">${l}<input id="at-${k}" type="number" step="${st || 1}" min="0" value="${c[k]}" ${owner ? "" : "disabled"}></label>`).join("")}</div>`).join("")}
     ${owner ? `<div class="actions"><button class="btn primary" onclick="attSave()">Save attendance rules</button><button class="btn ghost" onclick="attReset()">Back to standard</button></div>` : `<p class="small muted">Only the owner can change these.</p>`}`;
 }
-async function attSave(){ const v = { period: $("#at-period").value }; Object.keys(ATT_DEF).filter(k => k !== "period").forEach(k => v[k] = +$(`#at-${k}`).value || 0);
+async function attSave(){ const v = { ...(H.att || {}), period: $("#at-period").value }; Object.keys(ATT_DEF).filter(k => k !== "period").forEach(k => v[k] = +$(`#at-${k}`).value || 0);
   if (!(v.band_excellent > v.band_good && v.band_good > v.band_warn)) return toast("Bands must go Excellent > Good > Needs improvement");
   const { error } = await sb.from("settings").upsert({ key: "attendance", value: v }); if (error) return toast(error.message); H.att = v; H.hp = null; toast("Attendance rules saved"); }
 async function attReset(){ if (!confirm("Use the standard attendance rules?")) return; const { error } = await sb.from("settings").upsert({ key: "attendance", value: ATT_DEF }); if (error) return toast(error.message); H.hp = null; attCard(true); toast("Standard rules restored"); }
