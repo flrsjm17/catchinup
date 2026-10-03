@@ -27,13 +27,39 @@ video,canvas{width:100%;border-radius:14px;background:#000;transform:scaleX(-1)}
 .tabs button{flex:1;background:transparent;border:0;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:8px 2px;border-radius:10px}.tabs button[aria-pressed=true]{color:var(--pink);background:#1a1420}
 .tabs span{display:block;font-size:20px}
 .logo{height:46px;width:auto}
+select,textarea{width:100%;font:inherit;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0f0f14;color:var(--ink);margin-top:8px}textarea{min-height:84px;resize:vertical}
+label.lb{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-top:12px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.duo .btn{margin-top:0}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;font:inherit;color:var(--ink);background:#0f0f14;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:8px;cursor:pointer}.opt[aria-pressed=true]{border-color:var(--pink);background:#1a1420}.opt b{display:block;font-size:15px}.opt span{font-size:13px;color:var(--muted)}
+.opt i{flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:2px}.opt[aria-pressed=true] i{border:5px solid var(--pink)}
+.seg{display:flex;gap:6px;background:#0f0f14;border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:14px}.seg button{flex:1;font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:transparent;border:0;border-radius:9px;padding:9px 4px;cursor:pointer}.seg button[aria-pressed=true]{background:#24242f;color:var(--ink)}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}.mcal .h{font-size:11px;color:var(--muted);text-align:center;font-weight:700}.mcal button{aspect-ratio:1;font:inherit;font-size:14px;border-radius:10px;border:1px solid var(--line);background:#0f0f14;color:var(--ink);padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.mcal button small{font-size:9px;line-height:1;color:var(--muted)}.mcal button.rest{opacity:.5}.mcal button.past{opacity:.3}.mcal button.lv-a{border-color:var(--cyan);background:#0d2430}.mcal button.lv-p{border-color:var(--yellow);border-style:dashed}.mcal button.sel{background:var(--pink);border-color:var(--pink);color:#1a0416}.mcal button.sel small{color:#1a0416}.mcal button.today{outline:2px solid var(--ink);outline-offset:-2px}
+.err{color:#ff8a8a;font-size:14px;margin-top:10px}.st{align-self:center;white-space:nowrap;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:#1d1d26}.st.pending{color:var(--yellow)}.st.approved,.st.noted{color:var(--ok)}.st.declined,.st.rejected{color:#ff8a8a}
+.av{display:inline-grid;place-items:center;border-radius:50%;color:#14081a;font-weight:800;font-family:"Space Grotesk",sans-serif;flex:0 0 auto}.av-btn{background:none;border:0;padding:0;cursor:pointer;border-radius:50%}
+.ann{border-color:var(--yellow);background:#1e1a0c}.ann h2{color:var(--yellow)}
+.post{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}.post:last-child{border:0}.post .who{font-size:14px}.post .who b{font-weight:700}.post .t{font-size:12px;color:var(--muted)}
+.post .ph{display:block;width:100%;max-width:200px;aspect-ratio:3/4;object-fit:cover;border-radius:14px;margin-top:8px;background:#0f0f14;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;transform:scaleX(-1)}
+.post .tag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:4px}.tag.in{background:#0f3a2a;color:var(--ok)}.tag.out{background:#15202a;color:var(--cyan)}.tag.off{background:#3a1414;color:#ff8a8a}
+.rx{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.rx button{font:inherit;font-size:13px;background:#1d1d26;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:2px 9px;cursor:pointer}.rx button.mine{border-color:var(--pink);background:#2a1426}
+.picker{position:fixed;z-index:60;display:flex;gap:4px;background:#22222c;border:1px solid var(--line);border-radius:999px;padding:6px 8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}.picker button{font-size:26px;background:none;border:0;cursor:pointer;padding:2px 4px;transition:transform .1s}.picker button:active{transform:scale(1.3)}
+.chat{display:flex;flex-direction:column;gap:8px;max-height:58vh;overflow:auto;padding:4px 2px}.bub{max-width:80%;padding:8px 12px;border-radius:16px;background:#1d1d26;font-size:15px;line-height:1.35;white-space:pre-wrap;word-break:break-word;-webkit-user-select:none;user-select:none}.bub small{display:block;font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:700}
+.bub.me{align-self:flex-end;background:var(--pink);color:#1a0416;border-bottom-right-radius:4px}.bub.me small{color:#5a0f4c}.bub.them{align-self:flex-start;border-bottom-left-radius:4px}.bub.mgmt{background:#1e1a0c;border:1px solid var(--yellow)}.bub time{display:block;font-size:10px;opacity:.6;margin-top:3px;text-align:right}
+.chatbar{display:flex;gap:8px;margin-top:10px}.chatbar textarea{min-height:44px;height:44px;margin:0;resize:none}.chatbar .btn{width:auto;margin:0;padding:0 16px}
+.geo{font-size:12px;margin-top:8px;color:var(--muted)}.geo.bad{color:#ff8a8a}
+.sw{white-space:nowrap;font:inherit;font-size:12px;font-weight:700;color:var(--pink);background:#2a1426;border:1px solid #4a2040;border-radius:999px;padding:3px 10px;cursor:pointer}
+.seg.scroll{overflow-x:auto;scrollbar-width:none}.seg.scroll::-webkit-scrollbar{display:none}.seg.scroll button{flex:0 0 auto;padding:9px 12px}
+.chk{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}.chk:last-child{border:0}.yn{display:flex;gap:6px;flex:0 0 auto}.yn button{font:inherit;font-size:13px;font-weight:700;min-width:52px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:#0f0f14;color:var(--muted);cursor:pointer}.yn button.y[aria-pressed=true]{background:#0f3a2a;border-color:var(--ok);color:var(--ok)}.yn button.n[aria-pressed=true]{background:#3a1414;border-color:#ff8a8a;color:#ff8a8a}
+.tick{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:15px;cursor:pointer}.tick input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--pink);flex:0 0 auto}
+.shot{display:block;width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-top:8px;background:#0f0f14}
+.rec{border-left:3px solid var(--line);padding-left:12px}.rec.memo{border-color:var(--cyan)}.rec.evaluation{border-color:var(--ok)}.rec.incident{border-color:var(--yellow)}.rec.progressive{border-color:#ff8a8a}
 .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#1d1d26}.chip.rd{color:var(--yellow)}.chip.ok{color:var(--ok)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 </head>
 <body><div class="wrap" id="app"><div class="muted">Loading…</div></div>
-<div class="tabs" id="tabs" hidden><button data-t="clock" data-acc="clock" aria-pressed="true"><span>⏱</span>Clock</button><button data-t="sched" data-acc="schedule"><span>📅</span>Schedule</button><button data-t="time" data-acc="clock"><span>🕒</span>Timesheet</button><button data-t="pay" data-acc="payslips"><span>💸</span>Payslips</button><button data-t="floor" data-acc="floor"><span>🪑</span>Floor</button></div>
+<div class="tabs" id="tabs" hidden><button data-t="clock" data-acc="clock" aria-pressed="true"><span>⏱</span>Clock</button><button data-t="sched" data-acc="schedule"><span>📅</span>Schedule</button><button data-t="team" data-acc="team"><span>💬</span>Team</button><button data-t="pay" data-acc="payslips"><span>💸</span>Payroll</button><button data-t="ops" data-acc="ops"><span>🧰</span>Operations</button><button data-t="records" data-acc="records"><span>📁</span>My file</button></div>
 <script>
 const CFG = window.CU_CONFIG || {}, sb = supabase.createClient(CFG.SUPABASE_URL, CFG.ANON_KEY), $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -46,42 +72,65 @@ let me = null, E = null, P = null, stream = null, tab = "clock";
 const linkType = (location.hash.match(/type=(\w+)/) || [])[1];   // invite / recovery / magiclink
 const STEPS = [["time_in", "Time in"], ["lunch_out", "Lunch out"], ["lunch_in", "Lunch in"], ["time_out", "Time out"]];
 function workDate(){ const n = new Date(), st = E.default_start ? +E.default_start.slice(0, 2) : 0; if (n.getHours() < 6 && st >= 12){ n.setDate(n.getDate() - 1); } return iso(n); }
-const header = () => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><img src="logo-wide.png" alt="Catchin' Up Pub" class="logo"><button class="btn" style="width:auto;margin:0;padding:8px 12px;font-size:13px" onclick="sb.auth.signOut().then(()=>location.replace(location.pathname))">Sign out</button></div>`;
+const header = () => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">${E && E.branch === "fm" ? `<img src="logo-funhan.png" alt="Funhan Mart Arnaiz" class="logo">` : `<img src="logo-wide.png" alt="Catchin' Up Pub" class="logo">`}<div style="display:flex;gap:8px;align-items:center">${E ? `<button class="btn" style="width:auto;margin:0;padding:8px 12px;font-size:13px" onclick="profileSheet()">${esc(E.nickname || E.first_name)}</button>` : ""}<button class="btn" style="width:auto;margin:0;padding:8px 12px;font-size:13px" onclick="sb.auth.signOut().then(()=>location.replace(location.pathname))">Sign out</button></div></div>`;
+const AVC = ["#ff70e8","#32e3ff","#ffd84d","#38d996","#b18cff","#ff9f5a"];
+const face = (p, px = 40) => p && p.selfie && URLS[p.selfie] ? `<img src="${URLS[p.selfie]}" alt="" style="width:${px}px;height:${px}px;border-radius:50%;object-fit:cover;transform:scaleX(-1);flex:0 0 auto">` : avatar(p ? p.name : "", px);
+const avatar = (name, px = 36) => { const n = String(name || "?").trim(), c = AVC[[...n].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AVC.length]; return `<span class="av" style="width:${px}px;height:${px}px;font-size:${Math.round(px * .42)}px;background:${c}">${esc(n.slice(0, 1).toUpperCase())}</span>`; };
 
 async function start(){
   const { data: { session } } = await sb.auth.getSession(); if (!session) return login(); me = session.user;
   if (["invite", "recovery"].includes(linkType) && !sessionStorage.getItem("pwset")) return setPassword();
   const { data } = await sb.from("employees").select("*").eq("email", me.email.toLowerCase()).maybeSingle(); E = data;
   if (!E) return $("#app").innerHTML = `${header()}<div class="card"><h2>Almost there</h2><p class="muted">${esc(me.email)} is signed in but isn't on the employee list yet. Ask the manager to add you with this exact email.</p></div>`;
-  const ACC = Object.assign({ clock: true, schedule: true, payslips: true, floor: false }, E.access || {});
+  const ACC = Object.assign({ clock: true, schedule: true, payslips: true, floor: false, team: true, operations: true, records: true }, E.access || {}); ACC.ops = ACC.floor || ACC.operations; window.ACCX = ACC;
   document.querySelectorAll("#tabs button").forEach(b => { if (!ACC[b.dataset.acc]) b.remove(); });
   const first = document.querySelector("#tabs button"); if (!first) return $("#app").innerHTML = `${header()}<div class="card"><h2>No access yet</h2><p class="muted">HR hasn't switched on any pages for you yet. Ask your manager.</p></div>`;
   tab = first.dataset.t; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === first));
   $("#tabs").hidden = false; document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => { tab = b.dataset.t; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", x === b)); render(); });
   await loadToday(); render(); setInterval(() => { const c = $("#clk"); if (c) c.textContent = new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 }
-function login(){ $("#app").innerHTML = `<div style="text-align:center;padding:20px 0 6px"><img src="logo.png" alt="Catchin' Up Pub" style="width:200px"></div><h1 style="text-align:center">Staff</h1><p class="muted small" style="text-align:center">Sign in with the email HR has for you.</p><div class="card"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button class="btn go" id="go">Sign in</button><button class="btn" id="forgot">Forgot password / first sign-in</button><div class="msg" id="m"></div></div>`;
+function login(){ $("#app").innerHTML = `<div style="display:flex;justify-content:center;align-items:center;gap:18px;padding:20px 0 6px"><img src="logo.png" alt="Catchin' Up Pub" style="width:170px"><img src="logo-funhan.png" alt="Funhan Mart Arnaiz" style="height:84px;width:auto"></div><h1 style="text-align:center">Staff</h1><p class="muted small" style="text-align:center">Sign in with the email HR has for you.</p><div class="card"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Password" autocomplete="current-password"><button class="btn go" id="go">Sign in</button><button class="btn" id="forgot">Forgot password / first sign-in</button><div class="msg" id="m"></div></div>`;
   $("#go").onclick = async () => { const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value }); $("#m").textContent = error ? error.message : ""; if (!error) start(); };
   $("#forgot").onclick = async () => { const em = $("#em").value.trim(); if (!em) return $("#m").textContent = "Type your email first."; const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.href.split("#")[0] }); $("#m").textContent = error ? error.message : "Check your inbox for a link to set your password."; }; }
 function setPassword(){ $("#app").innerHTML = `<div style="text-align:center;padding:20px 0 6px"><img src="logo.png" alt="" style="width:200px"></div><h1 style="text-align:center">Welcome${me.user_metadata?.first_name ? ", " + esc(me.user_metadata.first_name) : ""}!</h1><p class="muted small" style="text-align:center">Create the password you'll use to sign in on your phone.</p><div class="card"><input id="p1" type="password" placeholder="New password (8+ characters)" autocomplete="new-password"><input id="p2" type="password" placeholder="Repeat password" autocomplete="new-password"><button class="btn go" id="setp">Save password</button><div class="msg" id="m"></div></div>`;
   $("#setp").onclick = async () => { const a = $("#p1").value, b = $("#p2").value; if (a.length < 8) return $("#m").textContent = "Use at least 8 characters."; if (a !== b) return $("#m").textContent = "The two passwords don't match."; const { error } = await sb.auth.updateUser({ password: a }); if (error) return $("#m").textContent = error.message; sessionStorage.setItem("pwset", "1"); history.replaceState(null, "", location.pathname); start(); }; }
 async function loadToday(){ const { data } = await sb.from("punches").select("*").eq("employee_id", E.id).eq("work_date", workDate()).eq("source", "app").order("created_at", { ascending: false }).limit(1); P = (data || [])[0] || null; }
 function next(){ if (!P) return "time_in"; if (!P.lunch_out && !P.time_out) return "lunch_out"; if (P.lunch_out && !P.lunch_in) return "lunch_in"; if (!P.time_out) return "time_out"; return null; }
-function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } if (floorTimer){ clearInterval(floorTimer); floorTimer = null; } ({ clock, sched, time, pay, floor })[tab](); }
+function render(){ if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; } if (floorTimer){ clearInterval(floorTimer); floorTimer = null; } if (tab !== "team") teamOff(); ({ clock, sched, pay, ops, records, team })[tab](); }
 
 /* clock */
 function clock(){
   const n = next(), label = Object.fromEntries(STEPS);
-  $("#app").innerHTML = `${header()}<div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
+  $("#app").innerHTML = `${header()}<div id="anns"></div><div class="card"><div class="muted small">Hi, ${esc(E.first_name.split(" ")[0])}</div><div class="clock" id="clk">${new Date().toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}</div><div class="date">${new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })} · shift date ${fmt(workDate())}</div>
       <div class="steps">${STEPS.map(([k, l]) => `<div class="${P && P[k] ? "done" : ""}">${l}<b>${P && P[k] ? hhmm(P[k]) : "—"}</b></div>`).join("")}</div></div>
-    <div class="card" id="cam">${n ? `<div class="muted small">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button><div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
+    <div class="card" id="cam">${n ? `<div class="muted small" style="font-weight:700;margin-bottom:6px">Where are you ${n === "time_in" ? "clocking in" : "punching"}?</div><div class="seg" style="margin-top:0" id="brpick">${Object.entries(BRANCHES).map(([k, l]) => `<button aria-pressed="${HERE === k}" onclick="HERE='${k}';checkHere()">${l}</button>`).join("")}</div><div class="geo" id="geo">📍 Checking your location…</div><div class="muted small" style="margin-top:10px">Take a selfie to <b>${label[n]}</b>. Make sure your face is clear.</div><video id="v" autoplay playsinline muted></video><canvas id="c" hidden></canvas><button class="btn ${n === "time_in" ? "go" : n === "time_out" ? "cyan" : ""}" id="snap">📸 ${label[n]}</button><div class="msg" id="m"></div>` : `<div style="text-align:center;padding:10px 0">✅ Shift complete. See you next time.</div>`}</div>
+    <div class="card" id="hp" style="display:none"></div>
+    <div class="card"><div class="duo"><button class="btn" onclick="notifyStatus()">📣 Notify status</button><button class="btn" onclick="requestOT()">⏱ Request OT / UT</button></div><div id="myreq"></div></div>
     <div class="card small muted">Punch at the pub, on your own phone, with your face in the photo. Photos are only seen by management. Forgot to punch? Tell the manager so they can add it by hand.</div>`;
   if (n) openCam(n);
+  myRequests(); loadAnns(); loadHealth();
 }
+const BRANCHES = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart" };
+let LOC = null, SPOTS = null, HERE = null, GEO_OK = false;
+function getLoc(){ return new Promise(res => { if (!navigator.geolocation) return res({ denied: true }); navigator.geolocation.getCurrentPosition(p => res({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) }), () => res({ denied: true }), { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }); }); }
+const distM = (a, b) => { const R = 6371000, r = x => x * Math.PI / 180, dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng); const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+function startLoc(){ if (!HERE) HERE = BRANCHES[E.branch] ? E.branch : "sa"; LOC = getLoc(); checkHere(); }
+async function checkHere(again){
+  document.querySelectorAll("#brpick button").forEach((b, i) => b.setAttribute("aria-pressed", Object.keys(BRANCHES)[i] === HERE));
+  const el = $("#geo"), snap = $("#snap"); if (!el) return; GEO_OK = false; if (snap) snap.disabled = true;
+  if (again) { el.className = "geo"; el.textContent = "📍 Checking your location…"; LOC = getLoc(); }
+  if (!SPOTS) { const { data } = await sb.rpc("branch_spots"); SPOTS = data || {}; }
+  const g = await LOC, spot = SPOTS[HERE], name = BRANCHES[HERE], retry = ` <a href="#" onclick="checkHere(true);return false" style="color:var(--pink)">Check again</a>`;
+  if (g.denied) { el.className = "geo bad"; el.innerHTML = `📍 Location is off. Turn on location for this site (and your phone's GPS), then tap Check again. You can't clock in without it.${retry}`; return; }
+  if (!spot || spot.lat == null) { GEO_OK = true; el.className = "geo"; el.innerHTML = `📍 ${name}'s location hasn't been set by management yet, so your punch will be checked by HR.`; if (snap) snap.disabled = false; return; }
+  const d = Math.round(distM(g, spot)), rad = spot.radius || 20;
+  if (d <= rad) { GEO_OK = true; el.className = "geo"; el.style.color = "var(--ok)"; el.innerHTML = `✓ You're at ${name} (${d} m from the clock-in spot).`; if (snap) snap.disabled = false; return; }
+  el.className = "geo bad"; el.style.color = ""; el.innerHTML = `✕ You're about ${d >= 1000 ? (d / 1000).toFixed(1) + " km" : d + " m"} from ${name}. Clock in only works within ${rad} m of the branch.${g.acc > 30 ? ` Your GPS is weak (±${g.acc} m); step near the door or a window.` : ""}${retry}`; }
 async function openCam(kind){
+  startLoc();
   try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 } }, audio: false }); $("#v").srcObject = stream; }
   catch (e){ $("#m").textContent = "Camera not available: " + e.message + ". Allow the camera in your browser settings."; $("#snap").disabled = true; return; }
-  $("#snap").onclick = () => punch(kind);
+  $("#snap").onclick = () => punch(kind); $("#snap").disabled = !GEO_OK;
 }
 async function punch(kind){
   const b = $("#snap"); b.disabled = true; $("#m").textContent = "Saving…";
@@ -91,22 +140,29 @@ async function punch(kind){
   const { error: upErr } = await sb.storage.from("selfies").upload(path, blob, { contentType: "image/jpeg" }); if (upErr){ $("#m").textContent = "Photo didn't upload: " + upErr.message; b.disabled = false; return; }
   const selfieCol = { time_in: "selfie_in", lunch_out: "selfie_lunch_out", lunch_in: "selfie_lunch_in", time_out: "selfie_out" }[kind];
   let res;
-  if (kind === "time_in" || !P) res = await sb.from("punches").insert({ employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) });
-  else res = await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path }).eq("id", P.id);
-  if (res.error){ $("#m").textContent = "Couldn't save: " + res.error.message; b.disabled = false; return; }
+  if (!GEO_OK) { $("#m").textContent = "You need to be at the branch with location on to punch."; b.disabled = false; return; }
+  const g = await Promise.race([LOC || getLoc(), new Promise(r => setTimeout(() => r({ denied: true, timeout: true }), 6000))]); const geo_last = { kind, branch: HERE, ...g, at: now.toISOString() };
+  if (kind === "time_in" || !P) res = await sb.from("punches").insert({ geo_last, employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) });
+  else res = await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path, geo_last }).eq("id", P.id);
+  if (res.error && /geo_last/.test(res.error.message)) res = (kind === "time_in" || !P) ? await sb.from("punches").insert({ employee_id: E.id, work_date: wd, time_in: now.toISOString(), selfie_in: path, source: "app", device: navigator.userAgent.slice(0, 80) }) : await sb.from("punches").update({ [kind]: now.toISOString(), [selfieCol]: path }).eq("id", P.id);
+  if (res.error){ $("#m").textContent = /within|location/i.test(res.error.message) ? res.error.message : "Couldn't save: " + res.error.message; b.disabled = false; return; }
   await loadToday(); render();
 }
 
 /* schedule */
 async function sched(){
+  if (schedSub === "leave"){ $("#app").innerHTML = `${header()}${schedSeg()}<div id="lvbox"><div class="card muted">Loading…</div></div>`; return leaveView(); }
   const from = iso(new Date()), to = new Date(); to.setDate(to.getDate() + 30);
   const { data } = await sb.from("schedules").select("*").eq("employee_id", E.id).gte("work_date", from).lte("work_date", iso(to)).order("work_date");
   const S = data || []; const rows = []; for (let d = new Date(); d <= to; d.setDate(d.getDate() + 1)){ const k = iso(d), s = S.find(x => x.work_date === k); const dow = d.getDay();
     const txt = s ? (s.kind === "work" ? `<b>${t5(s.start_time)} – ${t5(s.end_time)}</b>` : `<span class="chip ${s.kind === "rest" ? "rd" : ""}">${s.kind === "rest" ? "Rest day" : s.kind}</span>`) : ((E.rest_days || []).includes(dow) ? `<span class="chip rd">Rest day</span>` : E.default_start ? `<span class="muted">${t5(E.default_start)} – ${t5(E.default_end)}</span>` : `<span class="muted">—</span>`);
-    rows.push(`<div class="row"><span>${fmt(k)}${s?.note ? `<br><span class="small muted">${esc(s.note)}</span>` : ""}</span><span>${txt}</span></div>`); }
-  $("#app").innerHTML = `${header()}<div class="card"><h2>My schedule · next 30 days</h2>${rows.join("")}<p class="small muted">Grey times are your usual shift when nothing specific is set. Rest days and changes come from the line-up your manager sets.</p></div>`;
+    const works = s ? s.kind === "work" : !(E.rest_days || []).includes(dow) && !!E.default_start;
+    rows.push(`<div class="row" style="align-items:center"><span>${fmt(k)}${s?.note ? `<br><span class="small muted">${esc(s.note)}</span>` : ""}</span><span style="display:flex;gap:8px;align-items:center">${txt}${works ? `<button class="sw" onclick="swapSheet('${k}')">Swap</button>` : ""}</span></div>`); }
+  $("#app").innerHTML = `${header()}${schedSeg()}<div class="card"><h2>My schedule · next 30 days</h2>${rows.join("")}<p class="small muted">Grey times are your usual shift when nothing specific is set. Rest days and changes come from the line-up your manager sets. Can't make a shift? Tap Swap to offer it to a co-worker.</p></div><div id="swaps"></div>`;
+  loadSwaps();
 }
 
+const schedSeg = () => `<div class="seg"><button aria-pressed="${schedSub === "sched"}" onclick="schedSub='sched';sched()">My schedule</button><button aria-pressed="${schedSub === "leave"}" onclick="schedSub='leave';sched()">Leave</button></div>`;
 /* timesheet */
 async function time(){
   const t = new Date(), d = t.getDate(); let from, to; if (d >= 11 && d <= 25){ from = new Date(t.getFullYear(), t.getMonth(), 11); to = new Date(t.getFullYear(), t.getMonth(), 25); } else if (d >= 26){ from = new Date(t.getFullYear(), t.getMonth(), 26); to = new Date(t.getFullYear(), t.getMonth() + 1, 10); } else { from = new Date(t.getFullYear(), t.getMonth() - 1, 26); to = new Date(t.getFullYear(), t.getMonth(), 10); }
@@ -114,17 +170,320 @@ async function time(){
   const ps = data || []; let total = 0;
   const rows = ps.map(p => { const m = p.time_out ? (new Date(p.time_out) - new Date(p.time_in)) / 60000 - (p.lunch_out && p.lunch_in ? (new Date(p.lunch_in) - new Date(p.lunch_out)) / 60000 : 0) : 0; total += m;
     return `<div class="row"><span>${fmt(p.work_date)}</span><span>${hhmm(p.time_in)} – ${p.time_out ? hhmm(p.time_out) : "<span class='muted'>open</span>"}${p.lunch_out ? `<br><span class="small muted">lunch ${hhmm(p.lunch_out)} – ${p.lunch_in ? hhmm(p.lunch_in) : "…"}</span>` : ""}</span><b>${p.time_out ? (m / 60).toFixed(2) + " h" : ""}</b></div>`; });
-  $("#app").innerHTML = `${header()}<div class="card"><h2>My timesheet · ${fmt(iso(from))} – ${fmt(iso(to))}</h2>${rows.join("") || "<div class='muted'>No punches yet this cut-off.</div>"}<div class="row"><span>Clocked so far</span><b>${(total / 60).toFixed(2)} h</b></div><p class="small muted">Clocked time, before the lunch deduction and approvals. Paid hours are on your payslip.</p></div>`;
+  $("#paybox").innerHTML = `<div class="card"><h2>My timesheet · ${fmt(iso(from))} – ${fmt(iso(to))}</h2>${rows.join("") || "<div class='muted'>No punches yet this cut-off.</div>"}<div class="row"><span>Clocked so far</span><b>${(total / 60).toFixed(2)} h</b></div><p class="small muted">Clocked time, before the lunch deduction and approvals. Paid hours are on your payslip.</p></div>`;
 }
 
-/* payslips */
-async function pay(){
+/* payroll */
+async function paySlips(){
   const { data } = await sb.from("payroll_lines").select("*, payroll_runs(period_start,period_end,status)").eq("employee_id", E.id).order("created_at", { ascending: false }).limit(12);
   const L = (data || []).filter(l => l.payroll_runs);
-  $("#app").innerHTML = `${header()}<div class="card"><h2>My payslips</h2>${L.length ? L.map(l => `<div class="row" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between"><b>${fmt(l.payroll_runs.period_start)} – ${fmt(l.payroll_runs.period_end)}</b><b style="color:var(--ok)">₱${p2(l.net)}</b></div>
+  $("#paybox").innerHTML = `<div class="card"><h2>My payslips</h2>${L.length ? L.map(l => `<div class="row" style="flex-direction:column;align-items:stretch"><div style="display:flex;justify-content:space-between"><b>${fmt(l.payroll_runs.period_start)} – ${fmt(l.payroll_runs.period_end)}</b><b style="color:var(--ok)">₱${p2(l.net)}</b></div>
       <div class="small muted">Days ${l.days_worked} · regular ${p2(l.reg_hours)} h · OT ${p2(l.ot_hours)} h · ND ${p2(l.nd_hours)} h</div>
       <div class="small" style="display:grid;grid-template-columns:1fr auto;gap:2px 12px;margin-top:6px"><span>Basic</span><span>${p2(l.basic_pay)}</span><span>Premiums</span><span>${p2(l.premium_pay)}</span><span>Overtime</span><span>${p2(l.ot_pay)}</span><span>Night differential</span><span>${p2(l.nd_pay)}</span><span>Leave / other</span><span>${p2(+l.leave_pay + +l.other_earnings)}</span><span><b>Gross</b></span><span><b>${p2(l.gross)}</b></span><span>SSS</span><span>−${p2(l.sss)}</span><span>PhilHealth</span><span>−${p2(l.philhealth)}</span><span>Pag-IBIG</span><span>−${p2(l.pagibig)}</span><span>Tax</span><span>−${p2(l.tax)}</span><span>Other deductions</span><span>−${p2(l.other_deductions)}</span></div></div>`).join("") : "<div class='muted'>Payslips appear here once a cut-off has been released.</div>"}</div>`;
 }
+
+/* ---------- requests: status notices, OT/UT, leave, cash advance ---------- */
+const REQ_L = { late: "Running late", absent_sick: "Absent · sick", absent_emergency: "Absent · family emergency", absent_other: "Absent · other reason", ot: "Overtime", ut: "Undertime", cash_advance: "Cash advance" };
+const ST_L = { pending: "Pending", approved: "Approved", declined: "Declined", rejected: "Declined", noted: "Acknowledged" };
+const peso2 = n => "₱" + (+n || 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const tmrw = () => { const d = pd(workDate()); d.setDate(d.getDate() + 1); return iso(d); };
+async function fileRequest(row){ const { data, error } = await sb.from("staff_requests").insert({ employee_id: E.id, status: "pending", ...row }).select().single(); if (error) return { error }; try { sb.functions.invoke("staff", { body: { action: "notify", id: data.id } }); } catch (e) {} return { data }; }
+async function myRequests(){ const box = $("#myreq"); if (!box) return; const { data } = await sb.from("staff_requests").select("*").eq("employee_id", E.id).neq("kind", "cash_advance").order("created_at", { ascending: false }).limit(5);
+  if (!(data || []).length) return box.innerHTML = `<p class="small muted" style="margin:10px 0 0">Running late, can't come in, or need overtime approved? Let your manager know here so it's on record.</p>`;
+  box.innerHTML = `<div class="small muted" style="margin:14px 0 2px;font-weight:700">Your recent requests</div>` + data.map(r => `<div class="row"><span>${REQ_L[r.kind]}<br><span class="small muted">${r.work_date ? fmt(r.work_date) : ""}${r.start_time ? " · " + t5(r.start_time) + "–" + t5(r.end_time) : ""}${r.eta ? " · arriving " + esc(r.eta) : ""}${r.decision_note ? " · " + esc(r.decision_note) : ""}</span></span><span class="st ${r.status}">${ST_L[r.status]}</span></div>`).join(""); }
+let NS = { kind: "late" };
+function notifyStatus(){ NS = { kind: "late" }; drawNotify(); }
+function drawNotify(){ const O = [["late", "Running late", "I will arrive after my scheduled start time."], ["absent_sick", "Absent · sick", "I am unwell and unable to report for my shift."], ["absent_emergency", "Absent · family emergency", "I have an urgent family matter and cannot report for my shift."], ["absent_other", "Absent · other reason", "I cannot report for my shift for another reason (please explain)."]];
+  const v = id => (document.getElementById(id) || {}).value || "";
+  const keep = { d: v("ns-d") || workDate(), eta: v("ns-eta"), note: v("ns-note") };
+  fModal(`<h2>Notify your manager</h2><p class="small muted" style="margin:0">Send this as early as you can, ideally before your shift starts.</p>
+    ${O.map(([k, t, d]) => `<button class="opt" aria-pressed="${NS.kind === k}" onclick="NS.kind='${k}';drawNotify()"><i></i><span><b>${t}</b><span>${d}</span></span></button>`).join("")}
+    <label class="lb">For which shift?</label><select id="ns-d"><option value="${workDate()}" ${keep.d === workDate() ? "selected" : ""}>Today · ${fmt(workDate())}</option><option value="${tmrw()}" ${keep.d === tmrw() ? "selected" : ""}>Tomorrow · ${fmt(tmrw())}</option></select>
+    ${NS.kind === "late" ? `<label class="lb">Expected arrival time</label><input id="ns-eta" type="time" value="${esc(keep.eta)}">` : ""}
+    <label class="lb">${NS.kind === "absent_other" ? "Reason (required)" : "Details (optional)"}</label><textarea id="ns-note" placeholder="${NS.kind === "late" ? "e.g. Heavy traffic on EDSA" : NS.kind === "absent_sick" ? "e.g. Fever since last night" : "Add any details your manager should know"}">${esc(keep.note)}</textarea>
+    ${NS.kind === "absent_sick" ? `<p class="small muted">Your manager may ask for a medical certificate.</p>` : ""}
+    <div class="err" id="ns-err"></div><button class="btn go" id="ns-go">Send notice</button><button class="btn" onclick="closeF()">Cancel</button>`);
+  $("#ns-go").onclick = async () => { const note = v("ns-note").trim(), eta = v("ns-eta");
+    if (NS.kind === "absent_other" && note.length < 3) return $("#ns-err").textContent = "Please give a short reason.";
+    if (NS.kind === "late" && !eta) return $("#ns-err").textContent = "Add your expected arrival time.";
+    $("#ns-go").disabled = true; const r = await fileRequest({ kind: NS.kind, work_date: v("ns-d"), eta: eta ? hm12(eta) : null, reason: note || null });
+    if (r.error) { $("#ns-go").disabled = false; return $("#ns-err").textContent = "Couldn't send: " + r.error.message; }
+    fModal(`<h2>Notice sent ✓</h2><p class="muted">Your manager has been informed${NS.kind === "late" ? ` that you expect to arrive at ${hm12(eta)}` : ""}. If your shift starts within the hour, please also message or call your supervisor directly.</p><button class="btn go" onclick="closeF();render()">Done</button>`); }; }
+const hm12 = t => { const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+let OT = { kind: "ot" };
+function requestOT(){ OT = { kind: "ot" }; drawOT(); }
+function drawOT(){ const v = id => (document.getElementById(id) || {}).value || "";
+  const keep = { d: v("ot-d") || workDate(), a: v("ot-a"), b: v("ot-b"), r: v("ot-r"), n: v("ot-n") };
+  fModal(`<h2>Request overtime or undertime</h2><p class="small muted" style="margin:0">File it before the extra or shorter hours whenever possible. Only approved overtime is paid.</p>
+    <div class="seg"><button aria-pressed="${OT.kind === "ot"}" onclick="OT.kind='ot';drawOT()">Overtime</button><button aria-pressed="${OT.kind === "ut"}" onclick="OT.kind='ut';drawOT()">Undertime</button></div>
+    <label class="lb">Date</label><input id="ot-d" type="date" value="${esc(keep.d)}">
+    <label class="lb">Time frame</label><div class="duo"><input id="ot-a" type="time" value="${esc(keep.a)}" aria-label="From"><input id="ot-b" type="time" value="${esc(keep.b)}" aria-label="To"></div>
+    <p class="small muted" style="margin:6px 0 0">${OT.kind === "ot" ? "From the end of your shift to the time you'll stay until." : "From the time you need to leave to the end of your shift."}</p>
+    <label class="lb">Reason</label><textarea id="ot-r" placeholder="${OT.kind === "ot" ? "e.g. Private event teardown, 120 pax" : "e.g. Medical appointment at 9 PM"}">${esc(keep.r)}</textarea>
+    <label class="lb">Request for approval (note to your manager)</label><textarea id="ot-n" style="min-height:60px" placeholder="e.g. Approved verbally by the supervisor on duty">${esc(keep.n)}</textarea>
+    <div class="err" id="ot-err"></div><button class="btn go" id="ot-go">Submit for approval</button><button class="btn" onclick="closeF()">Cancel</button>`);
+  $("#ot-go").onclick = async () => { if (!v("ot-a") || !v("ot-b")) return $("#ot-err").textContent = "Add the start and end time."; if (v("ot-r").trim().length < 3) return $("#ot-err").textContent = "Please give a short reason.";
+    $("#ot-go").disabled = true; const r = await fileRequest({ kind: OT.kind, work_date: v("ot-d"), start_time: v("ot-a"), end_time: v("ot-b"), reason: v("ot-r").trim(), note: v("ot-n").trim() || null });
+    if (r.error) { $("#ot-go").disabled = false; return $("#ot-err").textContent = "Couldn't submit: " + r.error.message; }
+    fModal(`<h2>Request submitted ✓</h2><p class="muted">Your ${OT.kind === "ot" ? "overtime" : "undertime"} request for ${fmt(v("ot-d"))}, ${hm12(v("ot-a"))} to ${hm12(v("ot-b"))}, is waiting for approval. You'll see the decision on your Clock page.</p><button class="btn go" onclick="closeF();render()">Done</button>`); }; }
+
+/* schedule + leave */
+let schedSub = "sched", LV = { m: null, sel: [], kind: "VL" }, LVD = { leaves: [], sched: [] };
+const LEAVE_L = { VL: "Vacation leave", SL: "Sick leave", EL: "Emergency leave", unpaid: "Leave without pay" };
+async function leaveView(){
+  if (!LV.m){ const t = new Date(); LV.m = new Date(t.getFullYear(), t.getMonth(), 1); }
+  const a = new Date(LV.m), b = new Date(LV.m.getFullYear(), LV.m.getMonth() + 1, 0);
+  const [l, sc, all] = await Promise.all([sb.from("leaves").select("*").eq("employee_id", E.id).gte("leave_date", iso(a)).lte("leave_date", iso(b)), sb.from("schedules").select("*").eq("employee_id", E.id).gte("work_date", iso(a)).lte("work_date", iso(b)), sb.from("leaves").select("*").eq("employee_id", E.id).order("leave_date", { ascending: false }).limit(60)]);
+  LVD = { leaves: l.data || [], sched: sc.data || [], all: all.data || [] }; drawLeave(); }
+function drawLeave(){
+  const y = LV.m.getFullYear(), mo = LV.m.getMonth(), first = new Date(y, mo, 1).getDay(), days = new Date(y, mo + 1, 0).getDate(), today = iso(new Date());
+  const cells = []; for (let k = 0; k < first; k++) cells.push("<span></span>");
+  for (let d = 1; d <= days; d++){ const k = iso(new Date(y, mo, d)), lv = LVD.leaves.find(x => x.leave_date === k && x.status !== "rejected"), s = LVD.sched.find(x => x.work_date === k);
+    const rest = s ? s.kind === "rest" : (E.rest_days || []).includes(new Date(y, mo, d).getDay());
+    const lab = lv ? (lv.status === "approved" ? lv.kind : "pending") : rest ? "off" : s && s.kind === "work" ? t5(s.start_time) : "";
+    cells.push(`<button class="${k < today ? "past" : ""} ${rest ? "rest" : ""} ${lv ? (lv.status === "approved" ? "lv-a" : "lv-p") : ""} ${LV.sel.includes(k) ? "sel" : ""} ${k === today ? "today" : ""}" ${k < today || lv ? "disabled" : ""} onclick="lvTap('${k}')">${d}<small>${esc(lab)}</small></button>`); }
+  const sel = [...LV.sel].sort(), work = sel.filter(k => !lvRest(k));
+  const groups = {}; (LVD.all || []).forEach(l => { const g = String(l.created_at).slice(0, 16) + l.kind; (groups[g] = groups[g] || []).push(l); });
+  $("#lvbox").innerHTML = `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><button class="btn" style="width:auto;margin:0;padding:6px 12px" onclick="LV.m=new Date(LV.m.getFullYear(),LV.m.getMonth()-1,1);LV.sel=[];leaveView()">‹</button><h2 style="margin:0">${LV.m.toLocaleDateString("en-PH", { month: "long", year: "numeric" })}</h2><button class="btn" style="width:auto;margin:0;padding:6px 12px" onclick="LV.m=new Date(LV.m.getFullYear(),LV.m.getMonth()+1,1);LV.sel=[];leaveView()">›</button></div>
+      <div class="mcal">${["S","M","T","W","T","F","S"].map(d => `<span class="h">${d}</span>`).join("")}${cells.join("")}</div>
+      <p class="small muted" style="margin:10px 0 0">Tap the days you want off. Blue = approved leave · dashed = waiting for approval · faded = rest day.</p></div>
+    <div class="card"><h2>Request leave</h2>${sel.length ? `<div class="small">${sel.length === 1 ? fmt(sel[0]) : `${fmt(sel[0])} – ${fmt(sel[sel.length - 1])}`} · <b>${work.length} working day${work.length === 1 ? "" : "s"}</b>${sel.length > work.length ? ` <span class="muted">(rest days not counted)</span>` : ""} <a href="#" onclick="LV.sel=[];drawLeave();return false" style="color:var(--pink)">clear</a></div>` : `<p class="small muted" style="margin:0">Select dates on the calendar above.</p>`}
+      <label class="lb">Type of leave</label><select id="lv-k" onchange="LV.kind=this.value">${Object.entries(LEAVE_L).map(([k, l]) => `<option value="${k}" ${LV.kind === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+      ${E.vl_credits != null || E.sl_credits != null ? `<p class="small muted" style="margin:6px 0 0">Remaining credits: ${E.vl_credits ?? "—"} vacation · ${E.sl_credits ?? "—"} sick</p>` : ""}
+      <label class="lb">Reason</label><textarea id="lv-r" placeholder="e.g. Family trip to Batangas">${esc(LV.reason || "")}</textarea>
+      <div class="err" id="lv-err"></div><button class="btn go" id="lv-go" ${work.length ? "" : "disabled"}>Submit leave request</button></div>
+    <div class="card"><h2>My leave requests</h2>${Object.values(groups).map(g => { g.sort((a, b) => a.leave_date < b.leave_date ? -1 : 1); const st = g.some(x => x.status === "pending") ? "pending" : g[0].status; return `<div class="row"><span>${LEAVE_L[g[0].kind] || g[0].kind}<br><span class="small muted">${fmt(g[0].leave_date)}${g.length > 1 ? " – " + fmt(g[g.length - 1].leave_date) + ` · ${g.length} days` : ""}</span></span><span class="st ${st}">${ST_L[st] || st}</span></div>`; }).join("") || "<p class='small muted' style='margin:0'>No leave filed yet.</p>"}</div>`;
+  $("#lv-r").oninput = e => LV.reason = e.target.value;
+  $("#lv-go").onclick = async () => { const reason = $("#lv-r").value.trim(); if (reason.length < 3) return $("#lv-err").textContent = "Please give a short reason.";
+    $("#lv-go").disabled = true; const kind = $("#lv-k").value;
+    const { error } = await sb.from("leaves").insert(work.map(k => ({ employee_id: E.id, leave_date: k, kind, paid: kind !== "unpaid", status: "pending", reason, note: reason })));
+    if (error) { $("#lv-go").disabled = false; return $("#lv-err").textContent = "Couldn't submit: " + error.message; }
+    try { sb.functions.invoke("staff", { body: { action: "notify_leave", from: work[0], to: work[work.length - 1], days: work.length, kind } }); } catch (e) {}
+    fModal(`<h2>Leave request submitted ✓</h2><p class="muted">${LEAVE_L[kind]} for ${work.length} working day${work.length === 1 ? "" : "s"} (${fmt(work[0])}${work.length > 1 ? " – " + fmt(work[work.length - 1]) : ""}) is waiting for your manager's approval. Please don't make fixed plans until it's approved.</p><button class="btn go" onclick="closeF()">Done</button>`);
+    LV.sel = []; LV.reason = ""; leaveView(); }; }
+function lvRest(k){ const s = LVD.sched.find(x => x.work_date === k); return s ? s.kind === "rest" : (E.rest_days || []).includes(pd(k).getDay()); }
+function lvTap(k){ const i = LV.sel.indexOf(k); if (i >= 0) LV.sel.splice(i, 1); else if (LV.sel.length === 1 && Math.abs(pd(k) - pd(LV.sel[0])) > 86400000) { const [a, b] = [LV.sel[0], k].sort(); LV.sel = []; for (let d = pd(a); iso(d) <= b; d.setDate(d.getDate() + 1)) if (!LVD.leaves.some(x => x.leave_date === iso(d))) LV.sel.push(iso(d)); } else LV.sel.push(k); drawLeave(); }
+
+/* payroll: payslips · earnings & contributions · cash advance */
+let paySub = "slips";
+async function pay(){
+  $("#app").innerHTML = `${header()}<div class="seg">${[["slips", "Payslips"], ["hours", "Timesheet"], ["earn", "Earnings"], ["ca", "Cash advance"]].map(([k, l]) => `<button aria-pressed="${paySub === k}" onclick="paySub='${k}';pay()">${l}</button>`).join("")}</div><div id="paybox"><div class="card muted">Loading…</div></div>`;
+  if (paySub === "slips") await paySlips(); else if (paySub === "hours") await time(); else if (paySub === "earn") await payEarn(); else await payCA(); }
+async function payEarn(){
+  const y = new Date().getFullYear(); const { data } = await sb.from("payroll_lines").select("*, payroll_runs(period_start,period_end,status)").eq("employee_id", E.id).order("created_at", { ascending: false }).limit(48);
+  const L = (data || []).filter(l => l.payroll_runs && String(l.payroll_runs.period_end).startsWith(String(y))); const sum = k => L.reduce((a, l) => a + (+l[k] || 0), 0);
+  const mask = v => v ? "•••• " + String(v).replace(/\D/g, "").slice(-4) : "not on file";
+  $("#paybox").innerHTML = `<div class="card"><h2>Earnings · ${y} to date</h2><p class="small muted" style="margin:0 0 6px">From ${L.length} released payslip${L.length === 1 ? "" : "s"}.</p>
+    ${[["Basic pay", "basic_pay"], ["Holiday & rest-day premiums", "premium_pay"], ["Overtime", "ot_pay"], ["Night differential", "nd_pay"], ["Leave pay", "leave_pay"], ["Other earnings", "other_earnings"]].map(([l, k]) => `<div class="row"><span>${l}</span><span>${peso2(sum(k))}</span></div>`).join("")}<div class="row"><b>Gross earnings</b><b>${peso2(sum("gross"))}</b></div></div>
+    <div class="card"><h2>Contributions & tax · ${y} to date</h2>${[["SSS", "sss"], ["PhilHealth", "philhealth"], ["Pag-IBIG", "pagibig"], ["Withholding tax", "tax"], ["Other deductions", "other_deductions"]].map(([l, k]) => `<div class="row"><span>${l}</span><span>−${peso2(sum(k))}</span></div>`).join("")}<div class="row"><b>Net pay received</b><b style="color:var(--ok)">${peso2(sum("net"))}</b></div></div>
+    <div class="card"><h2>Your government numbers</h2><div class="row"><span>SSS</span><span>${mask(E.sss_no)}</span></div><div class="row"><span>PhilHealth</span><span>${mask(E.philhealth_no)}</span></div><div class="row"><span>Pag-IBIG</span><span>${mask(E.pagibig_no)}</span></div><div class="row"><span>TIN</span><span>${mask(E.tin)}</span></div><p class="small muted">Something missing or wrong? Tell HR so your contributions are posted to the right account.</p></div>`; }
+async function payCA(){
+  const { data } = await sb.from("staff_requests").select("*").eq("employee_id", E.id).eq("kind", "cash_advance").order("created_at", { ascending: false }).limit(10);
+  $("#paybox").innerHTML = `<div class="card"><h2>Request a cash advance</h2><p class="small muted" style="margin:0">Approved advances are deducted from your next payslip(s).</p>
+    <label class="lb">Amount (₱)</label><input id="ca-a" type="number" inputmode="decimal" min="1" step="1" placeholder="e.g. 2000">
+    <label class="lb">Reason</label><textarea id="ca-r" placeholder="e.g. School tuition for my child due this week"></textarea>
+    <div class="err" id="ca-err"></div><button class="btn go" id="ca-go">Submit request</button></div>
+    <div class="card"><h2>My requests</h2>${(data || []).map(r => `<div class="row"><span><b>${peso2(r.amount)}</b><br><span class="small muted">${fmt(r.created_at.slice(0, 10))} · ${esc(r.reason || "")}${r.decision_note ? " · " + esc(r.decision_note) : ""}</span></span><span class="st ${r.status}">${ST_L[r.status]}</span></div>`).join("") || "<p class='small muted' style='margin:0'>No requests yet.</p>"}</div>`;
+  $("#ca-go").onclick = async () => { const a = +$("#ca-a").value, r = $("#ca-r").value.trim(); if (!(a > 0)) return $("#ca-err").textContent = "Enter the amount you need."; if (r.length < 3) return $("#ca-err").textContent = "Please give a short reason.";
+    $("#ca-go").disabled = true; const res = await fileRequest({ kind: "cash_advance", amount: a, reason: r, work_date: iso(new Date()) });
+    if (res.error) { $("#ca-go").disabled = false; return $("#ca-err").textContent = "Couldn't submit: " + res.error.message; }
+    fModal(`<h2>Request submitted</h2><p class="muted">Your cash advance request for <b style="color:var(--ink)">${peso2(a)}</b> has been sent to management for review.</p><p class="muted small">Please note that submitting a request does not guarantee approval. You'll see the decision here once it has been reviewed.</p><button class="btn go" onclick="closeF();pay()">OK, got it</button>`); }; }
+
+/* ---------- announcements ---------- */
+async function loadAnns(){ const box = $("#anns"); if (!box) return;
+  const [{ data: a }, { data: r }] = await Promise.all([sb.from("announcements").select("*").order("created_at", { ascending: false }).limit(10), sb.from("announcement_reads").select("announcement_id").eq("employee_id", E.id)]);
+  const read = new Set((r || []).map(x => x.announcement_id)), now = new Date().toISOString();
+  const un = (a || []).filter(x => !read.has(x.id) && (!x.expires_at || x.expires_at > now));
+  box.innerHTML = un.map(x => `<div class="card ann"><div class="small muted">📌 Announcement · ${fmt(x.created_at.slice(0, 10))}</div><h2 style="margin:4px 0 6px">${esc(x.title)}</h2>${x.body ? `<div style="white-space:pre-wrap;font-size:15px">${esc(x.body)}</div>` : ""}<button class="btn go" onclick="readAnn('${x.id}')">Got it</button></div>`).join(""); }
+async function readAnn(id){ await sb.from("announcement_reads").insert({ announcement_id: id, employee_id: E.id }); loadAnns(); }
+
+/* ---------- profile: nickname + photo in the team feed ---------- */
+function profileSheet(first){
+  fModal(`<h2 style="margin:0">${esc(E.first_name)} ${esc(E.last_name)}</h2><div class="small muted">${esc(E.position || "")}</div>
+    ${first ? `<p class="muted small" style="margin:14px 0 0"><b style="color:var(--ink)">Welcome to Team.</b> Every time you clock in or out, your selfie and the time appear in the team feed so everyone can see who's on shift and cheer each other on. It also shows that it was really you who clocked in. Co-workers can react with an emoji. Photos are deleted after 30 days.</p>` : ""}
+    <label class="lb">Nickname (what your co-workers see)</label><input id="pf-n" maxlength="24" value="${esc(E.nickname || "")}" placeholder="${esc(E.first_name)}">
+    ${first ? `<div class="card" style="background:#0f0f14;margin-top:14px"><b>Team chat rules</b><ul class="small muted" style="margin:6px 0 0;padding-left:18px"><li>Be respectful. No bullying, harassment or hate.</li><li>No customer names, numbers or photos, and no screenshots outside the team.</li><li>Work instructions come as announcements; nobody has to reply on a day off.</li><li>Messages delete automatically after 7 days. Management can remove any message.</li></ul></div>` : ""}
+    <div class="err" id="pf-err"></div><button class="btn go" id="pf-go">${first ? "I agree, let's go" : "Save"}</button>${first ? "" : `<button class="btn" onclick="closeF()">Cancel</button>`}`);
+  $("#pf-go").onclick = async () => { const nick = $("#pf-n").value.trim(); const { data, error } = await sb.rpc("set_my_profile", { p_nick: nick, p_photo: true, p_consent: !!first });
+    if (error || !data?.ok) return $("#pf-err").textContent = (error || {}).message || data?.error || "Couldn't save";
+    E.nickname = nick || null; if (first) E.team_consent_at = new Date().toISOString(); closeF(); render(); }; }
+
+/* ---------- Team: live feed + group chat ---------- */
+let teamSub = "feed", room = "all", TCH = null, FEED = [], RX = [], CHAT = [], URLS = {};
+const EMO = ["👋", "🔥", "💪", "😂", "❤️", "🙌"];
+function teamOff(){ if (TCH){ try { sb.removeChannel(TCH); } catch (e) {} TCH = null; } }
+async function team(){
+  if (!E.team_consent_at) { $("#app").innerHTML = `${header()}<div class="card"><h2>Team</h2><p class="muted">See who's on shift, cheer each other on, and chat with your branch.</p></div>`; return profileSheet(true); }
+  const br = E.branch === "ju" ? "Jupiter team" : E.branch === "sa" ? "San Antonio team" : E.branch === "fm" ? "Funhan team" : "My branch";
+  $("#app").innerHTML = `${header()}<div class="seg"><button aria-pressed="${teamSub === "feed"}" onclick="teamSub='feed';team()">Live feed</button><button aria-pressed="${teamSub === "chat"}" onclick="teamSub='chat';team()">Chat</button></div><div id="tbox"><div class="card muted">Loading…</div></div>`;
+  teamOff();
+  TCH = sb.channel("team-" + Date.now()).on("postgres_changes", { event: "*", schema: "public", table: "feed_posts" }, () => teamSub === "feed" && loadFeed())
+    .on("postgres_changes", { event: "*", schema: "public", table: "feed_reactions" }, () => teamSub === "feed" && loadFeed(true))
+    .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => teamSub === "chat" && loadChat()).subscribe();
+  if (teamSub === "feed") loadFeed(); else { if (room !== "all" && room !== E.branch) room = "all"; loadChat(br); } }
+async function loadFeed(rxOnly){
+  const since = new Date(Date.now() - 2 * 86400000).toISOString();
+  if (!rxOnly){ const { data } = await sb.from("feed_posts").select("*").gte("at", since).order("at", { ascending: false }).limit(80); FEED = data || [];
+    const need = FEED.map(p => p.selfie).filter(x => x && !URLS[x]); if (need.length){ const { data: u } = await sb.storage.from("selfies").createSignedUrls(need, 3600); (u || []).forEach(x => { if (x.signedUrl) URLS[x.path] = x.signedUrl; }); } }
+  const ids = FEED.map(p => p.id); const { data: r } = ids.length ? await sb.from("feed_reactions").select("*").in("post_id", ids) : { data: [] }; RX = r || [];
+  drawFeed(); }
+function dayLabel(iso){ const d = new Date(iso), t = new Date(); const k = x => x.toDateString(); if (k(d) === k(t)) return "Today"; const y = new Date(t); y.setDate(y.getDate() - 1); return k(d) === k(y) ? "Yesterday" : d.toLocaleDateString("en-PH", { weekday: "long", month: "short", day: "numeric" }); }
+function drawFeed(){ const box = $("#tbox"); if (!box) return; let last = "", html = "";
+  const onNow = new Set(); [...FEED].reverse().forEach(p => { if (p.kind === "in") onNow.add(p.employee_id); else onNow.delete(p.employee_id); });
+  FEED.forEach(p => { const lab = dayLabel(p.at); if (lab !== last){ html += `${last ? "</div>" : ""}<div class="card"><div class="small muted" style="font-weight:700">${lab}</div>`; last = lab; }
+    const mine = RX.find(x => x.post_id === p.id && x.employee_id === E.id), counts = {}; RX.filter(x => x.post_id === p.id).forEach(x => counts[x.emoji] = (counts[x.emoji] || 0) + 1);
+    html += `<div class="post">${face(p, 40)}<div style="min-width:0;flex:1"><div class="who"><b>${esc(p.name)}</b> ${p.kind === "in" ? "timed in" : "timed out"} <span class="tag ${p.kind}">${p.kind === "in" ? "IN" : "OUT"}</span></div><div class="t">${hhmm(p.at)} · ${p.branch === "ju" ? "Jupiter" : p.branch === "fm" ? "Funhan Mart" : "San Antonio"}</div>
+      ${p.selfie && URLS[p.selfie] ? `<img class="ph" src="${URLS[p.selfie]}" alt="${esc(p.name)}" data-post="${p.id}" draggable="false">` : `<div class="t" style="margin-top:6px" data-post="${p.id}">Hold here to react</div>`}
+      <div class="rx">${Object.entries(counts).map(([em, n]) => `<button class="${mine && mine.emoji === em ? "mine" : ""}" onclick="react('${p.id}','${em}')">${em} ${n}</button>`).join("")}<button onclick="pickAt(event,'${p.id}')" aria-label="Add a reaction">＋</button></div></div></div>`; });
+  box.innerHTML = (FEED.length ? `<div class="card" style="padding:12px 16px"><div class="small muted">On shift now</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${[...onNow].map(id => { const p = FEED.find(x => x.employee_id === id); const pin = FEED.find(x => x.employee_id === id && x.kind === "in") || p; return `<span title="${esc(p.name)}" style="display:flex;flex-direction:column;align-items:center;font-size:11px;width:48px">${face(pin, 40)}<span style="max-width:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span></span>`; }).join("") || "<span class='small muted'>Nobody is clocked in right now.</span>"}</div></div>` : "") + (html ? html + "</div>" : `<div class="card muted">No time-ins in the last two days yet. Yours will show up here.</div>`) + `<p class="small muted" style="text-align:center">Press and hold a photo to react · photos disappear after 30 days</p>`;
+  box.querySelectorAll("[data-post]").forEach(el => { let t; const id = el.dataset.post;
+    el.addEventListener("contextmenu", e => e.preventDefault());
+    el.addEventListener("pointerdown", e => { const x = e.clientX, y = e.clientY; t = setTimeout(() => { if (navigator.vibrate) navigator.vibrate(15); showPicker(x, y, id); }, 450); });
+    ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach(ev => el.addEventListener(ev, e => { if (ev === "pointermove" && Math.abs(e.movementX) + Math.abs(e.movementY) < 6) return; clearTimeout(t); })); }); }
+function pickAt(e, id){ const r = e.target.getBoundingClientRect(); showPicker(r.left, r.top, id); }
+function showPicker(x, y, id){ document.querySelector(".picker")?.remove(); const p = document.createElement("div"); p.className = "picker"; p.innerHTML = EMO.map(em => `<button>${em}</button>`).join("");
+  document.body.appendChild(p); const w = p.offsetWidth; p.style.left = Math.max(8, Math.min(innerWidth - w - 8, x - w / 2)) + "px"; p.style.top = Math.max(8, y - 64) + "px";
+  p.querySelectorAll("button").forEach((b, i) => b.onclick = () => { p.remove(); react(id, EMO[i]); });
+  setTimeout(() => document.addEventListener("pointerdown", function off(ev){ if (!p.contains(ev.target)){ p.remove(); document.removeEventListener("pointerdown", off); } }), 50); }
+async function react(id, em){ const mine = RX.find(x => x.post_id === id && x.employee_id === E.id);
+  if (mine && mine.emoji === em) await sb.from("feed_reactions").delete().eq("post_id", id).eq("employee_id", E.id);
+  else if (mine) await sb.from("feed_reactions").update({ emoji: em }).eq("post_id", id).eq("employee_id", E.id);
+  else await sb.from("feed_reactions").insert({ post_id: id, employee_id: E.id, emoji: em });
+  loadFeed(true); }
+async function loadChat(brName){
+  const { data } = await sb.from("chat_messages").select("*").eq("room", room).is("deleted_at", null).order("created_at", { ascending: false }).limit(150); CHAT = (data || []).reverse();
+  const box = $("#tbox"); if (!box) return; const keep = $("#ch-in") ? $("#ch-in").value : "";
+  const br = brName || (E.branch === "ju" ? "Jupiter team" : E.branch === "fm" ? "Funhan team" : "San Antonio team");
+  let last = "";
+  box.innerHTML = `<div class="card" style="padding:12px"><div class="seg" style="margin-top:0"><button aria-pressed="${room === "all"}" onclick="room='all';loadChat()">All staff</button><button aria-pressed="${room === E.branch}" onclick="room='${E.branch}';loadChat()">${br}</button></div>
+    <div class="chat" id="chat">${CHAT.map(m => { const lab = dayLabel(m.created_at), sep = lab !== last ? `<div class="small muted" style="text-align:center;margin:6px 0">${lab}</div>` : ""; last = lab; const me = m.employee_id === E.id;
+      return `${sep}<div class="bub ${me ? "me" : "them"} ${m.staff_email ? "mgmt" : ""}" ${me ? `data-mid="${m.id}"` : ""}>${me ? "" : `<small>${esc(m.author || "")}</small>`}${esc(m.body)}<time>${hhmm(m.created_at)}</time></div>`; }).join("") || `<div class="small muted" style="text-align:center;padding:20px 0">No messages in the last 7 days. Say hi 👋</div>`}</div>
+    <div class="chatbar"><textarea id="ch-in" maxlength="1000" placeholder="Message ${room === "all" ? "all staff" : br}"></textarea><button class="btn go" id="ch-go">Send</button></div>
+    <p class="small muted" style="margin:8px 0 0">Messages delete after 7 days. Hold your own message to delete it.</p></div>`;
+  const c = $("#chat"); c.scrollTop = c.scrollHeight; $("#ch-in").value = keep;
+  const send = async () => { const v = $("#ch-in").value.trim(); if (!v) return; $("#ch-go").disabled = true; const { error } = await sb.from("chat_messages").insert({ room, employee_id: E.id, body: v }); $("#ch-go").disabled = false; if (error) return toastF("Couldn't send: " + error.message); $("#ch-in").value = ""; loadChat(); };
+  $("#ch-go").onclick = send; $("#ch-in").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); } };
+  c.querySelectorAll("[data-mid]").forEach(el => { let t; el.addEventListener("contextmenu", e => e.preventDefault()); el.addEventListener("pointerdown", () => { t = setTimeout(() => fModal(`<h2>Delete this message?</h2><p class="muted small">It will be removed for everyone.</p><button class="btn go" onclick="delMsg('${el.dataset.mid}')">Delete</button><button class="btn" onclick="closeF()">Cancel</button>`), 500); }); ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => clearTimeout(t))); }); }
+async function delMsg(id){ await sb.rpc("chat_delete", { p_id: id }); closeF(); loadChat(); }
+
+/* ---------- shift swaps ---------- */
+let COW = null;
+async function coworkers(){ if (!COW){ const { data } = await sb.rpc("my_coworkers"); COW = data || []; } return COW; }
+async function swapSheet(d){ const cw = (await coworkers()).filter(c => c.branch === E.branch);
+  fModal(`<h2>Offer your shift</h2><p class="muted small" style="margin:0">${fmt(d)}. Your co-worker accepts, then your manager approves the swap before it changes the line-up.</p>
+    <label class="lb">Offer to</label><select id="sw-p"><option value="">Anyone at my branch</option>${cw.map(c => `<option value="${c.id}">${esc(c.name)}${c.position ? " · " + esc(c.position) : ""}</option>`).join("")}</select>
+    <label class="lb">Note (optional)</label><textarea id="sw-n" style="min-height:60px" placeholder="e.g. Family event, I can cover your Sunday in return"></textarea>
+    <div class="err" id="sw-err"></div><button class="btn go" id="sw-go">Offer shift</button><button class="btn" onclick="closeF()">Cancel</button>`);
+  $("#sw-go").onclick = async () => { $("#sw-go").disabled = true; const { data, error } = await sb.rpc("swap_offer", { p_date: d, p_partner: $("#sw-p").value || null, p_note: $("#sw-n").value.trim() || null });
+    if (error || !data?.ok){ $("#sw-go").disabled = false; return $("#sw-err").textContent = (error || {}).message || data?.error; }
+    fModal(`<h2>Shift offered ✓</h2><p class="muted">We'll show it to ${$("#sw-p").selectedOptions[0].text === "Anyone at my branch" ? "your branch" : $("#sw-p").selectedOptions[0].text}. Keep the shift until your manager approves the swap.</p><button class="btn go" onclick="closeF();sched()">Done</button>`); }; }
+async function loadSwaps(){ const box = $("#swaps"); if (!box) return;
+  const { data } = await sb.from("shift_swaps").select("*").gte("work_date", iso(new Date())).order("work_date"); const W = data || []; const cw = await coworkers(); const nm = id => (cw.find(c => c.id === id) || {}).name || "a co-worker";
+  const forMe = W.filter(w => w.requester_id !== E.id && w.status === "open"), mine = W.filter(w => w.requester_id === E.id || (w.partner_id === E.id && w.status !== "open"));
+  const ST = { open: "Waiting for a taker", accepted: "Waiting for manager", approved: "Approved", declined: "Declined", cancelled: "Cancelled" };
+  box.innerHTML = (forMe.length ? `<div class="card"><h2>Shifts offered to you</h2>${forMe.map(w => `<div class="row" style="align-items:center"><span><b>${fmt(w.work_date)}</b> · ${t5(w.start_time)}–${t5(w.end_time)}<br><span class="small muted">from ${esc(nm(w.requester_id))}${w.note ? " · " + esc(w.note) : ""}</span></span><span style="display:flex;gap:6px"><button class="sw" onclick="swapAns('${w.id}',true)">Take it</button>${w.partner_id === E.id ? `<button class="sw" style="color:var(--muted)" onclick="swapAns('${w.id}',false)">No</button>` : ""}</span></div>`).join("")}</div>` : "")
+    + (mine.length ? `<div class="card"><h2>My swaps</h2>${mine.map(w => `<div class="row" style="align-items:center"><span><b>${fmt(w.work_date)}</b> · ${t5(w.start_time)}–${t5(w.end_time)}<br><span class="small muted">${w.requester_id === E.id ? (w.partner_id ? "to " + esc(nm(w.partner_id)) : "to anyone at my branch") : "from " + esc(nm(w.requester_id))}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${w.status === "approved" ? "approved" : w.status === "declined" || w.status === "cancelled" ? "declined" : "pending"}">${ST[w.status]}</span>${w.requester_id === E.id && w.status === "open" ? `<button class="sw" onclick="swapAns('${w.id}',false)">Cancel</button>` : ""}</span></div>`).join("")}</div>` : ""); }
+async function swapAns(id, yes){ const { data, error } = await sb.rpc("swap_respond", { p_id: id, p_accept: yes }); if (error || !data?.ok) return toastF((error || {}).message || data?.error); toastF(yes ? "Shift taken. Waiting for your manager's approval." : "Done"); loadSwaps(); }
+
+/* ---------- Operations: floor plan, inventory log, toilet audit, daily huddle, receiving ---------- */
+let opsSub = null;
+const OPS = () => [ACCX.floor && ["floor", "Floor"], ACCX.operations && ["inv", "Inventory"], ACCX.operations && ["toilet", "Toilet audit"], ACCX.operations && ["huddle", "Huddle"], ACCX.operations && ["rcv", "Receiving"]].filter(Boolean);
+const BR_HERE = () => (typeof HERE === "string" && HERE) || E.branch || "sa";
+async function ops(){ const subs = OPS(); if (!subs.some(([k]) => k === opsSub)) opsSub = subs[0][0];
+  $("#app").innerHTML = `${header()}<div class="seg scroll">${subs.map(([k, l]) => `<button aria-pressed="${opsSub === k}" onclick="opsSub='${k}';render()">${l}</button>`).join("")}</div><div id="opsbox"><div class="card muted">Loading…</div></div>`;
+  ({ floor, inv: opsInv, toilet: opsToilet, huddle: opsHuddle, rcv: opsRcv })[opsSub](); }
+async function shrink(file, max = 1280){ const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+  const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(r, "image/jpeg", 0.72)); }
+async function upPhoto(file, folder){ if (!file) return null; const blob = await shrink(file); const path = `${E.id}/${folder}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from("ops-photos").upload(path, blob, { contentType: "image/jpeg" }); if (error) throw error; return path; }
+const photoField = (id, label, req) => `<label class="lb">${label}${req ? "" : " (optional)"}</label><label class="btn" style="cursor:pointer;text-align:center;margin-top:8px">📷 Take or choose photo<input id="${id}" type="file" accept="image/*" capture="environment" hidden onchange="prevPhoto(this)"></label><img class="shot" id="${id}-pv" hidden alt="">`;
+function prevPhoto(inp){ const f = inp.files[0], pv = document.getElementById(inp.id + "-pv"); if (f && pv){ pv.src = URL.createObjectURL(f); pv.hidden = false; } }
+const done = (t, msg, back) => fModal(`<h2>${t} ✓</h2><p class="muted">${msg}</p><button class="btn go" onclick="closeF();${back || "render()"}">Done</button>`);
+const brSel = id => `<label class="lb">Branch</label><select id="${id}">${Object.entries(BRANCHES).map(([k, l]) => `<option value="${k}" ${BR_HERE() === k ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+
+/* inventory */
+const INV_CAT = { Kitchen: [], Bar: [], "Dine-in": [], Utilities: [], Others: ["Tools & equipment", "Movable furniture"] };
+const INV_ACT = ["Stock count", "Received / restocked", "Used / pulled out", "Spoiled / wasted", "Damaged / broken", "Missing"];
+async function opsInv(){ const { data } = await sb.from("inventory_logs").select("*").eq("employee_id", E.id).order("created_at", { ascending: false }).limit(8);
+  $("#opsbox").innerHTML = `<div class="card"><h2>Inventory log</h2><p class="small muted" style="margin:0">Log counts, pull-outs, spoilage and breakage as they happen.</p>${brSel("iv-br")}
+    <label class="lb">Area</label><select id="iv-cat" onchange="ivSub()">${Object.keys(INV_CAT).map(c => `<option>${c}</option>`).join("")}</select><div id="iv-subw" hidden><label class="lb">Type</label><select id="iv-sub">${INV_CAT.Others.map(c => `<option>${c}</option>`).join("")}</select></div>
+    <label class="lb">What happened</label><select id="iv-act">${INV_ACT.map(a => `<option>${a}</option>`).join("")}</select>
+    <label class="lb">Item</label><input id="iv-item" maxlength="80" placeholder="e.g. San Mig Light 330 ml">
+    <div class="duo"><div><label class="lb">Quantity</label><input id="iv-q" type="number" inputmode="decimal" step="0.01" placeholder="24"></div><div><label class="lb">Unit</label><input id="iv-u" maxlength="20" placeholder="bottles" list="iv-units"><datalist id="iv-units"><option>pcs</option><option>bottles</option><option>cases</option><option>kg</option><option>g</option><option>L</option><option>ml</option><option>packs</option><option>trays</option></datalist></div></div>
+    <label class="lb">Note (optional)</label><textarea id="iv-n" style="min-height:60px" placeholder="e.g. 2 bottles broken during delivery"></textarea>${photoField("iv-p", "Photo")}
+    <div class="err" id="iv-err"></div><button class="btn go" id="iv-go">Save entry</button></div>
+    <div class="card"><h2>My recent entries</h2>${(data || []).map(r => `<div class="row"><span><b>${esc(r.item)}</b> · ${+r.qty} ${esc(r.unit || "")}<br><span class="small muted">${esc(r.action)} · ${esc(r.category)}${r.subcategory ? " · " + esc(r.subcategory) : ""} · ${fmt(r.created_at.slice(0, 10))} ${hhmm(r.created_at)}</span></span></div>`).join("") || "<p class='small muted' style='margin:0'>No entries yet.</p>"}</div>`;
+  $("#iv-go").onclick = async () => { const item = $("#iv-item").value.trim(), q = $("#iv-q").value; if (!item) return $("#iv-err").textContent = "Add the item name."; if (q === "") return $("#iv-err").textContent = "Add the quantity.";
+    $("#iv-go").disabled = true; try { const photo = await upPhoto($("#iv-p").files[0], "inventory"); const cat = $("#iv-cat").value;
+      const { error } = await sb.from("inventory_logs").insert({ employee_id: E.id, branch: $("#iv-br").value, category: cat, subcategory: cat === "Others" ? $("#iv-sub").value : null, action: $("#iv-act").value, item, qty: +q, unit: $("#iv-u").value.trim() || null, note: $("#iv-n").value.trim() || null, photo }); if (error) throw error;
+      done("Saved", `${esc($("#iv-act").value)}: ${+q} ${esc($("#iv-u").value)} ${esc(item)}.`); } catch (e) { $("#iv-go").disabled = false; $("#iv-err").textContent = "Couldn't save: " + e.message; } }; }
+function ivSub(){ $("#iv-subw").hidden = $("#iv-cat").value !== "Others"; }
+
+/* toilet audit */
+const TOILETS = ["Men's", "Women's", "All-gender", "Staff"];
+const TCHK = ["Toilet bowl and seat clean", "Urinal clean and flushing", "Sink and mirror clean", "Floor clean and dry", "Tissue / paper towels stocked", "Hand soap stocked", "Trash bin emptied", "No bad odor", "Lights working", "Door lock working", "Flush and faucet working"];
+let TA = {};
+async function opsToilet(){ TA = {}; const { data } = await sb.from("toilet_audits").select("*").eq("branch", BR_HERE()).order("created_at", { ascending: false }).limit(6);
+  $("#opsbox").innerHTML = `<div class="card"><h2>Toilet audit</h2>${brSel("ta-br")}<label class="lb">Which toilet</label><select id="ta-t">${TOILETS.map(t => `<option>${t}</option>`).join("")}</select>
+    <div style="margin-top:10px">${TCHK.map((c, i) => `<div class="chk"><span>${c}</span><span class="yn"><button class="y" aria-pressed="false" onclick="taSet(${i},true,this)">Yes</button><button class="n" aria-pressed="false" onclick="taSet(${i},false,this)">No</button></span></div>`).join("")}</div>
+    <label class="lb">Notes / what you fixed (optional)</label><textarea id="ta-n" style="min-height:60px" placeholder="e.g. Refilled soap, reported leaking faucet"></textarea>${photoField("ta-p", "Photo")}
+    <div class="err" id="ta-err"></div><button class="btn go" id="ta-go">Submit audit</button></div>
+    <div class="card"><h2>Last checks at ${BRANCHES[BR_HERE()] || ""}</h2>${(data || []).map(a => `<div class="row"><span><b>${esc(a.toilet)}</b> · ${a.passed}/${a.total} OK<br><span class="small muted">${fmt(a.created_at.slice(0, 10))} ${hhmm(a.created_at)} · ${esc(a.by_name || "")}</span></span><span class="st ${a.passed === a.total ? "approved" : "pending"}">${a.passed === a.total ? "Clean" : "Needs work"}</span></div>`).join("") || "<p class='small muted' style='margin:0'>No checks yet today.</p>"}</div>`;
+  $("#ta-go").onclick = async () => { if (Object.keys(TA).length < TCHK.length) return $("#ta-err").textContent = `Answer all ${TCHK.length} checks (${TCHK.length - Object.keys(TA).length} left).`;
+    const fails = TCHK.filter((_, i) => !TA[i]); if (fails.length && !$("#ta-n").value.trim()) return $("#ta-err").textContent = "Add a note on what's wrong or what you fixed.";
+    $("#ta-go").disabled = true; try { const photo = await upPhoto($("#ta-p").files[0], "toilet");
+      const { error } = await sb.from("toilet_audits").insert({ employee_id: E.id, branch: $("#ta-br").value, toilet: $("#ta-t").value, checks: Object.fromEntries(TCHK.map((c, i) => [c, !!TA[i]])), passed: TCHK.length - fails.length, total: TCHK.length, note: $("#ta-n").value.trim() || null, photo }); if (error) throw error;
+      done("Audit submitted", fails.length ? `${fails.length} item${fails.length > 1 ? "s" : ""} need attention: ${fails.map(esc).join(", ")}. Your supervisor can see this.` : "Everything checks out. Thank you!"); } catch (e) { $("#ta-go").disabled = false; $("#ta-err").textContent = "Couldn't save: " + e.message; } }; }
+function taSet(i, v, btn){ TA[i] = v; const box = btn.parentElement; box.querySelector(".y").setAttribute("aria-pressed", v); box.querySelector(".n").setAttribute("aria-pressed", !v); }
+
+/* daily huddle */
+const HUDDLE = ["Attendance checked and stations assigned", "Tonight's reservations, big groups and events reviewed", "86'd items and menu availability shared", "Specials, promos and upselling focus for the night", "Service standards reminder (greeting, check-backs, timing)", "Cleanliness and safety check (spills, exits, fire extinguisher)", "Cash, POS and payment reminders", "Announcements from management shared", "Questions and concerns from the team"];
+async function opsHuddle(){ const today = workDate(); const { data } = await sb.from("huddles").select("*").eq("branch", BR_HERE()).order("created_at", { ascending: false }).limit(5);
+  const todays = (data || []).find(h => h.shift_date === today);
+  $("#opsbox").innerHTML = `<div class="card"><h2>Daily huddle · ${fmt(today)}</h2>${todays ? `<div class="geo" style="color:var(--ok)">✓ Already done today by ${esc(todays.by_name || "")} at ${hhmm(todays.created_at)}. You can add another for a second shift.</div>` : `<p class="small muted" style="margin:0">Run this with the team before opening (10 minutes). Tick each point as you cover it.</p>`}${brSel("hd-br")}
+    <div style="margin-top:6px">${HUDDLE.map((c, i) => `<label class="tick"><input type="checkbox" class="hd-c" value="${i}"><span>${c}</span></label>`).join("")}</div>
+    <label class="lb">Who attended</label><input id="hd-a" placeholder="e.g. Kenji, Grace, Bea, Migs">
+    <label class="lb">Key points discussed</label><textarea id="hd-n" placeholder="e.g. 120-pax event at 7 PM, upsell carafes, sisig is 86'd"></textarea>
+    <div class="err" id="hd-err"></div><button class="btn go" id="hd-go">Submit huddle</button></div>
+    <div class="card"><h2>Recent huddles</h2>${(data || []).map(h => `<div class="row"><span><b>${fmt(h.shift_date)}</b> · ${h.covered}/${HUDDLE.length} points<br><span class="small muted">led by ${esc(h.by_name || "")}${h.notes ? " · " + esc(h.notes.slice(0, 80)) : ""}</span></span></div>`).join("") || "<p class='small muted' style='margin:0'>None yet.</p>"}</div>`;
+  $("#hd-go").onclick = async () => { const ticked = [...document.querySelectorAll(".hd-c:checked")].map(x => +x.value); if (ticked.length < 3) return $("#hd-err").textContent = "Tick the points you covered (at least 3).";
+    if (!$("#hd-a").value.trim()) return $("#hd-err").textContent = "List who attended.";
+    $("#hd-go").disabled = true; const { error } = await sb.from("huddles").insert({ employee_id: E.id, branch: $("#hd-br").value, shift_date: today, checks: Object.fromEntries(HUDDLE.map((c, i) => [c, ticked.includes(i)])), covered: ticked.length, attendees: $("#hd-a").value.trim(), notes: $("#hd-n").value.trim() || null });
+    if (error) { $("#hd-go").disabled = false; return $("#hd-err").textContent = "Couldn't save: " + error.message; } done("Huddle recorded", `${ticked.length} of ${HUDDLE.length} points covered. Have a great shift!`); }; }
+
+/* receiving report */
+async function opsRcv(){ const { data } = await sb.from("receiving_reports").select("*").eq("employee_id", E.id).order("created_at", { ascending: false }).limit(8);
+  $("#opsbox").innerHTML = `<div class="card"><h2>Receiving report</h2><p class="small muted" style="margin:0">For every delivery: photo of the receipt or delivery slip, then the details.</p>${brSel("rc-br")}
+    ${photoField("rc-p", "Photo of the receipt", true)}
+    <label class="lb">Supplier</label><input id="rc-s" maxlength="80" placeholder="e.g. San Miguel Brewery" list="rc-sup"><datalist id="rc-sup">${[...new Set((data || []).map(r => r.supplier))].map(x => `<option>${esc(x)}</option>`).join("")}</datalist>
+    <div class="duo"><div><label class="lb">Date received</label><input id="rc-d" type="date" value="${iso(new Date())}"></div><div><label class="lb">Amount on receipt (₱)</label><input id="rc-a" type="number" inputmode="decimal" step="0.01" placeholder="12500"></div></div>
+    <label class="lb">Receipt / invoice no. (optional)</label><input id="rc-no" maxlength="40" placeholder="e.g. DR 004512">
+    <label class="lb">Area</label><select id="rc-c">${Object.keys(INV_CAT).map(c => `<option>${c}</option>`).join("")}</select>
+    <label class="lb">Notes (optional)</label><textarea id="rc-n" style="min-height:60px" placeholder="e.g. 2 cases short, supplier to deliver tomorrow"></textarea>
+    <div class="err" id="rc-err"></div><button class="btn go" id="rc-go">Submit receiving report</button></div>
+    <div class="card"><h2>My recent reports</h2>${(data || []).map(r => `<div class="row"><span><b>${esc(r.supplier)}</b><br><span class="small muted">${fmt(r.received_date)}${r.invoice_no ? " · " + esc(r.invoice_no) : ""} · ${esc(r.category || "")}</span></span><b>${peso2(r.amount)}</b></div>`).join("") || "<p class='small muted' style='margin:0'>No reports yet.</p>"}</div>`;
+  $("#rc-go").onclick = async () => { const f = $("#rc-p").files[0], sup = $("#rc-s").value.trim(), a = $("#rc-a").value;
+    if (!f) return $("#rc-err").textContent = "Take a photo of the receipt."; if (!sup) return $("#rc-err").textContent = "Add the supplier."; if (a === "") return $("#rc-err").textContent = "Add the amount on the receipt.";
+    $("#rc-go").disabled = true; try { const photo = await upPhoto(f, "receiving");
+      const { error } = await sb.from("receiving_reports").insert({ employee_id: E.id, branch: $("#rc-br").value, supplier: sup, received_date: $("#rc-d").value, amount: +a, invoice_no: $("#rc-no").value.trim() || null, category: $("#rc-c").value, note: $("#rc-n").value.trim() || null, photo }); if (error) throw error;
+      done("Receiving report submitted", `${esc(sup)} · ${peso2(+a)} on ${fmt($("#rc-d").value)}. Keep the original receipt for the office.`); } catch (e) { $("#rc-go").disabled = false; $("#rc-err").textContent = "Couldn't submit: " + e.message; } }; }
+
+/* ---------- My file: memos, evaluations, incident reports, progressive discipline ---------- */
+const REC_N = { memo: "Memo", evaluation: "Evaluation result", incident: "Incident report", progressive: "Disciplinary notice" };
+let recSub = "all";
+async function records(){
+  const [{ data: r }, { data: a }] = await Promise.all([sb.from("employee_records").select("*").order("issued_date", { ascending: false }).limit(100), sb.from("record_acks").select("*").eq("employee_id", E.id)]);
+  const R = r || [], A = new Set((a || []).map(x => x.record_id)), unread = R.filter(x => !A.has(x.id)).length;
+  const list = R.filter(x => recSub === "all" || x.kind === recSub);
+  $("#app").innerHTML = `${header()}<div class="seg scroll">${[["all", "All"], ["memo", "Memos"], ["evaluation", "Evaluations"], ["incident", "Incident reports"], ["progressive", "Disciplinary"]].map(([k, l]) => `<button aria-pressed="${recSub === k}" onclick="recSub='${k}';records()">${l}</button>`).join("")}</div>
+    <div class="card"><h2>My file</h2><p class="small muted" style="margin:0">Official documents from management addressed to you or your team.${unread ? ` <b style="color:var(--yellow)">${unread} waiting for your acknowledgment.</b>` : ""}</p></div>
+    ${list.map(x => `<div class="card"><div class="rec ${x.kind}"><div class="small muted">${REC_N[x.kind]}${x.level ? " · " + esc(x.level) : ""} · ${fmt(x.issued_date)}${x.employee_id ? "" : " · to all staff"}</div><h2 style="margin:4px 0 6px">${esc(x.title)}</h2>${x.body ? `<div style="white-space:pre-wrap;font-size:15px">${esc(x.body)}</div>` : ""}${x.file ? `<button class="btn" onclick="openRec('${esc(x.file)}','${x.employee_id ? "employee-docs" : "memos"}')">📄 Open attachment</button>` : ""}
+      ${A.has(x.id) ? `<div class="geo" style="color:var(--ok)">✓ You acknowledged this</div>` : `<button class="btn go" onclick="ackRec('${x.id}','${x.kind}')">${x.kind === "progressive" || x.kind === "incident" ? "Acknowledge receipt" : "I've read this"}</button>`}</div></div>`).join("") || `<div class="card muted">Nothing here yet.</div>`}`; }
+async function openRec(path, bucket){ const { data, error } = await sb.storage.from(bucket).createSignedUrl(path, 600); if (error || !data) return toastF("Couldn't open the file"); window.open(data.signedUrl, "_blank"); }
+function ackRec(id, kind){ const formal = kind === "progressive" || kind === "incident";
+  fModal(`<h2>${formal ? "Acknowledge receipt" : "Mark as read"}</h2><p class="muted small">${formal ? "This confirms you received and read this document. It does not mean you agree with it. You can add your side below; it is kept with the record." : "This lets management know you've read it."}</p>${formal ? `<label class="lb">Your comment (optional)</label><textarea id="ak-c" placeholder="Your explanation or side of the story"></textarea>` : ""}<button class="btn go" id="ak-go">${formal ? "Acknowledge" : "I've read this"}</button><button class="btn" onclick="closeF()">Cancel</button>`);
+  $("#ak-go").onclick = async () => { const { error } = await sb.from("record_acks").insert({ record_id: id, employee_id: E.id, comment: formal ? ($("#ak-c").value.trim() || null) : null }); if (error) return toastF(error.message); closeF(); records(); }; }
 
 /* floor plan */
 let floorTimer = null, FT = [], FB = [], fArea = "", fSel = null;
@@ -140,12 +499,12 @@ async function floor(){
   const unassigned = FB.filter(b => b.status !== "Seated" && !(b.table_codes || []).length).sort((a, b) => bMin(a) - bMin(b));
   const W = Math.max(...FT.filter(t => t.area === fArea).map(t => t.x), 0) + 110, Hh = Math.max(...FT.filter(t => t.area === fArea).map(t => t.y), 0) + 110;
   const col = { free: "#1d1d26", reserved: "#3a2f0c", later: "#15202a", seated: "#0f3a2a" }, bord = { free: "var(--line)", reserved: "var(--yellow)", later: "var(--cyan)", seated: "var(--ok)" };
-  $("#app").innerHTML = `${header()}<div class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Floor · ${fmt(d)}</h2><div style="display:flex;gap:6px">${areas.map(a => `<button class="btn" style="width:auto;margin:0;padding:7px 12px;font-size:13px;${a === fArea ? "background:#fff;color:#07070a" : ""}" onclick="fArea='${a}';render()">${esc(a)}</button>`).join("")}</div></div>
+  $("#opsbox").innerHTML = `<div class="card" style="padding:12px 14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Floor · ${fmt(d)}</h2><div style="display:flex;gap:6px">${areas.map(a => `<button class="btn" style="width:auto;margin:0;padding:7px 12px;font-size:13px;${a === fArea ? "background:#fff;color:#07070a" : ""}" onclick="fArea='${a}';render()">${esc(a)}</button>`).join("")}</div></div>
     <div class="small muted" style="margin:6px 0 8px"><span style="color:var(--ok)">■</span> seated · <span style="color:var(--yellow)">■</span> reserved, arriving within 2 h · <span style="color:var(--cyan)">■</span> reserved later · tap a table</div>
     <div style="overflow:auto;border:1px solid var(--line);border-radius:12px;background:#0b0b10"><div style="position:relative;width:${W}px;height:${Hh}px">${FT.filter(t => t.area === fArea).map(t => { const st = tableState(t); return `<button onclick="tapTable('${t.id}')" style="position:absolute;left:${t.x}px;top:${t.y}px;width:84px;height:72px;border-radius:${t.shape === "square" ? "12px" : "50%"};border:2px solid ${bord[st.k]};background:${col[st.k]};color:#fff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px"><b style="font-size:15px">${esc(t.code)}</b>${st.b ? `<span style="font-size:11px;line-height:1.2;color:var(--ink2);text-align:center;overflow:hidden;max-height:28px">${esc(st.b.name.split(" ")[0])} · ${st.b.guests}p<br>${st.k === "seated" ? hhmm(st.b.seated_at) : t5(st.b.time)}</span>` : `<span style="font-size:11px;color:var(--muted)">free</span>`}</button>`; }).join("")}</div></div></div>
     <div class="card"><h2>Tonight's bookings <span class="muted small">${FB.length}</span></h2>${FB.sort((a, b) => bMin(a) - bMin(b)).map(b => `<div class="row" style="align-items:center"><span><b>${t5(b.time)}</b> ${esc(b.name)} · ${b.guests} pax · ${esc(b.area)}<br><span class="small muted">${esc(b.ref)} · ${b.status}${(b.table_codes || []).length ? " · tables " + b.table_codes.join(", ") : " · <span style='color:var(--yellow)'>no table yet</span>"}</span></span><span style="display:flex;gap:6px">${b.status !== "Seated" ? `<button class="btn" style="width:auto;margin:0;padding:6px 10px;font-size:12px" onclick="pickFor('${b.id}')">Assign</button>` : `<button class="btn" style="width:auto;margin:0;padding:6px 10px;font-size:12px" onclick="fAct('clear','${b.id}')">Clear</button>`}</span></div>`).join("") || "<div class='muted'>No bookings yet tonight.</div>"}</div>`;
   if (unassigned.length) toastF(`${unassigned.length} booking${unassigned.length > 1 ? "s" : ""} still without a table`);
-  floorTimer = setInterval(async () => { if (tab !== "floor" || document.getElementById("fmodal")) return; await loadFloor(); if (tab === "floor") render(); }, 60000);
+  floorTimer = setInterval(async () => { if (tab !== "ops" || opsSub !== "floor" || document.getElementById("fmodal")) return; await loadFloor(); if (tab === "ops" && opsSub === "floor") render(); }, 60000);
 }
 function toastF(t){ const el = document.getElementById("ftoast") || Object.assign(document.body.appendChild(document.createElement("div")), { id: "ftoast" }); el.style.cssText = "position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--yellow);color:#1a1400;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;z-index:50"; el.textContent = t; clearTimeout(el._t); el._t = setTimeout(() => el.remove(), 3000); }
 function fModal(html){ let m = document.getElementById("fmodal"); if (!m){ m = document.createElement("div"); m.id = "fmodal"; m.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center;padding:12px"; m.onclick = e => { if (e.target === m) m.remove(); }; document.body.appendChild(m); } m.innerHTML = `<div class="card" style="width:100%;max-width:480px;max-height:85vh;overflow:auto">${html}</div>`; }
@@ -163,6 +522,18 @@ function drawPick(){ const { b, sel } = PK; const list = FT.filter(t => t.area =
   fModal(`<h2>Tables for ${esc(b.name)}</h2><p class="muted small">${b.guests} pax needs ${b.tables} table${b.tables > 1 ? "s" : ""} · ${esc(b.area)}. Tap to pick ${sel.size}/${b.tables}.</p><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">${list.map(t => { const st = tableState(t); const busy = st.k === "seated" || (st.b && st.b.id !== b.id && st.k === "reserved"); return `<button class="btn" style="margin:0;padding:10px 4px;${sel.has(t.code) ? "background:var(--pink);color:#1a0416;border-color:var(--pink)" : busy ? "opacity:.35" : ""}" ${busy ? "disabled" : ""} onclick="pkTog('${t.code}')">${esc(t.code)}</button>`; }).join("")}</div><button class="btn go" onclick="fAct('assign','${b.id}',${JSON.stringify([...sel]).replace(/"/g, "&quot;")})" ${sel.size ? "" : "disabled"}>Save tables</button><button class="btn" onclick="closeF()">Cancel</button>`); }
 async function fAct(action, id, codes){ const { data, error } = await sb.rpc("floor_action", { p: { action, id, codes: codes || [] } }); if (error || !data?.ok) return toastF((error || {}).message || data?.error || "Failed"); closeF(); await loadFloor(); render(); }
 async function walkIn(code, area){ const { data, error } = await sb.rpc("floor_action", { p: { action: "walkin", branch: E.branch, area, codes: [code], guests: +$("#wi-g").value || 2, name: $("#wi-n").value } }); if (error || !data?.ok) return toastF((error || {}).message || data?.error || "Failed"); closeF(); await loadFloor(); render(); }
+
+/* attendance health */
+let HP = null;
+const hpCol = b => ({ Excellent: "#3ddc84", Good: "#4fc3f7", "Needs improvement": "#ffb300", "At risk": "#ff5252" })[b] || "#aaa";
+async function loadHealth(){ const box = document.getElementById("hp"); if (!box) return;
+  const { data, error } = await sb.rpc("attendance_health", { p_emp: E.id }); if (error || !data) return; HP = data; const col = hpCol(data.band);
+  box.style.display = ""; box.innerHTML = `<div style="display:flex;align-items:center;gap:14px" onclick="healthSheet()"><div style="width:58px;height:58px;border-radius:50%;border:5px solid ${col};display:grid;place-items:center;font-size:19px;font-weight:800;color:${col};flex:none">${+data.score}</div><div style="flex:1"><b>Attendance health</b><div class="small" style="color:${col};font-weight:700">${data.band}</div><div class="muted small">${data.items.filter(i => i.points < 0).length ? `${data.items.filter(i => i.points < 0).length} issue(s) this period` : "No issues this period. Keep it up!"}</div></div><span class="muted">›</span></div>`; }
+async function healthSheet(){ if (!HP) return; const col = hpCol(HP.band); const { data: c } = await sb.rpc("attendance_cfg"); const r = c || {};
+  fModal(`<h2>Attendance health</h2><div style="display:flex;align-items:center;gap:14px;margin-bottom:8px"><div style="width:70px;height:70px;border-radius:50%;border:6px solid ${col};display:grid;place-items:center;font-size:22px;font-weight:800;color:${col}">${+HP.score}</div><div><b style="color:${col}">${HP.band}</b><div class="muted small">${fmt(HP.from)} – ${fmt(HP.to)}</div><div class="muted small">Starts at 100 ${r.period === "rolling30" ? "and covers the last 30 days" : "every 1st of the month"}.</div></div></div>
+    ${HP.items.length ? HP.items.map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span class="small">${fmt(i.date)} · ${esc(i.kind)}</span><b style="color:${i.points < 0 ? "#ff5252" : "#3ddc84"}">${i.points > 0 ? "+" : ""}${+i.points}</b></div>`).join("") : `<p class="muted">No issues this period.</p>`}
+    ${c ? `<div class="muted small" style="margin-top:12px;line-height:1.6"><b>How points work</b><br>Late after ${r.grace} min grace: −${r.late_1} (up to 15 min), −${r.late_2} (16–30), −${r.late_3} (30+). Sending a “running late” notice before your shift lowers it.<br>Absent with notice ${Math.round(r.notice_min / 60 * 10) / 10}h+ ahead −${r.absent_notice}, late notice −${r.absent_late_notice}, no call no show −${r.no_show}.<br>No time-out −${r.missed_punch} · left early without approved UT −${r.undertime} · punched off-site −${r.offsite}.<br>A clean week earns +${r.clean_week_bonus} back. Approved leave and rest days never count.</div>` : ""}
+    <button class="btn" style="margin-top:12px" onclick="closeF()">Close</button>`); }
 
 sb.auth.onAuthStateChange(ev => { if (ev === "SIGNED_IN" && !me) start(); });
 start();

@@ -1,6 +1,7 @@
 /* Catchin' Up · HR & Payroll module (loaded by manage.html) */
 const H = { loaded: false, emps: [], sched: [], punches: [], exc: [], runs: [], lines: [], hol: [], leaves: [], imports: [], rules: {}, tab: "pay", from: "", to: "", run: null };
 const EMP_BR = { sa: "Catchin' Up · San Antonio Place", ju: "Catchin' Up · Jupiter Street", fm: "Funhan Mart · Arnaiz" };
+const brLogo = b => b === "fm" ? `<img src="logo-funhan.png" alt="" style="height:22px;width:auto;vertical-align:middle;margin-right:6px">` : "";
 const KINDN = { early_in: "Early in", ot: "Overtime", late_in: "Late in", undertime: "Undertime", under_break: "Under lunch", over_break: "Over lunch", missed_punch: "Missed punch", absent: "Absent", unscheduled: "Unscheduled", short_day: "Short day", rest_day_work: "Rest day work", holiday_work: "Holiday work" };
 const NEEDS_OK = ["early_in", "ot", "under_break", "rest_day_work"];   // paid only when approved
 const ename = e => e ? `${e.last_name}, ${e.first_name}` : "?";
@@ -22,18 +23,20 @@ async function hrLoad(force){
   if (H.loaded && !force) return;
   const [e, h, r, s] = await Promise.all([sb.from("employees").select("*").order("last_name"), sb.from("holidays").select("*").order("hdate"), sb.from("payroll_runs").select("*").order("period_start", { ascending: false }), sb.from("settings").select("*").eq("key", "payroll")]);
   H.emps = e.data || []; H.hol = h.data || []; H.runs = r.data || []; H.rules = (s.data || [])[0]?.value || {};
+  { const { data: ca } = await sb.from("staff_requests").select("*").eq("kind", "cash_advance").eq("status", "approved"); H.ca = ca || []; }
   if (!H.from){ [H.from, H.to] = lastCutoff(); }
-  await hrLoadPeriod(); H.loaded = true;
+  await hrLoadPeriod(); try { await wfLoad(); } catch (e) {} H.loaded = true;
 }
 async function hrLoadPeriod(){
   const from = H.from, to = H.to;
-  const [p, x, l, sc, im] = await Promise.all([
+  const [p, x, l, sc, im, oq] = await Promise.all([
     sb.from("punches").select("*").gte("work_date", from).lte("work_date", to).order("time_in"),
     sb.from("attendance_exceptions").select("*").gte("work_date", from).lte("work_date", to).order("work_date"),
     sb.from("leaves").select("*").gte("leave_date", from).lte("leave_date", to),
     sb.from("schedules").select("*").gte("work_date", from).lte("work_date", to),
-    sb.from("timesheet_imports").select("*").order("created_at", { ascending: false }).limit(20)]);
-  H.punches = p.data || []; H.exc = x.data || []; H.leaves = l.data || []; H.sched = sc.data || []; H.imports = im.data || [];
+    sb.from("timesheet_imports").select("*").order("created_at", { ascending: false }).limit(20),
+    sb.from("staff_requests").select("*").in("kind", ["ot", "ut"]).eq("status", "approved").gte("work_date", from).lte("work_date", to)]);
+  H.punches = p.data || []; H.exc = x.data || []; H.leaves = l.data || []; H.sched = sc.data || []; H.imports = im.data || []; H.otReq = oq.data || [];
 }
 const emp = id => H.emps.find(e => e.id === id);
 const hol = d => H.hol.find(h => h.hdate === d);
@@ -147,9 +150,11 @@ function computeLine(e, from, to){
   L.gross = L.basic_pay + L.ot_pay + L.nd_pay + L.premium_pay + L.leave_pay + L.other_earnings;
   const c = contributions(e, from); L.sss = c.sss; L.philhealth = c.philhealth; L.pagibig = c.pagibig;
   L.tax = withholding(e, L.gross - L.sss - L.philhealth - L.pagibig); L.other_deductions = 0;
+  const cas = (H.ca || []).filter(c => c.employee_id === e.id && String(c.decided_at || "").slice(0, 10) <= to && +c.amount > +c.ca_paid).map(c => { const left = +c.amount - +c.ca_paid, inst = Math.min(left, Math.ceil(+c.amount / Math.max(1, +c.ca_terms || 1) * 100) / 100); return { id: c.id, amt: Math.round(inst * 100) / 100 }; });
+  if (cas.length){ L.other_deductions = cas.reduce((a, c) => a + c.amt, 0); L.flags.push(`Cash advance deduction ${peso(L.other_deductions)}`); }
   L.net = L.gross - L.sss - L.philhealth - L.pagibig - L.tax - L.other_deductions;
   Object.keys(L).forEach(k => { if (typeof L[k] === "number") L[k] = Math.round(L[k] * 100) / 100; });
-  L.detail = { days: det, hourly_rate: e.hourly_rate, monthly_base: monthlyBase(e) };
+  L.detail = { days: det, hourly_rate: e.hourly_rate, monthly_base: monthlyBase(e), ca: cas };
   if (!+e.hourly_rate) L.flags.unshift("No hourly rate set");
   return L;
 }
@@ -164,6 +169,7 @@ async function generateExceptions(){
   const stale = H.exc.filter(x => x.status === "pending" && !rows.some(r => r.employee_id === x.employee_id && r.work_date === x.work_date && r.kind === x.kind));
   if (stale.length){ const { error } = await sb.from("attendance_exceptions").delete().in("id", stale.map(s => s.id)); if (error) return toast(error.message); }
   const fresh = rows.filter(r => !H.exc.some(x => x.employee_id === r.employee_id && x.work_date === r.work_date && x.kind === r.kind && x.status !== "pending"));
+  fresh.forEach(r => { const want = r.kind === "ot" ? "ot" : r.kind === "undertime" ? "ut" : null; if (want && (H.otReq || []).some(q => q.kind === want && q.employee_id === r.employee_id && q.work_date === r.work_date)) { r.status = "approved"; r.decision_note = "Pre-approved request from the staff app"; } });
   for (let i = 0; i < fresh.length; i += 200){ const { error } = await sb.from("attendance_exceptions").upsert(fresh.slice(i, i + 200), { onConflict: "employee_id,work_date,kind" }); if (error) return toast(error.message); }
   await hrLoadPeriod(); toast(`${rows.length} exceptions listed`); hrRender();
 }
@@ -221,7 +227,7 @@ function periodBar(extra){
   return `<div class="toolbar"><label class="f">Pay period<select id="hr-period">${opts.map(([a, b]) => `<option value="${a}|${b}" ${a === H.from && b === H.to ? "selected" : ""}>${fmt(pd(a))} – ${fmt(pd(b))}</option>`).join("")}</select></label>${extra || ""}</div>`;
 }
 function bindPeriod(){ const s = $("#hr-period"); if (s) s.onchange = async () => { [H.from, H.to] = s.value.split("|"); await hrLoadPeriod(); hrRender(); }; }
-const HR_CAT = { pay: "H", rules: "H", exc: "G", time: "G", lineup: "G", floorplan: "G", hol: "G", emps: "F" };
+const HR_CAT = { pay: "H", rules: "H", exc: "G", time: "G", lineup: "G", floorplan: "G", hol: "G", emps: "F", wfcal: "G", wfreq: "G", wffeed: "G", wfann: "G", wflab: "H", wfrec: "F", opsinv: "G", opstoilet: "G", opshud: "G", opsrcv: "G" };
 function hrRender(){
   const grps = Object.keys(HR_GRP).filter(g => HR_GRP_PERM[g]());
   if (!grps.length) return $("#main").innerHTML = `<div class="empty">No HR access.</div>`;
@@ -231,12 +237,12 @@ function hrRender(){
   syncNav(); ro(HR_CAT[H.tab]);
   const pend = H.exc.filter(x => x.status === "pending").length, pendEmp = H.emps.filter(e => e.status === "pending").length;
   const badge = n => n ? ` <span class="chip" style="background:#fff3df;color:#9a5f00">${n}</span>` : "";
-  const sub = { people: "Everyone on payroll: details, documents, staff app access.", schedule: "Who works when, where they stand, and days off.", pay: "Each cut-off: upload the timesheet, decide the exceptions, then generate payroll." }[hrGrp];
-  $("#main").innerHTML = `<h1>${G.title}<span class="ro-badge">view only</span></h1><p class="ph-sub">${sub}</p>${tabs.length > 1 ? `<div class="tabs">${tabs.map(([k, l, n]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${n ? `<span class="step">${n}</span>` : ""}${l}${k === "exc" ? badge(pend) : ""}${k === "emps" ? badge(pendEmp) : ""}</button>`).join("")}</div>` : ""}<div id="hr-body"></div>`;
+  const sub = { people: "Everyone on payroll: details, documents, staff app access.", schedule: "Who works when, where they stand, and days off.", pay: "Each cut-off: upload the timesheet, decide the exceptions, then generate payroll.", wf: "Who is working each day, plus leave, absences, overtime and cash advance requests from the staff app.", ops: "What the team logs from the staff app: inventory movements, toilet audits, pre-shift huddles and deliveries received." }[hrGrp];
+  $("#main").innerHTML = `<h1>${G.title}<span class="ro-badge">view only</span></h1><p class="ph-sub">${sub}</p>${tabs.length > 1 ? `<div class="tabs">${tabs.map(([k, l, n]) => `<button aria-pressed="${H.tab === k}" data-t="${k}">${n ? `<span class="step">${n}</span>` : ""}${l}${k === "exc" ? badge(pend) : ""}${k === "emps" ? badge(pendEmp) : ""}${k === "wfreq" ? badge(W.pend) : ""}</button>`).join("")}</div>` : ""}<div id="hr-body"></div>`;
   document.querySelectorAll("#main .tabs button").forEach(b => b.onclick = () => { H.tab = b.dataset.t; hrRender(); });
-  ({ pay: tabPay, exc: tabExc, time: tabTime, lineup: tabLineup, emps: tabEmps, floorplan: tabFloor, hol: tabHol, rules: tabRules })[H.tab]();
+  ({ pay: tabPay, exc: tabExc, time: tabTime, lineup: tabLineup, emps: tabEmps, floorplan: tabFloor, hol: tabHol, rules: tabRules, wfcal: tabWfCal, wfreq: tabWfReq, wffeed: tabWfFeed, wfann: tabWfAnn, wflab: tabWfLabor, wfrec: tabWfRec, opsinv: tabOpsInv, opstoilet: tabOpsToilet, opshud: tabOpsHuddle, opsrcv: tabOpsRcv })[H.tab](); if (H.tab !== "wffeed") wfFeedOff();
   const nbHr = (g, n) => { const b = document.querySelector(`#nav button[data-g=${g}]`); if (!b) return; b.querySelector(".nb")?.remove(); if (n) b.insertAdjacentHTML("beforeend", `<span class="nb">${n}</span>`); };
-  nbHr("pay", pend); nbHr("people", pendEmp);
+  nbHr("pay", pend); nbHr("people", pendEmp); nbHr("wf", W.pend);
 }
 
 /* Employees · master list */
@@ -259,10 +265,11 @@ function tabEmps(){
     ${pending.length ? `<div class="card" style="border-color:#d98e04;margin-bottom:12px">⏳ <b>${pending.length}</b> registration${pending.length > 1 ? "s" : ""} waiting for your review. Click a row to check the details and ID, set the rate, then approve.</div>` : ""}
     <p class="muted small">Send the registration link to new hires: <a href="${regLink}" target="_blank">${regLink}</a>. They fill in their details, government numbers, a photo of their valid ID and a selfie. ${rows.length} of ${H.emps.length} shown.</p>
     <div style="overflow:auto"><table><tr><th></th><th>Employee</th><th>Branch</th><th>Position</th><th>Mobile</th><th>SSS · PhilHealth · Pag-IBIG · TIN</th><th>Hired</th><th>Rate/h</th><th>Status</th><th>Staff app</th></tr>
-    ${rows.map(e => `<tr class="row" onclick="showEmp('${e.id}')"><td><div class="avatar" data-sf="${esc(e.selfie || "")}" id="av-${e.id}"></div></td><td><b>${esc(ename(e))}</b>${e.middle_name ? ` <span class="muted small">${esc(e.middle_name)}</span>` : ""}<br><span class="small muted">${esc(e.email || "")}</span></td><td class="small">${EMP_BR[e.branch] || esc(e.branch || "")}</td><td class="small">${esc(e.position || "")}${e.role ? ` · <b>${esc(e.role)}</b>` : ""}<br><span class="muted">${esc(e.employment_type || "")}${e.access ? " · " + Object.entries(e.access).filter(([, v]) => v).map(([k]) => ({ clock: "clock", schedule: "sched", payslips: "pay", floor: "floor" })[k]).join(", ") : ""}</span></td><td class="small">${esc(e.mobile || "")}</td><td class="small muted">${[e.sss_no, e.philhealth_no, e.pagibig_no, e.tin].map(x => x ? esc(x) : "<span style='color:#c62828'>—</span>").join(" · ")}</td><td class="small">${e.date_hired ? fmt(pd(e.date_hired)) : e.registered_at ? `<span class="muted">reg. ${fmt(pd(e.registered_at))}</span>` : ""}</td><td class="num">${+e.hourly_rate ? "₱" + p2(e.hourly_rate) : "<span class='chip' style='background:#fff3df;color:#9a5f00'>set</span>"}</td><td>${stChip(e)}</td>
+    ${rows.map(e => `<tr class="row" onclick="showEmp('${e.id}')"><td><div class="avatar" data-sf="${esc(e.selfie || "")}" id="av-${e.id}"></div></td><td><b>${esc(ename(e))}</b>${e.middle_name ? ` <span class="muted small">${esc(e.middle_name)}</span>` : ""}<br><span class="small muted">${esc(e.email || "")}</span></td><td class="small">${brLogo(e.branch)}${EMP_BR[e.branch] || esc(e.branch || "")}</td><td class="small">${esc(e.position || "")}${e.role ? ` · <b>${esc(e.role)}</b>` : ""}<br><span class="muted">${esc(e.employment_type || "")}${e.access ? " · " + Object.entries(e.access).filter(([, v]) => v).map(([k]) => ({ clock: "clock", schedule: "sched", payslips: "pay", floor: "floor" })[k]).join(", ") : ""}</span></td><td class="small">${esc(e.mobile || "")}</td><td class="small muted">${[e.sss_no, e.philhealth_no, e.pagibig_no, e.tin].map(x => x ? esc(x) : "<span style='color:#c62828'>—</span>").join(" · ")}</td><td class="small">${e.date_hired ? fmt(pd(e.date_hired)) : e.registered_at ? `<span class="muted">reg. ${fmt(pd(e.registered_at))}</span>` : ""}</td><td class="num">${+e.hourly_rate ? "₱" + p2(e.hourly_rate) : "<span class='chip' style='background:#fff3df;color:#9a5f00'>set</span>"}</td><td>${stChip(e)}<br><span class="hpc" data-hp="${e.id}"></span></td>
       <td onclick="event.stopPropagation()">${e.status !== "active" ? "" : e.invited_at ? `<span class="small muted">invited ${fmt(pd(e.invited_at))}</span><br><button class="btn sm ghost" onclick="inviteEmp('${e.id}')">Resend</button>` : e.email ? `<button class="btn sm" onclick="inviteEmp('${e.id}')">Send invite</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="10" class="empty">No employees match.</td></tr>`}</table></div>`;
   ["q", "br", "st", "sort"].forEach(k => { const el = $(`#ef-${k}`); el[k === "q" ? "oninput" : "onchange"] = () => { ef[k] = el.value; hrRender(); }; });
   if (!document.getElementById("av-css")) { const st = document.createElement("style"); st.id = "av-css"; st.textContent = ".avatar{width:38px;height:38px;border-radius:50%;background:var(--soft) center/cover no-repeat;border:1px solid var(--line)}"; document.head.appendChild(st); }
+  hpFill();
   rows.filter(e => e.selfie).forEach(async e => { const { data } = await sb.storage.from("employee-docs").createSignedUrl(e.selfie, 600); const el = document.getElementById("av-" + e.id); if (data && el) el.style.backgroundImage = `url(${data.signedUrl})`; });
 }
 async function showEmp(id){
@@ -271,15 +278,16 @@ async function showEmp(id){
   openModal(`<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap"><div id="em-sf" style="width:96px;height:96px;border-radius:14px;background:var(--soft) center/cover;border:1px solid var(--line);flex:none"></div><div><h2 style="margin:0">${esc(ename(e))}${e.suffix ? " " + esc(e.suffix) : ""}</h2><div class="muted">${esc(e.position || "")} · ${EMP_BR[e.branch] || esc(e.branch || "")} · ${esc(e.employment_type || "")}</div><div style="margin-top:6px"><span class="chip ${st === "active" ? "c-Confirmed" : st === "pending" ? "c-Pencil" : "c-Lost"}">${st}</span>${e.registered_at ? ` <span class="small muted">registered online ${fmtTs(e.registered_at)}</span>` : ""}</div></div></div>
     <div class="kv" style="margin-top:14px">${kv("Email", e.email)}${kv("Mobile", e.mobile)}${kv("Birthdate", e.birthdate ? fmt(pd(e.birthdate)) : "")}${kv("Gender", e.gender)}${kv("Civil status", e.civil_status)}${kv("Address", e.address)}${kv("Emergency contact", e.emergency_name ? `${e.emergency_name} (${e.emergency_relation || "—"}) · ${e.emergency_mobile || ""}` : "")}
       ${kv("SSS", e.sss_no)}${kv("PhilHealth", e.philhealth_no)}${kv("Pag-IBIG", e.pagibig_no)}${kv("TIN", e.tin)}${kv("Valid ID", e.id_type ? `${e.id_type}${e.id_number ? " · " + e.id_number : ""}` : "")}${kv("Date hired", e.date_hired ? fmt(pd(e.date_hired)) : "")}${kv("Hourly rate", +e.hourly_rate ? "₱" + p2(e.hourly_rate) : "")}${kv("Notes", e.notes)}${kv("Consent", e.consent?.accepted ? `given ${fmtTs(e.consent.at)} (${e.consent.version})` : "")}</div>
-    <div id="em-id" style="margin:10px 0"></div>
+    <div id="em-hp" style="margin-top:12px"></div><div id="em-id" style="margin:10px 0"></div>
     ${st === "pending" ? `<div class="card" style="border-color:#d98e04"><h3>Approve this registration</h3><div class="fields"><label class="f">Hourly rate ₱<input id="ap-rate" type="number" step="0.01" value="${e.hourly_rate || ""}"></label><label class="f">Date hired<input id="ap-hired" type="date" value="${e.date_hired || iso(today)}"></label><label class="f">Default shift start<input id="ap-start" type="time" value="${String(e.default_start || "").slice(0, 5)}"></label><label class="f">Default shift end<input id="ap-end" type="time" value="${String(e.default_end || "").slice(0, 5)}"></label><label class="f">Break minutes<input id="ap-brk" type="number" value="${e.default_break_min ?? 60}"></label><label class="f">Role<select id="ap-role">${["", "Server", "Bartender", "Cashier", "Kitchen", "Floor manager", "Security", "Admin", "Other"].map(r => `<option value="${r}" ${(e.role || "") === r ? "selected" : ""}>${r || "—"}</option>`).join("")}</select></label></div>
-      <div class="small muted" style="font-weight:700;margin-top:6px">Staff app access</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 6px">${[["clock", "Time clock & timesheet"], ["schedule", "Schedule"], ["payslips", "Payslips"], ["floor", "Floor plan"]].map(([k, l]) => `<label><input type="checkbox" class="ap-acc" value="${k}" ${k !== "floor" ? "checked" : ""}> ${l}</label>`).join("")}</div>
+      <div class="small muted" style="font-weight:700;margin-top:6px">Staff app access</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 6px">${[["clock", "Time clock"], ["schedule", "Schedule & leave"], ["payslips", "Payroll"], ["team", "Team feed & chat"], ["operations", "Operations"], ["floor", "Floor plan"], ["records", "My file"]].map(([k, l]) => `<label><input type="checkbox" class="ap-acc" value="${k}" ${k !== "floor" ? "checked" : ""}> ${l}</label>`).join("")}</div>
       <div class="actions"><button class="btn primary" id="ap-go">Approve and send staff-app invite</button><button class="btn ghost" id="ap-no">Reject</button></div></div>` : ""}
     <div class="actions"><button class="btn" onclick="closeModal();editEmp('${e.id}')">Edit details</button>${st === "active" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','inactive')">Mark separated</button>` : st === "inactive" ? `<button class="btn ghost" onclick="setEmpStatus('${e.id}','active')">Reactivate</button>` : ""}<button class="btn ghost keep" onclick="closeModal()">Close</button></div>`);
+  if (st === "active") hpShow(e.id);
   if (e.selfie){ const { data } = await sb.storage.from("employee-docs").createSignedUrl(e.selfie, 600); if (data) $("#em-sf").style.backgroundImage = `url(${data.signedUrl})`; }
   if (e.id_photo){ const { data } = await sb.storage.from("employee-docs").createSignedUrl(e.id_photo, 600); if (data) $("#em-id").innerHTML = `<div class="small muted" style="margin-bottom:4px">Valid ID (click to open)</div><a href="${data.signedUrl}" target="_blank"><img src="${data.signedUrl}" style="max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line)"></a>`; }
   if ($("#ap-go")) $("#ap-go").onclick = async () => { const rate = +$("#ap-rate").value; if (!rate) return toast("Set the hourly rate first");
-    const access = Object.fromEntries(["clock", "schedule", "payslips", "floor"].map(k => [k, !!document.querySelector(`.ap-acc[value=${k}]:checked`)]));
+    const access = Object.fromEntries(["clock", "schedule", "payslips", "team", "operations", "floor", "records"].map(k => [k, !!document.querySelector(`.ap-acc[value=${k}]:checked`)]));
     const { error } = await sb.from("employees").update({ status: "active", active: true, hourly_rate: rate, role: $("#ap-role").value || null, access, date_hired: $("#ap-hired").value || null, default_start: $("#ap-start").value || null, default_end: $("#ap-end").value || null, default_break_min: +$("#ap-brk").value || 60, updated_at: new Date().toISOString() }).eq("id", e.id); if (error) return toast(error.message);
     await logAct(`EMP ${e.last_name}`, `Registration approved by ${me.email}`); closeModal(); await hrLoad(true); hrRender(); inviteEmp(e.id); };
   if ($("#ap-no")) $("#ap-no").onclick = () => setEmpStatus(e.id, "rejected");
@@ -300,7 +308,7 @@ function editEmp(id){
     ${f("date_hired", "Date hired", "date")}${f("sss_no", "SSS no.")}${f("philhealth_no", "PhilHealth no.")}${f("pagibig_no", "Pag-IBIG no.")}${f("tin", "TIN")}${f("vl_credits", "VL credits", "number")}${f("sl_credits", "SL credits", "number")}
     <label class="f">Role<select id="e-role">${["", "Server", "Bartender", "Cashier", "Kitchen", "Floor manager", "Security", "Admin", "Other"].map(r => `<option value="${r}" ${(e.role || "") === r ? "selected" : ""}>${r || "—"}</option>`).join("")}</select></label>
     <label class="f">Active<select id="e-active"><option value="true" ${e.active ? "selected" : ""}>Yes</option><option value="false" ${!e.active ? "selected" : ""}>No (separated)</option></select></label></div>
-    <div class="f" style="font-size:13px;font-weight:700;color:var(--muted)">Staff app access (what they can open)</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 10px">${[["clock", "Time clock & timesheet"], ["schedule", "Schedule"], ["payslips", "Payslips"], ["floor", "Floor plan (seat guests, walk-ins)"]].map(([k, l]) => `<label><input type="checkbox" class="e-acc" value="${k}" ${(e.access || { clock: true, schedule: true, payslips: true })[k] ? "checked" : ""}> ${l}</label>`).join("")}</div>
+    <div class="f" style="font-size:13px;font-weight:700;color:var(--muted)">Staff app access (what they can open)</div><div style="display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 10px">${[["clock", "Time clock"], ["schedule", "Schedule & leave"], ["payslips", "Payroll & timesheet"], ["team", "Team feed & chat"], ["operations", "Operations (inventory, toilet audit, huddle, receiving)"], ["floor", "Floor plan (seat guests, walk-ins)"], ["records", "My file (memos, evaluations)"]].map(([k, l]) => `<label><input type="checkbox" class="e-acc" value="${k}" ${({ clock: true, schedule: true, payslips: true, team: true, operations: true, records: true, ...(e.access || {}) })[k] ? "checked" : ""}> ${l}</label>`).join("")}</div>
     <div class="f" style="font-size:13px;font-weight:700;color:var(--muted)">Rest days</div><div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px">${DAYS.map((d, i) => `<label><input type="checkbox" class="e-rd" value="${i}" ${(e.rest_days || []).includes(i) ? "checked" : ""}> ${d}</label>`).join("")}</div>
     <label class="f">Notes<textarea id="e-notes" rows="2">${esc(e.notes || "")}</textarea></label>
     <div class="actions"><button class="btn primary" id="e-save">Save</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
@@ -310,7 +318,7 @@ function editEmp(id){
     v.hourly_rate = v.hourly_rate || 0; v.default_break_min = v.default_break_min ?? 60; v.mwe = $("#e-mwe").value === "true"; v.active = $("#e-active").value === "true"; v.status = v.active ? "active" : "inactive";
     v.default_start = $("#e-default_start").value || null; v.default_end = $("#e-default_end").value || null; v.date_hired = $("#e-date_hired").value || null;
     v.rest_days = [...document.querySelectorAll(".e-rd:checked")].map(x => +x.value); v.updated_at = new Date().toISOString();
-    v.role = $("#e-role").value || null; v.access = Object.fromEntries(["clock", "schedule", "payslips", "floor"].map(k => [k, !!document.querySelector(`.e-acc[value=${k}]:checked`)]));
+    v.role = $("#e-role").value || null; v.access = Object.fromEntries(["clock", "schedule", "payslips", "team", "operations", "floor", "records"].map(k => [k, !!document.querySelector(`.e-acc[value=${k}]:checked`)]));
     if (!v.last_name || !v.first_name) return toast("Name is required");
     const res = id ? await sb.from("employees").update(v).eq("id", id).select().single() : await sb.from("employees").insert(v).select().single(); if (res.error) return toast(res.error.message);
     closeModal(); await hrLoad(true); hrRender(); toast("Saved");
@@ -359,7 +367,7 @@ function tabTime(){
     `<p class="muted small">Imports so far: ${H.imports.slice(0, 5).map(i => `${esc(i.filename)} (${fmt(pd(i.period_start))}–${fmt(pd(i.period_end))}, ${i.row_count} rows)`).join(" · ") || "none"}</p>
     ${(() => { const none = H.emps.filter(e => e.active && !(byEmp[e.id] || []).length); return !H.punches.length ? `<div class="empty">No punches for this period yet. Upload the timesheet CSV to start.</div>` : none.length ? `<p class="muted small"><b>No punches yet (${none.length}):</b> ${none.map(e => esc(ename(e))).join(", ")}</p>` : ""; })()}
     <div class="grid">${H.emps.filter(e => e.active && (byEmp[e.id] || []).length).map(e => { const ps = (byEmp[e.id] || []); const byDay = {}; ps.forEach(p => (byDay[p.work_date] = byDay[p.work_date] || []).push(p));
-      return `<div class="card"><h3>${esc(ename(e))} <span class="muted small">${Object.keys(byDay).length} days</span></h3>${ps.length ? `<table>${Object.entries(byDay).sort().map(([d, xs]) => { const a = analyzeDay(e, d); return `<tr><td>${fmt(pd(d))}</td><td class="num">${xs.map(p => `${hhmm(p.time_in)}–${p.time_out ? hhmm(p.time_out) : "<b style='color:#c62828'>?</b>"}${p.lunch_out ? ` <span class="muted">(L ${hhmm(p.lunch_out)}–${hhmm(p.lunch_in)})</span>` : ""}${p.source === "app" ? ` <a href="#" onclick="viewSelfie('${p.selfie_in || ""}','${p.selfie_out || ""}');return false" title="selfies">📱</a>` : ""}`).join("<br>")}</td><td class="num">${hm(a.paid)}</td><td class="small">${a.exc.map(x => `<span class="chip" style="background:${NEEDS_OK.includes(x[0]) ? "#fff3df" : "#f1f1f1"};color:#555">${KINDN[x[0]]}</span>`).join(" ")}</td></tr>`; }).join("")}</table>` : `<div class="muted small">No punches in this period</div>`}</div>`; }).join("")}</div>`;
+      return `<div class="card"><h3>${esc(ename(e))} <span class="muted small">${Object.keys(byDay).length} days</span></h3>${ps.length ? `<table>${Object.entries(byDay).sort().map(([d, xs]) => { const a = analyzeDay(e, d); return `<tr><td>${fmt(pd(d))}</td><td class="num">${xs.map(p => `${hhmm(p.time_in)}–${p.time_out ? hhmm(p.time_out) : "<b style='color:#c62828'>?</b>"}${p.lunch_out ? ` <span class="muted">(L ${hhmm(p.lunch_out)}–${hhmm(p.lunch_in)})</span>` : ""}${p.source === "app" ? ` <a href="#" onclick="viewSelfie('${p.selfie_in || ""}','${p.selfie_out || ""}');return false" title="selfies">📱</a>` : ""}${p.offsite ? ` <span class="chip c-Lost" title="${esc(geoNote(p))}">off-site</span>` : ""}`).join("<br>")}</td><td class="num">${hm(a.paid)}</td><td class="small">${a.exc.map(x => `<span class="chip" style="background:${NEEDS_OK.includes(x[0]) ? "#fff3df" : "#f1f1f1"};color:#555">${KINDN[x[0]]}</span>`).join(" ")}</td></tr>`; }).join("")}</table>` : `<div class="muted small">No punches in this period</div>`}</div>`; }).join("")}</div>`;
   bindPeriod(); $("#ts-file").onchange = ev => { if (ev.target.files[0]) importTimesheet(ev.target.files[0]); };
 }
 function manualPunch(){
@@ -412,11 +420,16 @@ async function tabPay(){
   if ($("#pr-review")) $("#pr-review").onclick = () => setRun(run, { status: "For review" }, "Sent for review");
   if ($("#pr-approve")) $("#pr-approve").onclick = () => { if (confirm("Approve this payroll run? Lines are frozen after approval.")) setRun(run, { status: "Approved" }, "Approved"); };
   if ($("#pr-reject")) $("#pr-reject").onclick = () => { const n = prompt("What should the processor fix?"); if (n === null) return; setRun(run, { status: "Draft", review_notes: n }, "Sent back"); };
-  if ($("#pr-release")) $("#pr-release").onclick = () => setRun(run, { status: "Released" }, "Released");
+  if ($("#pr-release")) $("#pr-release").onclick = () => releaseRun(run);
   if ($("#pr-csv")) $("#pr-csv").onclick = () => exportCSV(run, lines);
   if ($("#pr-slips")) $("#pr-slips").onclick = () => payslips(run, lines);
 }
 async function setRun(run, patch, msg){ const { error } = await sb.from("payroll_runs").update(patch).eq("id", run.id); if (error) return toast(error.message); await logAct(`PAY ${run.period_start}`, msg); await hrLoad(true); hrRender(); toast(msg); }
+async function releaseRun(run){ // marks cash-advance installments as paid, then releases payslips
+  if (run.status === "Released") return; const { data: lines } = await sb.from("payroll_lines").select("employee_id,detail").eq("run_id", run.id);
+  const paid = {}; (lines || []).forEach(l => (l.detail?.ca || []).forEach(c => paid[c.id] = (paid[c.id] || 0) + c.amt));
+  for (const [id, amt] of Object.entries(paid)){ const c = (H.ca || []).find(x => x.id === id); if (!c) continue; const { error } = await sb.from("staff_requests").update({ ca_paid: Math.min(+c.amount, Math.round((+c.ca_paid + amt) * 100) / 100) }).eq("id", id); if (error) return toast(error.message); }
+  await setRun(run, { status: "Released" }, "Released"); await hrLoad(true); hrRender(); }
 async function generatePayroll(run){
   const emps = H.emps.filter(e => e.active);
   if (!run){ const { data, error } = await sb.from("payroll_runs").insert({ period_start: H.from, period_end: H.to, prepared_by: me.email, rules: H.rules }).select().single(); if (error) return toast(error.message); run = data; }
@@ -473,8 +486,11 @@ function tabRules(){
     <div class="card"><h3>Government contributions</h3><p class="small muted">Employee shares, computed on the monthly basis (employee's monthly rate, or hourly × 8 × 26). Deducted on: <select id="r-con" ${owner ? "" : "disabled"}><option value="second" ${R.contrib_on === "second" ? "selected" : ""}>the 26–10 run (once a month)</option><option value="first" ${R.contrib_on === "first" ? "selected" : ""}>the 11–25 run (once a month)</option><option value="split" ${R.contrib_on === "split" ? "selected" : ""}>both runs, half each</option></select></p>
       <div class="kv"><b>SSS</b><span>${(R.sss.ee_rate * 100).toFixed(1)}% of the monthly salary credit (₱${R.sss.min_msc.toLocaleString()}–₱${R.sss.max_msc.toLocaleString()}, steps of ₱${R.sss.step})</span><b>PhilHealth</b><span>${(R.philhealth.rate * 100).toFixed(1)}% of basic (₱${R.philhealth.min_base.toLocaleString()}–₱${R.philhealth.max_base.toLocaleString()}), employee pays half</span><b>Pag-IBIG</b><span>${(R.pagibig.ee_rate * 100).toFixed(0)}% of basic up to ₱${R.pagibig.max_base.toLocaleString()}</span><b>Withholding tax</b><span>BIR semi-monthly table; minimum wage earners exempt</span></div>
       <p class="small muted">The percentages and tables are in Supabase → settings → payroll if they change.</p></div></div>
-    ${owner ? `<div class="actions"><button class="btn primary" id="r-save">Save rules</button></div>` : ""}`;
-  if ($("#r-save")) $("#r-save").onclick = async () => { const v = { ...R }; ["std_hours", "break_min", "tol_min", "round_min", "ot_rate", "nd_rate", "rest_day", "special_holiday", "regular_holiday", "rest_day_special", "rest_day_regular", "ot_on_premium"].forEach(k => v[k] = +$(`#r-${k}`).value); v.regular_holiday_unworked_paid = $("#r-hup").checked; v.contrib_on = $("#r-con").value;
+    <div class="card"><h3>Leave credits</h3><p class="small muted">Added to every active employee's balance on the 1st of each month. Approved paid leave is deducted automatically; days beyond the balance are approved as unpaid.</p><div class="fields"><label class="f">Vacation leave per month<input id="r-lvl" type="number" step="0.25" value="${R.leave_accrual?.vl ?? 0}" ${owner ? "" : "disabled"}></label><label class="f">Sick leave per month<input id="r-lsl" type="number" step="0.25" value="${R.leave_accrual?.sl ?? 0}" ${owner ? "" : "disabled"}></label><label class="f">Who earns credits<select id="r-lty" ${owner ? "" : "disabled"}><option value="regular" ${(R.leave_accrual?.types || ["regular"]).length === 1 ? "selected" : ""}>Regular employees only</option><option value="all" ${(R.leave_accrual?.types || []).length > 1 ? "selected" : ""}>Regular and probationary</option></select></label></div></div>
+    ${owner ? `<div class="actions"><button class="btn primary" id="r-save">Save rules</button></div>` : ""}
+    <div class="card" id="att-card"><h3>Attendance health</h3><p class="small muted">Loading…</p></div>`;
+  attCard(owner);
+  if ($("#r-save")) $("#r-save").onclick = async () => { const v = { ...R }; v.leave_accrual = { vl: +$("#r-lvl").value || 0, sl: +$("#r-lsl").value || 0, types: $("#r-lty").value === "all" ? ["regular", "probationary"] : ["regular"] }; ["std_hours", "break_min", "tol_min", "round_min", "ot_rate", "nd_rate", "rest_day", "special_holiday", "regular_holiday", "rest_day_special", "rest_day_regular", "ot_on_premium"].forEach(k => v[k] = +$(`#r-${k}`).value); v.regular_holiday_unworked_paid = $("#r-hup").checked; v.contrib_on = $("#r-con").value;
     const { error } = await sb.from("settings").upsert({ key: "payroll", value: v }); if (error) return toast(error.message); H.rules = v; toast("Saved"); };
 }
 
@@ -511,4 +527,281 @@ function editTable(id){ const t = fp.tables.find(x => x.id === id);
     <div class="actions"><button class="btn primary" id="ft-save">Save</button><button class="btn ghost" id="ft-retire">Retire table</button><button class="btn ghost keep" onclick="closeModal()">Cancel</button></div>`);
   $("#ft-save").onclick = async () => { const { error } = await sb.from("floor_tables").update({ code: $("#ft-code").value.trim(), seats: +$("#ft-seats").value || 2, shape: $("#ft-shape").value, area: $("#ft-area").value.trim() }).eq("id", id); if (error) return toast(error.message); closeModal(); hrRender(); };
   $("#ft-retire").onclick = async () => { if (!confirm("Retire this table? It disappears from the floor plan; bookings keep their history.")) return; await sb.from("floor_tables").update({ active: false }).eq("id", id); closeModal(); hrRender(); };
+}
+
+/* ---------- Workforce Management: team calendar + staff requests ---------- */
+const REQ_N = { late: "Running late", absent_sick: "Absent · sick", absent_emergency: "Absent · emergency", absent_other: "Absent · other reason", ot: "Overtime request", ut: "Undertime request", cash_advance: "Cash advance", leave: "Leave request" };
+const LEAVE_N = { VL: "Vacation leave", SL: "Sick leave", EL: "Emergency leave", unpaid: "Leave without pay", other: "Other leave" };
+const W = { m: null, br: "", sched: [], leaves: [], reqs: [], sel: null, filt: "pending", pend: 0 };
+async function wfLoad(){
+  if (!W.m){ const t = new Date(); W.m = new Date(t.getFullYear(), t.getMonth(), 1); }
+  const a = new Date(W.m), b = new Date(W.m.getFullYear(), W.m.getMonth() + 1, 0);
+  const from = iso(a), to = iso(b);
+  const [sc, lv, rq, rqAll, lvP] = await Promise.all([
+    sb.from("schedules").select("*").gte("work_date", from).lte("work_date", to),
+    sb.from("leaves").select("*").gte("leave_date", from).lte("leave_date", to),
+    sb.from("staff_requests").select("*").gte("work_date", from).lte("work_date", to),
+    sb.from("staff_requests").select("*").order("created_at", { ascending: false }).limit(300),
+    sb.from("leaves").select("*").order("created_at", { ascending: false }).limit(400)]);
+  const [sw, ms] = await Promise.all([sb.from("shift_swaps").select("*").order("created_at", { ascending: false }).limit(200), sb.from("missed_alerts").select("*").gte("work_date", iso(new Date(Date.now() - 2 * 86400000))).is("resolved_at", null)]);
+  W.swaps = sw.data || []; W.missed = ms.data || [];
+  W.sched = sc.data || []; W.leaves = lv.data || []; W.reqs = rq.data || []; W.all = rqAll.data || []; W.allLeaves = lvP.data || [];
+  W.pend = W.all.filter(r => r.status === "pending").length + leaveGroups(W.allLeaves).filter(g => g.status === "pending").length + W.swaps.filter(w => w.status === "accepted").length + W.missed.length;
+}
+function wfSched(e, d){ // same rules as the payroll engine, read from this month's line-up
+  const s = W.sched.find(x => x.employee_id === e.id && x.work_date === d);
+  if (s) return s.kind === "work" ? { kind: "work", st: s.start_time, en: s.end_time } : { kind: s.kind === "rest" ? "rest" : s.kind };
+  if ((e.rest_days || []).includes(pd(d).getDay())) return { kind: "rest" };
+  if (e.default_start) return { kind: "work", st: e.default_start, en: e.default_end };
+  return { kind: "none" };
+}
+function wfDay(d){
+  const out = { work: [], off: [], leave: [], sick: [], absent: [], late: [], pendLeave: [] };
+  H.emps.filter(e => e.active && (!W.br || e.branch === W.br) && (!e.date_hired || e.date_hired <= d)).forEach(e => {
+    const lv = W.leaves.find(l => l.employee_id === e.id && l.leave_date === d && l.status !== "rejected");
+    const rq = W.reqs.filter(r => r.employee_id === e.id && r.work_date === d && r.status !== "declined");
+    const sc = wfSched(e, d);
+    if (lv && lv.status === "approved") return out.leave.push([e, LEAVE_N[lv.kind] || lv.kind]);
+    if (rq.some(r => r.kind === "absent_sick")) return out.sick.push([e, rq.find(r => r.kind === "absent_sick").reason || ""]);
+    if (rq.some(r => r.kind.startsWith("absent"))) { const r = rq.find(r => r.kind.startsWith("absent")); return out.absent.push([e, REQ_N[r.kind] + (r.reason ? " · " + r.reason : "")]); }
+    if (sc.kind === "rest" || sc.kind === "none") return out.off.push([e, sc.kind === "rest" ? "Rest day" : "No shift set"]);
+    if (sc.kind !== "work") return out.leave.push([e, sc.kind]);
+    out.work.push([e, `${String(sc.st || "").slice(0, 5)}–${String(sc.en || "").slice(0, 5)}`]);
+    if (rq.some(r => r.kind === "late")) out.late.push([e, "ETA " + (rq.find(r => r.kind === "late").eta || "—")]);
+    if (lv && lv.status === "pending") out.pendLeave.push([e, (LEAVE_N[lv.kind] || lv.kind) + " · awaiting approval"]);
+  });
+  return out;
+}
+async function tabWfCal(){
+  $("#hr-body").innerHTML = `<div class="empty">Loading…</div>`; await wfLoad();
+  const y = W.m.getFullYear(), mo = W.m.getMonth(), first = new Date(y, mo, 1), days = new Date(y, mo + 1, 0).getDate(), todayK = iso(new Date());
+  const cells = []; for (let k = 0; k < first.getDay(); k++) cells.push(`<div></div>`);
+  for (let dd = 1; dd <= days; dd++){ const k = iso(new Date(y, mo, dd)), x = wfDay(k);
+    cells.push(`<div class="day${k === todayK ? " today" : ""}${W.sel === k ? " wf-sel" : ""}" onclick="W.sel='${k}';tabWfCalDraw()"><div class="d"><span>${dd}</span></div>
+      <div class="wf-n"><span class="wf-c wf-w" title="Scheduled">${x.work.length}</span><span>on shift</span></div>
+      ${x.off.length ? `<div class="wf-n"><span class="wf-c wf-o">${x.off.length}</span><span>off</span></div>` : ""}
+      ${x.leave.length ? `<div class="wf-n"><span class="wf-c wf-l">${x.leave.length}</span><span>leave</span></div>` : ""}
+      ${x.sick.length + x.absent.length ? `<div class="wf-n"><span class="wf-c wf-s">${x.sick.length + x.absent.length}</span><span>${x.absent.length ? "absent" : "sick"}</span></div>` : ""}
+      ${x.pendLeave.length ? `<div class="wf-n muted"><span class="wf-c wf-p">${x.pendLeave.length}</span><span>to approve</span></div>` : ""}</div>`); }
+  W.cells = cells;
+  $("#hr-body").innerHTML = `<div class="toolbar" style="align-items:flex-end"><div style="display:flex;gap:8px;align-items:center"><button class="btn sm ghost" onclick="W.m=new Date(W.m.getFullYear(),W.m.getMonth()-1,1);W.sel=null;tabWfCal()">‹</button><b style="min-width:150px;text-align:center">${W.m.toLocaleDateString("en-PH", { month: "long", year: "numeric" })}</b><button class="btn sm ghost" onclick="W.m=new Date(W.m.getFullYear(),W.m.getMonth()+1,1);W.sel=null;tabWfCal()">›</button></div>
+    <label class="f">Branch<select id="wf-br" onchange="W.br=this.value;tabWfCalDraw()"><option value="">All branches</option>${Object.entries(EMP_BR).map(([k, v]) => `<option value="${k}" ${W.br === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label></div>
+    <div class="legend"><span><i class="wf-w"></i>On shift</span><span><i class="wf-o"></i>Off / rest day</span><span><i class="wf-l"></i>On leave</span><span><i class="wf-s"></i>Called in sick / absent</span><span><i class="wf-p"></i>Leave awaiting approval</span></div>
+    <div class="wf-wrap"><div><div class="cal">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => `<div class="dow">${d}</div>`).join("")}<span id="wf-cells" style="display:contents"></span></div></div><div class="card wf-side" id="wf-side"></div></div>`;
+  tabWfCalDraw();
+}
+function tabWfCalDraw(){
+  if (!$("#wf-cells")) return tabWfCal();
+  const y = W.m.getFullYear(), mo = W.m.getMonth(), first = new Date(y, mo, 1), days = new Date(y, mo + 1, 0).getDate(), todayK = iso(new Date());
+  if (!W.sel || !W.sel.startsWith(iso(first).slice(0, 7))) W.sel = todayK.startsWith(iso(first).slice(0, 7)) ? todayK : iso(first);
+  const cells = []; for (let k = 0; k < first.getDay(); k++) cells.push(`<div></div>`);
+  for (let dd = 1; dd <= days; dd++){ const k = iso(new Date(y, mo, dd)), x = wfDay(k);
+    cells.push(`<div class="day${k === todayK ? " today" : ""}${W.sel === k ? " wf-sel" : ""}" onclick="W.sel='${k}';tabWfCalDraw()"><div class="d"><span>${dd}</span></div>
+      <div class="wf-n"><span class="wf-c wf-w">${x.work.length}</span><span>on shift</span></div>
+      ${x.off.length ? `<div class="wf-n"><span class="wf-c wf-o">${x.off.length}</span><span>off</span></div>` : ""}
+      ${x.leave.length ? `<div class="wf-n"><span class="wf-c wf-l">${x.leave.length}</span><span>leave</span></div>` : ""}
+      ${x.sick.length + x.absent.length ? `<div class="wf-n"><span class="wf-c wf-s">${x.sick.length + x.absent.length}</span><span>${x.absent.length ? "absent" : "sick"}</span></div>` : ""}
+      ${x.pendLeave.length ? `<div class="wf-n"><span class="wf-c wf-p">${x.pendLeave.length}</span><span>to approve</span></div>` : ""}</div>`); }
+  $("#wf-cells").innerHTML = cells.join("");
+  const x = wfDay(W.sel), list = (t, arr, cls) => arr.length ? `<div class="wf-grp"><div class="wf-gt"><i class="${cls}"></i>${t} <span class="muted">${arr.length}</span></div>${arr.map(([e, s]) => `<div class="wf-row"><span>${esc(e.first_name)} ${esc(e.last_name)}<br><span class="small muted">${esc(e.position || "")}${W.br ? "" : " · " + (e.branch || "").toUpperCase()}</span></span><span class="small">${esc(s)}</span></div>`).join("")}</div>` : "";
+  $("#wf-side").innerHTML = `<h3 style="margin:0 0 4px">${fmt(pd(W.sel))}</h3><p class="small muted" style="margin:0 0 10px">${x.work.length} on shift · ${x.off.length} off · ${x.leave.length} on leave · ${x.sick.length + x.absent.length} absent</p>
+    ${list("On shift", x.work, "wf-w")}${list("Running late", x.late, "wf-p")}${list("Called in sick", x.sick, "wf-s")}${list("Absent", x.absent, "wf-s")}${list("On leave", x.leave, "wf-l")}${list("Leave awaiting approval", x.pendLeave, "wf-p")}${list("Off", x.off, "wf-o")}`;
+}
+function leaveGroups(rows){ // one staff request covers several dates: group by employee + filing time
+  const g = {}; rows.forEach(l => { const k = l.employee_id + "|" + String(l.created_at).slice(0, 16) + "|" + l.kind; (g[k] = g[k] || []).push(l); });
+  return Object.values(g).map(a => { a.sort((x, y) => x.leave_date < y.leave_date ? -1 : 1); return { kind: "leave", lk: a[0].kind, employee_id: a[0].employee_id, ids: a.map(x => x.id), from: a[0].leave_date, to: a[a.length - 1].leave_date, n: a.length, reason: a[0].reason || a[0].note || "", created_at: a[0].created_at, status: a.some(x => x.status === "pending") ? "pending" : a[0].status, paid: a[0].paid }; });
+}
+async function tabWfReq(){
+  $("#hr-body").innerHTML = `<div class="empty">Loading…</div>`; await wfLoad();
+  const items = [...W.all.map(r => ({ ...r, src: "req" })), ...leaveGroups(W.allLeaves).map(g => ({ ...g, src: "leave" })), ...W.swaps.filter(w => w.status !== "open").map(w => ({ ...w, src: "swap", kind: "swap", employee_id: w.requester_id, work_date: w.work_date, status: w.status === "accepted" ? "pending" : w.status, reason: w.note, note: null }))]
+    .filter(r => W.filt === "all" || (W.filt === "pending" ? r.status === "pending" : r.kind === W.filt || (W.filt === "absent" && String(r.kind).startsWith("absent"))))
+    .sort((a, b) => { const rank = r => r.status !== "pending" ? 3 : ["late", "absent_sick", "absent_emergency", "absent_other"].includes(r.kind) ? 0 : r.src === "leave" ? 2 : 1; return rank(a) - rank(b) || (a.created_at < b.created_at ? 1 : -1); });
+  const stCls = s => s === "approved" ? "c-Confirmed" : s === "declined" || s === "rejected" ? "c-Lost" : s === "noted" ? "c-Contacted" : "c-Pencil";
+  const when = r => r.src === "leave" ? `${fmt(pd(r.from))}${r.n > 1 ? " – " + fmt(pd(r.to)) + ` (${r.n} days)` : ""}` : `${r.work_date ? fmt(pd(r.work_date)) : ""}${r.start_time ? ` · ${String(r.start_time).slice(0, 5)}–${String(r.end_time || "").slice(0, 5)}` : ""}${r.eta ? " · ETA " + esc(r.eta) : ""}`;
+  const what = r => r.src === "swap" ? `Shift swap → <b>${esc(ename2(r.partner_id))}</b>` : r.src === "leave" ? (LEAVE_N[r.lk] || r.lk) : REQ_N[r.kind] + (r.kind === "cash_advance" ? ` · <b>₱${(+r.amount || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}</b>` : "");
+  const acts = r => r.status !== "pending" ? `<span class="small muted">${r.decided_by ? esc(who(r.decided_by)) : ""}${r.decision_note ? " · " + esc(r.decision_note) : ""}</span>`
+    : r.src === "swap" ? `<button class="btn sm primary" onclick="wfSwap('${r.id}',true)">Approve swap</button><button class="btn sm ghost" onclick="wfSwap('${r.id}',false)">Decline</button>`
+    : r.src === "leave" ? `<button class="btn sm primary" onclick="wfLeave('${r.ids.join(",")}','approved')">Approve</button><button class="btn sm ghost" onclick="wfLeave('${r.ids.join(",")}','rejected')">Decline</button>`
+    : ["late", "absent_sick", "absent_emergency", "absent_other"].includes(r.kind) ? `<button class="btn sm primary" onclick="wfDecide('${r.id}','noted')">Acknowledge</button>`
+    : `<button class="btn sm primary" onclick="wfDecide('${r.id}','approved')">Approve</button><button class="btn sm ghost" onclick="wfDecide('${r.id}','declined',true)">Decline</button>`;
+  const F = [["pending", "Needs action"], ["all", "All"], ["leave", "Leave"], ["absent", "Absences"], ["late", "Late"], ["ot", "Overtime"], ["ut", "Undertime"], ["swap", "Shift swaps"], ["cash_advance", "Cash advance"]];
+  const missed = W.missed.map(m => ({ m, e: emp(m.employee_id) })).filter(x => x.e);
+  $("#hr-body").innerHTML = `${missed.length ? `<div class="card" style="border-color:#f3b4b4;background:#fff5f5;margin-bottom:12px"><h3 style="color:#a22020">No time-in yet</h3><p class="small muted" style="margin:0 0 8px">Scheduled, 15+ minutes past their start, no punch and no notice. Call them, then mark it handled.</p>${missed.map(({ m, e }) => `<div class="wf-row"><span><b>${esc(e.first_name)} ${esc(e.last_name)}</b> · ${esc(e.position || "")} · ${(e.branch || "").toUpperCase()}<br><span class="small muted">${fmt(pd(m.work_date))} · shift ${String(m.shift_start || "").slice(0, 5)} · flagged ${fmtTs(m.created_at)}${e.mobile ? " · " + esc(e.mobile) : ""}</span></span><span><button class="btn sm ghost" onclick="wfMissed('${m.employee_id}','${m.work_date}')">Handled</button></span></div>`).join("")}</div>` : ""}<div class="toolbar" style="flex-wrap:wrap;gap:6px">${F.map(([k, l]) => `<button class="btn sm ${W.filt === k ? "primary" : "ghost"}" onclick="W.filt='${k}';tabWfReq()">${l}</button>`).join("")}</div>
+    <div class="card" style="padding:0"><table><tr><th>Employee</th><th>Request</th><th>For</th><th>Reason</th><th>Filed</th><th>Status</th><th></th></tr>${items.map(r => { const e = emp(r.employee_id); return `<tr><td><b>${esc(e ? e.first_name + " " + e.last_name : "?")}</b><br><span class="small muted">${esc(e?.position || "")} · ${(e?.branch || "").toUpperCase()}</span></td><td>${what(r)}</td><td>${when(r)}</td><td style="max-width:280px">${esc(r.reason || "")}${r.note ? `<br><span class="small muted">To approver: ${esc(r.note)}</span>` : ""}</td><td class="small">${fmtTs(r.created_at)}</td><td><span class="chip ${stCls(r.status)}">${r.status === "pending" ? "Pending" : r.status === "noted" ? "Acknowledged" : r.status === "rejected" ? "Declined" : r.status[0].toUpperCase() + r.status.slice(1)}</span></td><td><div class="actions" style="margin:0;flex-wrap:nowrap">${acts(r)}</div></td></tr>`; }).join("") || `<tr><td colspan="7" class="empty">${W.filt === "pending" ? "Nothing waiting. New notices and requests from the staff app land here." : "No requests yet."}</td></tr>`}</table></div>
+    <p class="small muted">Approved overtime and undertime requests are applied automatically when you generate exceptions for that cut-off. Approved cash advances are deducted automatically from the next payslips, split over the number of pay periods you choose, and marked paid when you release each payroll.</p>`;
+}
+async function wfDecide(id, status, askNote){
+  let note = null, extra = {}; if (askNote){ note = prompt("Reason for declining (the employee will see this)"); if (note === null) return; }
+  const r = W.all.find(x => x.id === id);
+  if (r && r.kind === "cash_advance" && status === "approved"){ const t = prompt(`Approve ₱${(+r.amount).toLocaleString("en-PH")}. Deduct over how many pay periods? (1–6)`, "2"); if (t === null) return; extra.ca_terms = Math.min(6, Math.max(1, parseInt(t) || 1)); note = `Deducted over ${extra.ca_terms} pay period${extra.ca_terms > 1 ? "s" : ""}`; }
+  const { error } = await sb.from("staff_requests").update({ status, decided_by: me.email, decided_at: new Date().toISOString(), decision_note: note, ...extra }).eq("id", id);
+  if (error) return toast(error.message); toast(status === "noted" ? "Acknowledged" : status === "approved" ? "Approved" : "Declined"); tabWfReq(); }
+async function wfLeave(ids, status){
+  const rows = W.allLeaves.filter(l => ids.split(",").includes(l.id)).sort((a, b) => a.leave_date < b.leave_date ? -1 : 1), e = emp(rows[0]?.employee_id), now = new Date().toISOString();
+  if (status === "approved" && e && ["VL", "SL"].includes(rows[0].kind)){ const col = rows[0].kind === "VL" ? "vl_credits" : "sl_credits", bal = e[col];
+    if (bal != null){ const paidN = Math.max(0, Math.min(rows.length, Math.floor(+bal))); if (paidN < rows.length && !confirm(`${e.first_name} has ${bal} ${rows[0].kind} credit${+bal === 1 ? "" : "s"} left. Approve ${paidN} day${paidN === 1 ? "" : "s"} as paid and ${rows.length - paidN} as unpaid?`)) return;
+      for (let i = 0; i < rows.length; i++){ const { error } = await sb.from("leaves").update({ status, paid: i < paidN, decided_by: me.email, decided_at: now }).eq("id", rows[i].id); if (error) return toast(error.message); }
+      const { error } = await sb.from("employees").update({ [col]: Math.round((+bal - paidN) * 100) / 100 }).eq("id", e.id); if (error) return toast(error.message); e[col] = +bal - paidN;
+      toast(`Leave approved · ${paidN} paid, ${col === "vl_credits" ? "VL" : "SL"} balance now ${e[col]}`); return tabWfReq(); } }
+  const { error } = await sb.from("leaves").update({ status, decided_by: me.email, decided_at: now }).in("id", ids.split(","));
+  if (error) return toast(error.message); toast(status === "approved" ? "Leave approved" : "Leave declined"); tabWfReq(); }
+const ename2 = id => { const e = emp(id); return e ? `${e.first_name} ${e.last_name}` : "anyone at the branch"; };
+const geoNote = p => Object.entries(p.geo || {}).map(([k, g]) => `${k}: ${g.denied ? "location off" : g.dist != null ? g.dist + " m from branch" : "branch location not set"}`).join(" · ");
+async function wfMissed(eid, d){ const { error } = await sb.from("missed_alerts").update({ resolved_at: new Date().toISOString() }).eq("employee_id", eid).eq("work_date", d); if (error) return toast(error.message); tabWfReq(); }
+async function wfSwap(id, ok){ const w = W.swaps.find(x => x.id === id); if (!w) return; const now = new Date().toISOString(), a = emp(w.requester_id), b = emp(w.partner_id);
+  if (ok){ if (!b) return toast("Nobody has taken this shift yet");
+    const { data: bs } = await sb.from("schedules").select("*").eq("employee_id", b.id).eq("work_date", w.work_date);
+    const bWorks = bs && bs[0] ? bs[0].kind === "work" : !(b.rest_days || []).includes(pd(w.work_date).getDay()) && !!b.default_start;
+    if (bWorks && !confirm(`${b.first_name} is also scheduled on ${fmt(pd(w.work_date))}. Approve anyway? ${b.first_name} will take ${a.first_name}'s shift times instead of their own.`)) return;
+    const rows = [{ employee_id: a.id, work_date: w.work_date, kind: "rest", note: `Shift swapped to ${b.first_name}`, created_by: me.email }, { employee_id: b.id, work_date: w.work_date, kind: "work", start_time: w.start_time, end_time: w.end_time, branch: w.branch, note: `Covering for ${a.first_name}`, created_by: me.email }];
+    const { error: e1 } = await sb.from("schedules").upsert(rows, { onConflict: "employee_id,work_date" }); if (e1) return toast(e1.message); }
+  const { error } = await sb.from("shift_swaps").update({ status: ok ? "approved" : "declined", decided_by: me.email, decided_at: now }).eq("id", id); if (error) return toast(error.message);
+  toast(ok ? "Swap approved · line-up updated" : "Swap declined"); tabWfReq(); }
+
+
+/* ---------- Workforce: live feed + chat moderation ---------- */
+let WF = { room: "all", ch: null, urls: {} };
+function wfFeedOff(){ if (WF.ch){ try { sb.removeChannel(WF.ch); } catch (e) {} WF.ch = null; } }
+async function tabWfFeed(){
+  const since = new Date(Date.now() - 2 * 86400000).toISOString();
+  const [{ data: posts }, { data: msgs }] = await Promise.all([sb.from("feed_posts").select("*").gte("at", since).order("at", { ascending: false }).limit(120), sb.from("chat_messages").select("*").eq("room", WF.room).order("created_at", { ascending: false }).limit(150)]);
+  const P = posts || [], M = (msgs || []).reverse(); const ids = P.map(p => p.id);
+  const { data: rx } = ids.length ? await sb.from("feed_reactions").select("*").in("post_id", ids) : { data: [] };
+  const need = P.map(p => p.selfie).filter(x => x && !WF.urls[x]); if (need.length){ const { data: u } = await sb.storage.from("selfies").createSignedUrls(need, 3600); (u || []).forEach(x => { if (x.signedUrl) WF.urls[x.path] = x.signedUrl; }); }
+  WF.idp = WF.idp || {}; const needId = [...new Set(P.map(p => (emp(p.employee_id) || {}).selfie).filter(x => x && !WF.idp[x]))]; if (needId.length){ const { data: u } = await sb.storage.from("employee-docs").createSignedUrls(needId, 3600); (u || []).forEach(x => { if (x.signedUrl) WF.idp[x.path] = x.signedUrl; }); }
+  const onNow = new Set(); [...P].reverse().forEach(p => { if (p.kind === "in") onNow.add(p.employee_id); else onNow.delete(p.employee_id); });
+  const rxFor = id => { const c = {}; (rx || []).filter(r => r.post_id === id).forEach(r => c[r.emoji] = (c[r.emoji] || 0) + 1); return Object.entries(c).map(([e, n]) => `<span class="chip" style="background:var(--soft)">${e} ${n}</span>`).join(" "); };
+  $("#hr-body").innerHTML = `<div class="wf-wrap" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+    <div class="card"><h3 style="margin:0 0 4px">Live time-in feed</h3><p class="small muted" style="margin:0 0 10px">${onNow.size} on shift now · updates live · each punch selfie sits next to the person's registration photo so you can check it was really them · photos kept 30 days</p>
+      ${P.map(p => { const e = emp(p.employee_id); return `<div class="wf-row" style="align-items:flex-start;gap:12px"><span style="display:flex;gap:10px;min-width:0">${e && e.selfie && WF.idp[e.selfie] ? `<img src="${WF.idp[e.selfie]}" title="Registration photo" style="width:44px;height:56px;object-fit:cover;border-radius:8px;opacity:.85;align-self:flex-end">` : ""}${p.selfie && WF.urls[p.selfie] ? `<img src="${WF.urls[p.selfie]}" style="width:56px;height:72px;object-fit:cover;border-radius:8px;transform:scaleX(-1);cursor:zoom-in" onclick="openModal('<img src=&quot;${WF.urls[p.selfie]}&quot; style=&quot;max-width:100%;border-radius:12px;transform:scaleX(-1)&quot;>')">` : `<span style="width:56px;height:72px;border-radius:8px;background:var(--soft);display:grid;place-items:center;font-weight:700">${esc((p.name || "?")[0])}</span>`}
+        <span><b>${esc(p.name)}</b>${e ? ` <span class="small muted">(${esc(e.first_name)} ${esc(e.last_name)})</span>` : ""}<br><span class="small">${p.kind === "in" ? "Timed in" : "Timed out"} · ${fmtTs(p.at)} · ${(p.branch || "").toUpperCase()}</span>${p.offsite ? ` <span class="chip c-Lost">off-site</span>` : ""}<br>${rxFor(p.id)}</span></span><span></span></div>`; }).join("") || `<div class="empty">No time-ins from the staff app in the last two days.</div>`}</div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">Team chat</h3><div class="tabs" style="margin:0;border:0">${[["all", "All staff"], ["sa", "San Antonio"], ["ju", "Jupiter"], ["fm", "Funhan Mart"]].map(([k, l]) => `<button aria-pressed="${WF.room === k}" onclick="WF.room='${k}';tabWfFeed()">${l}</button>`).join("")}</div></div>
+      <div id="wf-chat" style="max-height:520px;overflow:auto;margin:10px 0">${M.map(m => `<div class="wf-row" style="${m.deleted_at ? "opacity:.45" : ""}"><span style="min-width:0"><b>${esc(m.author || "")}</b> <span class="small muted">${fmtTs(m.created_at)}</span><br><span style="white-space:pre-wrap;word-break:break-word">${m.deleted_at ? "<i>deleted</i>" : esc(m.body)}</span></span><span>${m.deleted_at ? "" : `<button class="btn sm ghost" onclick="wfDelMsg('${m.id}')">Remove</button>`}</span></div>`).join("") || `<div class="empty">No messages in the last 7 days.</div>`}</div>
+      <div style="display:flex;gap:8px"><input id="wf-msg" maxlength="1000" placeholder="Post as management" style="flex:1"><button class="btn sm primary" onclick="wfPost()">Send</button></div>
+      <p class="small muted">Messages delete automatically after 7 days. Removed messages disappear for staff right away.</p></div></div>`;
+  const c = $("#wf-chat"); if (c) c.scrollTop = c.scrollHeight;
+  wfFeedOff(); WF.ch = sb.channel("wf-" + Date.now()).on("postgres_changes", { event: "*", schema: "public", table: "feed_posts" }, () => H.tab === "wffeed" && tabWfFeed()).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, () => H.tab === "wffeed" && tabWfFeed()).subscribe(); }
+async function wfPost(){ const v = $("#wf-msg").value.trim(); if (!v) return; const { error } = await sb.from("chat_messages").insert({ room: WF.room, body: v }); if (error) return toast(error.message); tabWfFeed(); }
+async function wfDelMsg(id){ const { error } = await sb.rpc("chat_delete", { p_id: id }); if (error) return toast(error.message); tabWfFeed(); }
+
+/* ---------- Workforce: announcements ---------- */
+async function tabWfAnn(){
+  const [{ data: a }, { data: r }] = await Promise.all([sb.from("announcements").select("*").order("created_at", { ascending: false }).limit(30), sb.from("announcement_reads").select("*")]);
+  const A = a || [], R = r || [];
+  const aud = x => H.emps.filter(e => e.active && (!x.branch || e.branch === x.branch));
+  $("#hr-body").innerHTML = `<div class="grid"><div class="card"><h3>New announcement</h3><p class="small muted">Shows at the top of the staff app until each person taps "Got it". Use it for menu changes, events tonight and policy reminders.</p>
+      <label class="f">Title<input id="an-t" maxlength="120" placeholder="Private event tonight at San Antonio: 120 pax"></label>
+      <label class="f">Message<textarea id="an-b" rows="4" placeholder="Doors close to walk-ins at 6 PM. All servers report by 4:30 PM for briefing."></textarea></label>
+      <div class="fields"><label class="f">Who sees it<select id="an-br"><option value="">Everyone</option><option value="sa">San Antonio Place</option><option value="ju">Jupiter Street</option></select></label><label class="f">Hide after<input id="an-x" type="date"></label></div>
+      <button class="btn primary" onclick="wfAnnPost()">Post announcement</button></div>
+    <div class="card" style="grid-column:span 2"><h3>Posted</h3><table><tr><th>Announcement</th><th>For</th><th>Read</th><th></th></tr>${A.map(x => { const au = aud(x), rd = R.filter(y => y.announcement_id === x.id), names = au.filter(e => !rd.some(y => y.employee_id === e.id)); return `<tr><td><b>${esc(x.title)}</b><br><span class="small muted">${fmtTs(x.created_at)}${x.expires_at ? " · until " + fmt(pd(x.expires_at.slice(0, 10))) : ""}</span></td><td>${x.branch ? x.branch.toUpperCase() : "Everyone"}</td><td><b>${rd.length}</b> of ${au.length}${names.length && names.length <= 12 ? `<br><span class="small muted">Not yet: ${names.map(e => esc(e.first_name)).join(", ")}</span>` : ""}</td><td><button class="btn sm ghost" onclick="wfAnnDel('${x.id}')">Remove</button></td></tr>`; }).join("") || "<tr><td colspan='4' class='empty'>Nothing posted yet.</td></tr>"}</table></div></div>`; }
+async function wfAnnPost(){ const t = $("#an-t").value.trim(); if (!t) return toast("Add a title"); const x = $("#an-x").value;
+  const { error } = await sb.from("announcements").insert({ title: t, body: $("#an-b").value.trim() || null, branch: $("#an-br").value || null, created_by: me.email, expires_at: x ? x + "T23:59:00+08:00" : null }); if (error) return toast(error.message); toast("Posted to the staff app"); tabWfAnn(); }
+async function wfAnnDel(id){ if (!confirm("Remove this announcement from the staff app?")) return; await sb.from("announcements").delete().eq("id", id); tabWfAnn(); }
+
+/* ---------- Workforce: labor cost vs sales ---------- */
+let WL = { m: null, br: "sa" };
+async function tabWfLabor(){
+  if (!WL.m){ const t = new Date(); WL.m = new Date(t.getFullYear(), t.getMonth(), 1); }
+  const a = iso(WL.m), b = iso(new Date(WL.m.getFullYear(), WL.m.getMonth() + 1, 0));
+  const [{ data: sales }, { data: pun }, { data: sc }] = await Promise.all([sb.from("daily_sales").select("*").eq("branch", WL.br).gte("sale_date", a).lte("sale_date", b), sb.from("punches").select("*").gte("work_date", a).lte("work_date", b), sb.from("schedules").select("*").gte("work_date", a).lte("work_date", b)]);
+  const E = H.emps.filter(e => e.branch === WL.br), rate = e => +e.hourly_rate || (+e.monthly_rate ? +e.monthly_rate / 26 / (H.rules.std_hours ?? 8) : 0), today = iso(new Date());
+  const days = []; for (let d = new Date(WL.m); d.getMonth() === WL.m.getMonth(); d.setDate(d.getDate() + 1)) days.push(iso(d));
+  let tS = 0, tC = 0, tH = 0;
+  const rows = days.map(d => { let hrs = 0, cost = 0, src = "actual";
+    const ps = (pun || []).filter(p => p.work_date === d && E.some(e => e.id === p.employee_id));
+    if (ps.length) ps.forEach(p => { if (!p.time_out) return; let m = (new Date(p.time_out) - new Date(p.time_in)) / 60000; if (p.lunch_out && p.lunch_in) m -= (new Date(p.lunch_in) - new Date(p.lunch_out)) / 60000; const e = E.find(x => x.id === p.employee_id); hrs += m / 60; cost += m / 60 * rate(e); });
+    else { src = d > today ? "line-up" : "line-up (no punches)"; E.filter(e => e.active).forEach(e => { const s = (sc || []).find(x => x.employee_id === e.id && x.work_date === d); let st, en; if (s){ if (s.kind !== "work") return; st = s.start_time; en = s.end_time; } else { if ((e.rest_days || []).includes(pd(d).getDay()) || !e.default_start) return; st = e.default_start; en = e.default_end; } let m = tmin(en) - tmin(st); if (m <= 0) m += 1440; m -= (H.rules.break_min ?? 60); hrs += m / 60; cost += m / 60 * rate(e); }); }
+    const sale = (sales || []).find(x => x.sale_date === d), sv = sale ? +sale.net_sales : null, pct = sv ? cost / sv * 100 : null;
+    if (sv) { tS += sv; tC += cost; } tH += hrs;
+    return { d, hrs, cost, sv, pct, src }; });
+  const tone = p => p == null ? "" : p <= 25 ? "color:#1f9d55" : p <= 35 ? "color:#8a5a00" : "color:#c62828;font-weight:700";
+  $("#hr-body").innerHTML = `<div class="toolbar" style="align-items:flex-end"><div style="display:flex;gap:8px;align-items:center"><button class="btn sm ghost" onclick="WL.m=new Date(WL.m.getFullYear(),WL.m.getMonth()-1,1);tabWfLabor()">‹</button><b style="min-width:150px;text-align:center">${WL.m.toLocaleDateString("en-PH", { month: "long", year: "numeric" })}</b><button class="btn sm ghost" onclick="WL.m=new Date(WL.m.getFullYear(),WL.m.getMonth()+1,1);tabWfLabor()">›</button></div>
+    <label class="f">Branch<select onchange="WL.br=this.value;tabWfLabor()"><option value="sa" ${WL.br === "sa" ? "selected" : ""}>San Antonio Place</option><option value="ju" ${WL.br === "ju" ? "selected" : ""}>Jupiter Street</option></select></label></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:12px"><div class="card"><div class="small muted">Net sales entered</div><div style="font-size:22px;font-weight:700">${peso(tS)}</div></div><div class="card"><div class="small muted">Labor cost on those days</div><div style="font-size:22px;font-weight:700">${peso(tC)}</div></div><div class="card"><div class="small muted">Labor % of sales</div><div style="font-size:22px;${tone(tS ? tC / tS * 100 : null)}">${tS ? (tC / tS * 100).toFixed(1) + "%" : "—"}</div></div><div class="card"><div class="small muted">Staff hours this month</div><div style="font-size:22px;font-weight:700">${Math.round(tH).toLocaleString()} h</div></div></div>
+    <div class="card" style="padding:0"><table><tr><th>Date</th><th>Net sales ₱</th><th>Staff hours</th><th>Labor cost</th><th>Labor %</th><th>Hours from</th></tr>${rows.map(r => `<tr><td>${fmt(pd(r.d))}</td><td><input type="number" step="0.01" value="${r.sv ?? ""}" placeholder="enter sales" style="max-width:140px" onchange="wfSale('${r.d}',this.value)"></td><td class="num">${r.hrs ? r.hrs.toFixed(1) : "—"}</td><td class="num">${r.cost ? peso(r.cost) : "—"}</td><td class="num" style="${tone(r.pct)}">${r.pct != null ? r.pct.toFixed(1) + "%" : "—"}</td><td class="small muted">${r.src}</td></tr>`).join("")}</table></div>
+    <p class="small muted">Labor cost = paid hours × each person's hourly rate (monthly-rated staff ÷ 26 days ÷ ${H.rules.std_hours ?? 8} h), before OT premiums, night differential and contributions. Past days use actual punches; future days use the line-up. Under 25% is healthy for a bar; over 35% means the night was over-staffed for its sales.</p>`; }
+async function wfSale(d, v){ if (v === "") { await sb.from("daily_sales").delete().eq("branch", WL.br).eq("sale_date", d); return tabWfLabor(); }
+  const { error } = await sb.from("daily_sales").upsert({ branch: WL.br, sale_date: d, net_sales: +v, entered_by: me.email, updated_at: new Date().toISOString() }, { onConflict: "branch,sale_date" }); if (error) return toast(error.message); toast("Saved"); tabWfLabor(); }
+
+/* ---------- Operations: what the team logs from the staff app ---------- */
+const OPS_BR = { "": "All branches", sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart" };
+let OPF = { br: "", days: 14, cat: "" }, OPU = {};
+async function opsPhotos(rows){ const need = rows.map(r => r.photo).filter(x => x && !OPU[x]); if (!need.length) return; const { data } = await sb.storage.from("ops-photos").createSignedUrls(need, 3600); (data || []).forEach(x => { if (x.signedUrl) OPU[x.path] = x.signedUrl; }); }
+const opsThumb = p => p && OPU[p] ? `<img src="${OPU[p]}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:zoom-in" onclick="openModal('<img src=&quot;${OPU[p]}&quot; style=&quot;max-width:100%;border-radius:12px&quot;>')">` : "";
+function opsBar(extra){ return `<div class="toolbar" style="align-items:flex-end;flex-wrap:wrap"><label class="f">Branch<select onchange="OPF.br=this.value;hrRender()">${Object.entries(OPS_BR).map(([k, v]) => `<option value="${k}" ${OPF.br === k ? "selected" : ""}>${v}</option>`).join("")}</select></label><label class="f">Period<select onchange="OPF.days=+this.value;hrRender()">${[[1, "Today"], [7, "Last 7 days"], [14, "Last 14 days"], [31, "Last 31 days"], [92, "Last 3 months"]].map(([k, v]) => `<option value="${k}" ${OPF.days === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>${extra || ""}</div>`; }
+async function opsLoad(table, dateCol = "created_at"){ const since = new Date(); since.setDate(since.getDate() - OPF.days + 1); since.setHours(0, 0, 0, 0);
+  let q = sb.from(table).select("*").gte(dateCol, dateCol === "created_at" ? since.toISOString() : iso(since)).order(dateCol, { ascending: false }).limit(500); if (OPF.br) q = q.eq("branch", OPF.br);
+  const { data, error } = await q; if (error) { $("#hr-body").innerHTML = `<div class="empty">Couldn't load: ${esc(error.message)}</div>`; return null; } await opsPhotos(data || []); return data || []; }
+const byName = r => { const e = emp(r.employee_id); return r.by_name || (e ? `${e.first_name} ${e.last_name}` : ""); };
+async function tabOpsInv(){ const R = await opsLoad("inventory_logs"); if (!R) return; const rows = R.filter(r => !OPF.cat || r.category === OPF.cat);
+  const cnt = {}; rows.forEach(r => cnt[r.action] = (cnt[r.action] || 0) + 1);
+  $("#hr-body").innerHTML = opsBar(`<label class="f">Area<select onchange="OPF.cat=this.value;hrRender()"><option value="">All areas</option>${["Kitchen", "Bar", "Dine-in", "Utilities", "Others"].map(c => `<option ${OPF.cat === c ? "selected" : ""}>${c}</option>`).join("")}</select></label>`) +
+    `<div class="legend">${Object.entries(cnt).map(([k, n]) => `<span><b>${n}</b> ${esc(k)}</span>`).join("") || ""}</div>
+    <div class="card" style="padding:0"><table><tr><th>When</th><th>Item</th><th>Qty</th><th>What happened</th><th>Area</th><th>By</th><th>Note</th><th></th></tr>${rows.map(r => `<tr><td class="small">${fmtTs(r.created_at)}<br>${OPS_BR[r.branch] || ""}</td><td><b>${esc(r.item)}</b></td><td class="num">${+r.qty} ${esc(r.unit || "")}</td><td>${/spoil|damag|missing/i.test(r.action) ? `<span class="chip c-Lost">${esc(r.action)}</span>` : esc(r.action)}</td><td>${esc(r.category)}${r.subcategory ? `<br><span class="small muted">${esc(r.subcategory)}</span>` : ""}</td><td class="small">${esc(byName(r))}</td><td class="small" style="max-width:220px">${esc(r.note || "")}</td><td>${opsThumb(r.photo)}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No inventory entries in this period.</td></tr>`}</table></div>`; }
+async function tabOpsToilet(){ const R = await opsLoad("toilet_audits"); if (!R) return;
+  $("#hr-body").innerHTML = opsBar() + `<div class="card" style="padding:0"><table><tr><th>When</th><th>Toilet</th><th>Result</th><th>Failed checks</th><th>By</th><th>Note</th><th></th></tr>${R.map(a => { const f = Object.entries(a.checks || {}).filter(([, v]) => !v).map(([k]) => k); return `<tr><td class="small">${fmtTs(a.created_at)}<br>${OPS_BR[a.branch] || ""}</td><td>${esc(a.toilet)}</td><td><span class="chip ${a.passed === a.total ? "c-Confirmed" : "c-Lost"}">${a.passed}/${a.total}</span></td><td class="small">${f.map(esc).join(", ") || "—"}</td><td class="small">${esc(byName(a))}</td><td class="small" style="max-width:220px">${esc(a.note || "")}</td><td>${opsThumb(a.photo)}</td></tr>`; }).join("") || `<tr><td colspan="7" class="empty">No toilet audits in this period.</td></tr>`}</table></div>
+    <p class="small muted">Tip: ask for a check every 2 hours on busy nights. Fewer than 3 audits on a Friday or Saturday is worth a word with the shift lead.</p>`; }
+async function tabOpsHuddle(){ const R = await opsLoad("huddles", "shift_date"); if (!R) return;
+  const days = []; for (let k = 0; k < Math.min(OPF.days, 31); k++){ const d = new Date(); d.setDate(d.getDate() - k); days.push(iso(d)); }
+  const brs = OPF.br ? [OPF.br] : ["sa", "ju"];
+  $("#hr-body").innerHTML = opsBar() + `<div class="card"><h3 style="margin:0 0 8px">Huddle done?</h3>${brs.map(b => `<div style="display:flex;gap:8px;align-items:center;margin:6px 0"><span class="small" style="width:90px;font-weight:700">${OPS_BR[b]}</span><div style="display:flex;gap:4px;flex-wrap:wrap">${days.slice().reverse().map(d => { const h = R.find(x => x.shift_date === d && x.branch === b); return `<span title="${fmt(pd(d))}" style="width:26px;height:26px;border-radius:6px;display:inline-grid;place-items:center;font-size:10px;font-weight:700;${h ? "background:#dff3e6;color:#115a30" : "background:#fde3e3;color:#a22020"}">${pd(d).getDate()}</span>`; }).join("")}</div></div>`).join("")}<p class="small muted" style="margin:8px 0 0">Green = huddle recorded · red = none</p></div>
+    <div class="card" style="padding:0"><table><tr><th>Shift</th><th>Led by</th><th>Covered</th><th>Attended</th><th>Key points</th></tr>${R.map(h => `<tr><td>${fmt(pd(h.shift_date))}<br><span class="small muted">${OPS_BR[h.branch] || ""} · ${new Date(h.created_at).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}</span></td><td>${esc(byName(h))}</td><td><span class="chip ${h.covered >= 7 ? "c-Confirmed" : "c-Pencil"}">${h.covered}/${Object.keys(h.checks || {}).length}</span></td><td class="small">${esc(h.attendees || "")}</td><td class="small" style="max-width:320px;white-space:pre-wrap">${esc(h.notes || "")}</td></tr>`).join("") || `<tr><td colspan="5" class="empty">No huddles recorded in this period.</td></tr>`}</table></div>`; }
+async function tabOpsRcv(){ const R = await opsLoad("receiving_reports", "received_date"); if (!R) return;
+  const tot = R.reduce((a, r) => a + (+r.amount || 0), 0), sup = {}; R.forEach(r => sup[r.supplier] = (sup[r.supplier] || 0) + (+r.amount || 0));
+  $("#hr-body").innerHTML = opsBar() + `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:12px"><div class="card"><div class="small muted">Deliveries received</div><div style="font-size:22px;font-weight:700">${R.length}</div></div><div class="card"><div class="small muted">Total on receipts</div><div style="font-size:22px;font-weight:700">${peso(tot)}</div></div><div class="card"><div class="small muted">Top suppliers</div><div class="small">${Object.entries(sup).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${esc(k)} · <b>${peso(v)}</b>`).join("<br>") || "—"}</div></div></div>
+    <div class="card" style="padding:0"><table><tr><th>Received</th><th>Supplier</th><th>Amount</th><th>Receipt no.</th><th>Area</th><th>By</th><th>Note</th><th>Receipt</th></tr>${R.map(r => `<tr><td>${fmt(pd(r.received_date))}<br><span class="small muted">${OPS_BR[r.branch] || ""}</span></td><td><b>${esc(r.supplier)}</b></td><td class="num">${peso(r.amount)}</td><td class="small">${esc(r.invoice_no || "")}</td><td class="small">${esc(r.category || "")}</td><td class="small">${esc(byName(r))}</td><td class="small" style="max-width:220px">${esc(r.note || "")}</td><td>${opsThumb(r.photo)}</td></tr>`).join("") || `<tr><td colspan="8" class="empty">No receiving reports in this period.</td></tr>`}</table></div>`; }
+
+/* ---------- Workforce: employee file (memos, evaluations, incident reports, disciplinary notices) ---------- */
+const REC_K = { memo: "Memo", evaluation: "Evaluation result", incident: "Incident report", progressive: "Disciplinary notice" };
+const REC_LV = ["Notice to explain", "Verbal warning (documented)", "Written warning", "Final written warning", "Notice of suspension", "Notice of decision"];
+async function tabWfRec(){
+  const [{ data: r }, { data: a }] = await Promise.all([sb.from("employee_records").select("*").order("issued_date", { ascending: false }).limit(200), sb.from("record_acks").select("*")]);
+  const R = r || [], A = a || [], act = H.emps.filter(e => e.active);
+  $("#hr-body").innerHTML = `<div class="grid"><div class="card"><h3>Add to an employee's file</h3><p class="small muted">Shows in the person's "My file" tab in the staff app. They acknowledge receipt there; the date and any comment they leave are kept here.</p>
+      <div class="fields"><label class="f">Type<select id="rc-k" onchange="$('#rc-lvw').hidden=this.value!=='progressive'">${Object.entries(REC_K).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label><label class="f" id="rc-lvw" hidden>Level<select id="rc-lv">${REC_LV.map(x => `<option>${x}</option>`).join("")}</select></label>
+      <label class="f">For<select id="rc-to"><option value="all">All staff</option><option value="br:sa">San Antonio team</option><option value="br:ju">Jupiter team</option><option value="br:fm">Funhan Mart team</option>${act.map(e => `<option value="${e.id}">${esc(ename(e))}</option>`).join("")}</select></label><label class="f">Date issued<input id="rc-d" type="date" value="${iso(new Date())}"></label></div>
+      <label class="f">Title<input id="rc-t" maxlength="140" placeholder="e.g. Memo: New cash handling procedure"></label>
+      <label class="f">Details<textarea id="rc-b" rows="5" placeholder="Write the memo, evaluation summary or incident details here."></textarea></label>
+      <label class="f">Attachment (PDF or photo, optional)<input id="rc-f" type="file" accept="application/pdf,image/*"></label>
+      <button class="btn primary" onclick="wfRecAdd()">Add to file</button><p class="small muted">Memos to a team are visible to everyone on that team. Evaluations, incident reports and disciplinary notices should go to one person.</p></div>
+    <div class="card" style="grid-column:span 2"><h3>Issued</h3><table><tr><th>Date</th><th>Type</th><th>Title</th><th>For</th><th>Acknowledged</th><th></th></tr>${R.map(x => { const au = x.employee_id ? act.filter(e => e.id === x.employee_id) : act.filter(e => !x.branch || e.branch === x.branch), ak = A.filter(y => y.record_id === x.id);
+        return `<tr><td>${fmt(pd(x.issued_date))}</td><td>${REC_K[x.kind]}${x.level ? `<br><span class="small muted">${esc(x.level)}</span>` : ""}</td><td><b>${esc(x.title)}</b>${x.file ? ` <a href="#" onclick="wfRecOpen('${esc(x.file)}','${x.employee_id ? "employee-docs" : "memos"}');return false">📄</a>` : ""}</td><td>${x.employee_id ? esc(ename(emp(x.employee_id))) : x.branch ? OPS_BR[x.branch] + " team" : "All staff"}</td>
+          <td class="small">${x.employee_id ? (ak[0] ? `✓ ${fmtTs(ak[0].ack_at)}${ak[0].comment ? `<br><i>"${esc(ak[0].comment)}"</i>` : ""}` : `<span style="color:#a22020">Not yet</span>`) : `<b>${ak.length}</b> of ${au.length}`}</td><td><button class="btn sm ghost" onclick="wfRecDel('${x.id}')">Remove</button></td></tr>`; }).join("") || "<tr><td colspan='6' class='empty'>Nothing issued yet.</td></tr>"}</table></div></div>`; }
+async function wfRecAdd(){ const t = $("#rc-t").value.trim(); if (!t) return toast("Add a title"); const to = $("#rc-to").value, k = $("#rc-k").value, f = $("#rc-f").files[0];
+  const row = { kind: k, level: k === "progressive" ? $("#rc-lv").value : null, title: t, body: $("#rc-b").value.trim() || null, issued_date: $("#rc-d").value, issued_by: me.email, employee_id: to.length > 20 ? to : null, branch: to.startsWith("br:") ? to.slice(3) : null };
+  if (f){ const ext = (f.name.split(".").pop() || "pdf").toLowerCase(), bucket = row.employee_id ? "employee-docs" : "memos", path = `${row.employee_id || "all"}/records/${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from(bucket).upload(path, f, { contentType: f.type }); if (error) return toast("Upload failed: " + error.message); row.file = path; }
+  const { error } = await sb.from("employee_records").insert(row); if (error) return toast(error.message); toast("Added. It's in the staff app now."); tabWfRec(); }
+async function wfRecOpen(path, bucket){ const { data } = await sb.storage.from(bucket).createSignedUrl(path, 600); if (data) window.open(data.signedUrl, "_blank"); }
+async function wfRecDel(id){ if (!confirm("Remove this from the employee's file?")) return; const { error } = await sb.from("employee_records").delete().eq("id", id); if (error) return toast(error.message); tabWfRec(); }
+
+/* ---------- attendance health ---------- */
+const ATT_DEF = { period: "month", grace: 5, late_1: 2, late_2: 4, late_3: 6, notified_factor: 0.5, notice_min: 120, absent_notice: 5, absent_late_notice: 8, no_show: 20, missed_punch: 2, undertime: 3, offsite: 3, clean_week_bonus: 2, band_excellent: 90, band_good: 75, band_warn: 60 };
+const ATT_F = [["Lateness", [["grace", "Grace period (minutes, no deduction)"], ["late_1", "Late 1–15 min (points off)"], ["late_2", "Late 16–30 min"], ["late_3", "Late more than 30 min"], ["notified_factor", "If they sent a ‘running late’ notice before the shift, multiply by", "0.1"]]],
+  ["Absences", [["notice_min", "Notice counts as ‘ahead’ if sent this many minutes before the shift", "15"], ["absent_notice", "Absent, notified ahead"], ["absent_late_notice", "Absent, notified late"], ["no_show", "No call, no show"]]],
+  ["Punches", [["missed_punch", "No time-out"], ["undertime", "Left early without approved UT"], ["offsite", "Punched outside the branch location"]]],
+  ["Recovery and bands", [["clean_week_bonus", "Points back for a clean week (every scheduled day on time)"], ["band_excellent", "Excellent from"], ["band_good", "Good from"], ["band_warn", "Needs improvement from (below = At risk)"]]]];
+const hpBand = sc => { const c = { ...ATT_DEF, ...(H.att || {}) }; return sc >= c.band_excellent ? ["Excellent", "#1f9d55"] : sc >= c.band_good ? ["Good", "#2b7bb9"] : sc >= c.band_warn ? ["Needs improvement", "#d98e04"] : ["At risk", "#c0392b"]; };
+async function attCard(owner){
+  const { data } = await sb.from("settings").select("value").eq("key", "attendance").maybeSingle(); H.att = data?.value || {};
+  const c = { ...ATT_DEF, ...H.att }, box = $("#att-card"); if (!box) return;
+  box.innerHTML = `<h3>Attendance health</h3><p class="small muted">Every employee starts at <b>100</b>. Points come off for the issues below and come back for clean weeks. Approved leave and rest days never count. The score shows on their profile, in the People list and in their staff app.</p>
+    <div class="fields"><label class="f">Score resets<select id="at-period" ${owner ? "" : "disabled"}><option value="month" ${c.period === "month" ? "selected" : ""}>Every 1st of the month</option><option value="rolling30" ${c.period === "rolling30" ? "selected" : ""}>Rolling: last 30 days</option></select></label></div>
+    ${ATT_F.map(([t, fs]) => `<div class="small muted" style="font-weight:700;margin-top:10px">${t}</div><div class="fields">${fs.map(([k, l, st]) => `<label class="f">${l}<input id="at-${k}" type="number" step="${st || 1}" min="0" value="${c[k]}" ${owner ? "" : "disabled"}></label>`).join("")}</div>`).join("")}
+    ${owner ? `<div class="actions"><button class="btn primary" onclick="attSave()">Save attendance rules</button><button class="btn ghost" onclick="attReset()">Back to standard</button></div>` : `<p class="small muted">Only the owner can change these.</p>`}`;
+}
+async function attSave(){ const v = { period: $("#at-period").value }; Object.keys(ATT_DEF).filter(k => k !== "period").forEach(k => v[k] = +$(`#at-${k}`).value || 0);
+  if (!(v.band_excellent > v.band_good && v.band_good > v.band_warn)) return toast("Bands must go Excellent > Good > Needs improvement");
+  const { error } = await sb.from("settings").upsert({ key: "attendance", value: v }); if (error) return toast(error.message); H.att = v; H.hp = null; toast("Attendance rules saved"); }
+async function attReset(){ if (!confirm("Use the standard attendance rules?")) return; const { error } = await sb.from("settings").upsert({ key: "attendance", value: ATT_DEF }); if (error) return toast(error.message); H.hp = null; attCard(true); toast("Standard rules restored"); }
+async function hpFill(){
+  if (!H.hp || Date.now() - H.hpAt > 120000){ const { data, error } = await sb.rpc("attendance_health_all"); if (error) return; H.hp = data || {}; H.hpAt = Date.now(); }
+  document.querySelectorAll(".hpc").forEach(el => { const h = H.hp[el.dataset.hp]; if (!h) return; const [b, col] = hpBand(+h.score); el.innerHTML = `<span class="small" style="color:${col};font-weight:700" title="Attendance health · ${b}">♥ ${+h.score}</span>`; });
+}
+async function hpShow(id){
+  const box = $("#em-hp"); if (!box) return; const { data: h, error } = await sb.rpc("attendance_health", { p_emp: id }); if (error || !h) return;
+  const [b, col] = hpBand(+h.score);
+  box.innerHTML = `<div class="card" style="margin:0;border-color:${col}"><div style="display:flex;align-items:center;gap:14px"><div style="width:64px;height:64px;border-radius:50%;border:5px solid ${col};display:grid;place-items:center;font-size:20px;font-weight:800;color:${col}">${+h.score}</div><div><b>Attendance health · <span style="color:${col}">${b}</span></b><div class="small muted">${fmt(pd(h.from))} – ${fmt(pd(h.to))} · −${+h.deducted} pts${+h.bonus ? ` · +${+h.bonus} back` : ""}</div></div></div>
+    ${h.items.length ? `<table style="margin-top:10px">${h.items.map(i => `<tr><td class="small">${fmt(pd(i.date))}</td><td class="small">${esc(i.kind)}</td><td class="small" style="text-align:right;font-weight:700;color:${i.points < 0 ? "#c0392b" : "#1f9d55"}">${i.points > 0 ? "+" : ""}${+i.points}</td></tr>`).join("")}</table>` : `<p class="small muted" style="margin:8px 0 0">No issues this period.</p>`}</div>`;
 }
