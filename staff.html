@@ -338,7 +338,7 @@ async function team(){
   TCH = sb.channel("team-" + Date.now()).on("postgres_changes", { event: "*", schema: "public", table: "feed_posts" }, () => teamSub === "feed" && loadFeed())
     .on("postgres_changes", { event: "*", schema: "public", table: "feed_reactions" }, () => teamSub === "feed" && loadFeed(true))
     .on("postgres_changes", { event: "*", schema: "public", table: "chat_messages" }, () => teamSub === "chat" && loadChat()).subscribe();
-  if (teamSub === "feed") loadFeed(); else { if (room !== "all" && room !== E.branch) room = "all"; loadChat(br); } }
+  if (teamSub === "feed") loadFeed(); else loadChat(br); }
 async function loadFeed(rxOnly){
   const since = new Date(Date.now() - 2 * 86400000).toISOString();
   if (!rxOnly){ const { data } = await sb.from("feed_posts").select("*").gte("at", since).order("at", { ascending: false }).limit(80); FEED = data || [];
@@ -368,15 +368,22 @@ async function react(id, em){ const mine = RX.find(x => x.post_id === id && x.em
   else if (mine) await sb.from("feed_reactions").update({ emoji: em }).eq("post_id", id).eq("employee_id", E.id);
   else await sb.from("feed_reactions").insert({ post_id: id, employee_id: E.id, emoji: em });
   loadFeed(true); }
+const ROOMS = { all: "All staff", sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart" }; let MYROOMS = null, CHPIC = {};
 async function loadChat(brName){
-  const { data } = await sb.from("chat_messages").select("*").eq("room", room).is("deleted_at", null).order("created_at", { ascending: false }).limit(150); CHAT = (data || []).reverse();
+  if (!MYROOMS){ const { data: hr } = await sb.rpc("is_hr").then(r => r, () => ({ data: false })); MYROOMS = hr === true ? Object.keys(ROOMS) : ["all", ...(ROOMS[E.branch] && E.branch !== "all" ? [E.branch] : [])]; }
+  if (!MYROOMS.includes(room)) room = "all";
+  const [{ data }, { data: pics }] = await Promise.all([sb.from("chat_messages").select("*").eq("room", room).is("deleted_at", null).order("created_at", { ascending: false }).limit(150), sb.from("feed_posts").select("employee_id,selfie").not("selfie", "is", null).order("at", { ascending: false }).limit(300)]);
+  CHAT = (data || []).reverse();
+  (pics || []).forEach(x => { if (!CHPIC[x.employee_id]) CHPIC[x.employee_id] = x.selfie; });
+  const need = [...new Set(CHAT.map(m => CHPIC[m.employee_id]).filter(x => x && !URLS[x]))]; if (need.length){ const { data: u } = await sb.storage.from("selfies").createSignedUrls(need, 3600); (u || []).forEach(x => { if (x.signedUrl) URLS[x.path] = x.signedUrl; }); }
   const box = $("#tbox"); if (!box) return; const keep = $("#ch-in") ? $("#ch-in").value : "";
-  const br = brName || (E.branch === "ju" ? "Jupiter team" : E.branch === "fm" ? "Funhan team" : "San Antonio team");
+  const icon = m => m.staff_email && !m.employee_id ? `<span style="width:32px;height:32px;border-radius:50%;background:#2a2410;border:1px solid var(--yellow);display:grid;place-items:center;font-size:15px;flex:0 0 auto">⭐</span>` : face({ name: m.author || "?", selfie: CHPIC[m.employee_id] }, 32);
   let last = "";
-  box.innerHTML = `<div class="card" style="padding:12px"><div class="seg" style="margin-top:0"><button aria-pressed="${room === "all"}" onclick="room='all';loadChat()">All staff</button><button aria-pressed="${room === E.branch}" onclick="room='${E.branch}';loadChat()">${br}</button></div>
-    <div class="chat" id="chat">${CHAT.map(m => { const lab = dayLabel(m.created_at), sep = lab !== last ? `<div class="small muted" style="text-align:center;margin:6px 0">${lab}</div>` : ""; last = lab; const me = m.employee_id === E.id;
-      return `${sep}<div class="bub ${me ? "me" : "them"} ${m.staff_email ? "mgmt" : ""}" ${me ? `data-mid="${m.id}"` : ""}>${me ? "" : `<small>${esc(m.author || "")}</small>`}${esc(m.body)}<time>${hhmm(m.created_at)}</time></div>`; }).join("") || `<div class="small muted" style="text-align:center;padding:20px 0">No messages in the last 7 days. Say hi 👋</div>`}</div>
-    <div class="chatbar"><textarea id="ch-in" maxlength="1000" placeholder="Message ${room === "all" ? "all staff" : br}"></textarea><button class="btn go" id="ch-go">Send</button></div>
+  box.innerHTML = `<div class="card" style="padding:12px"><label class="lb" style="margin-top:0">Chat room</label><select id="ch-room" style="font-weight:700" onchange="room=this.value;loadChat()">${MYROOMS.map(k => `<option value="${k}" ${room === k ? "selected" : ""}>💬 ${ROOMS[k]}</option>`).join("")}</select>
+    <div class="chat" id="chat" style="margin-top:10px">${CHAT.map(m => { const lab = dayLabel(m.created_at), sep = lab !== last ? `<div class="small muted" style="text-align:center;margin:6px 0">${lab}</div>` : ""; last = lab; const me = m.employee_id === E.id;
+      const bub = `<div class="bub ${me ? "me" : "them"} ${m.staff_email ? "mgmt" : ""}" ${me ? `data-mid="${m.id}"` : ""} style="max-width:100%">${me ? "" : `<small>${esc(m.author || "")}</small>`}${esc(m.body)}<time>${hhmm(m.created_at)}</time></div>`;
+      return `${sep}<div style="display:flex;gap:8px;align-items:flex-end;${me ? "align-self:flex-end;flex-direction:row-reverse;max-width:85%" : "align-self:flex-start;max-width:85%"}">${me ? face({ name: E.nickname || E.first_name, selfie: CHPIC[E.id] }, 28) : icon(m)}${bub}</div>`; }).join("") || `<div class="small muted" style="text-align:center;padding:20px 0">No messages in the last 7 days. Say hi 👋</div>`}</div>
+    <div class="chatbar"><textarea id="ch-in" maxlength="1000" placeholder="Message ${ROOMS[room]}"></textarea><button class="btn go" id="ch-go">Send</button></div>
     <p class="small muted" style="margin:8px 0 0">Messages delete after 7 days. Hold your own message to delete it.</p></div>`;
   const c = $("#chat"); c.scrollTop = c.scrollHeight; $("#ch-in").value = keep;
   const send = async () => { const v = $("#ch-in").value.trim(); if (!v) return; $("#ch-go").disabled = true; const { error } = await sb.from("chat_messages").insert({ room, employee_id: E.id, body: v }); $("#ch-go").disabled = false; if (error) return toastF("Couldn't send: " + error.message); $("#ch-in").value = ""; loadChat(); };
@@ -406,7 +413,8 @@ async function swapAns(id, yes){ const { data, error } = await sb.rpc("swap_resp
 /* ---------- Operations: floor plan, inventory log, toilet audit, daily huddle, receiving ---------- */
 let opsSub = null;
 const OPS = () => [ACCX.floor && ["floor", "Floor"], ACCX.operations && ["inv", "Inventory"], ACCX.operations && ["toilet", "Toilet audit"], ACCX.operations && ["huddle", "Huddle"], ACCX.operations && ["rcv", "Receiving"]].filter(Boolean);
-const BR_HERE = () => (typeof HERE === "string" && HERE) || E.branch || "sa";
+const OPS_BRS = { sa: "San Antonio", ju: "Jupiter", fm: "Funhan Mart" };
+const BR_HERE = () => (typeof HERE === "string" && OPS_BRS[HERE] && HERE) || (OPS_BRS[E.branch] && E.branch) || "sa";
 async function ops(){ const subs = OPS(); if (!subs.some(([k]) => k === opsSub)) opsSub = subs[0][0];
   $("#app").innerHTML = `${header()}<div class="seg scroll">${subs.map(([k, l]) => `<button aria-pressed="${opsSub === k}" onclick="opsSub='${k}';render()">${l}</button>`).join("")}</div><div id="opsbox"><div class="card muted">Loading…</div></div>`;
   ({ floor, inv: opsInv, toilet: opsToilet, huddle: opsHuddle, rcv: opsRcv })[opsSub](); }
@@ -418,7 +426,7 @@ async function upPhoto(file, folder){ if (!file) return null; const blob = await
 const photoField = (id, label, req) => `<label class="lb">${label}${req ? "" : " (optional)"}</label><label class="btn" style="cursor:pointer;text-align:center;margin-top:8px">📷 Take or choose photo<input id="${id}" type="file" accept="image/*" capture="environment" hidden onchange="prevPhoto(this)"></label><img class="shot" id="${id}-pv" hidden alt="">`;
 function prevPhoto(inp){ const f = inp.files[0], pv = document.getElementById(inp.id + "-pv"); if (f && pv){ pv.src = URL.createObjectURL(f); pv.hidden = false; } }
 const done = (t, msg, back) => fModal(`<h2>${t} ✓</h2><p class="muted">${msg}</p><button class="btn go" onclick="closeF();${back || "render()"}">Done</button>`);
-const brSel = id => `<label class="lb">Branch</label><select id="${id}">${Object.entries(BRANCHES).map(([k, l]) => `<option value="${k}" ${BR_HERE() === k ? "selected" : ""}>${l}</option>`).join("")}</select>`;
+const brSel = id => `<label class="lb">Branch</label><select id="${id}">${Object.entries(OPS_BRS).map(([k, l]) => `<option value="${k}" ${BR_HERE() === k ? "selected" : ""}>${l}</option>`).join("")}</select>`;
 
 /* inventory */
 const INV_CAT = { Kitchen: [], Bar: [], "Dine-in": [], Utilities: [], Others: ["Tools & equipment", "Movable furniture"] };
@@ -447,7 +455,7 @@ async function opsToilet(){ TA = {}; const { data } = await sb.from("toilet_audi
     <div style="margin-top:10px">${TCHK.map((c, i) => `<div class="chk"><span>${c}</span><span class="yn"><button class="y" aria-pressed="false" onclick="taSet(${i},true,this)">Yes</button><button class="n" aria-pressed="false" onclick="taSet(${i},false,this)">No</button></span></div>`).join("")}</div>
     <label class="lb">Notes / what you fixed (optional)</label><textarea id="ta-n" style="min-height:60px" placeholder="e.g. Refilled soap, reported leaking faucet"></textarea>${photoField("ta-p", "Photo")}
     <div class="err" id="ta-err"></div><button class="btn go" id="ta-go">Submit audit</button></div>
-    <div class="card"><h2>Last checks at ${BRANCHES[BR_HERE()] || ""}</h2>${(data || []).map(a => `<div class="row"><span><b>${esc(a.toilet)}</b> · ${a.passed}/${a.total} OK<br><span class="small muted">${fmt(a.created_at.slice(0, 10))} ${hhmm(a.created_at)} · ${esc(a.by_name || "")}</span></span><span class="st ${a.passed === a.total ? "approved" : "pending"}">${a.passed === a.total ? "Clean" : "Needs work"}</span></div>`).join("") || "<p class='small muted' style='margin:0'>No checks yet today.</p>"}</div>`;
+    <div class="card"><h2>Last checks at ${OPS_BRS[BR_HERE()] || ""}</h2>${(data || []).map(a => `<div class="row"><span><b>${esc(a.toilet)}</b> · ${a.passed}/${a.total} OK<br><span class="small muted">${fmt(a.created_at.slice(0, 10))} ${hhmm(a.created_at)} · ${esc(a.by_name || "")}</span></span><span class="st ${a.passed === a.total ? "approved" : "pending"}">${a.passed === a.total ? "Clean" : "Needs work"}</span></div>`).join("") || "<p class='small muted' style='margin:0'>No checks yet today.</p>"}</div>`;
   $("#ta-go").onclick = async () => { if (Object.keys(TA).length < TCHK.length) return $("#ta-err").textContent = `Answer all ${TCHK.length} checks (${TCHK.length - Object.keys(TA).length} left).`;
     const fails = TCHK.filter((_, i) => !TA[i]); if (fails.length && !$("#ta-n").value.trim()) return $("#ta-err").textContent = "Add a note on what's wrong or what you fixed.";
     $("#ta-go").disabled = true; try { const photo = await upPhoto($("#ta-p").files[0], "toilet");
